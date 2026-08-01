@@ -1,0 +1,396 @@
+export const SUPPORTED_UI_LANGS = ["zh", "en", "ja", "de"] as const;
+export type UILanguage = (typeof SUPPORTED_UI_LANGS)[number];
+
+export const SUPPORTED_REPORT_LANGS = ["zh", "en", "ja", "de"] as const;
+export type ReportLanguage = (typeof SUPPORTED_REPORT_LANGS)[number] | "follow";
+
+export const LANG_LABELS: Record<UILanguage, string> = {
+  zh: "\u4e2d\u6587",
+  en: "English",
+  ja: "\u65e5\u672c\u8a9e",
+  de: "Deutsch",
+};
+
+export const REPORT_LANG_LABELS: Record<ReportLanguage, string> = {
+  follow: "\u8ddf\u968f UI \u8bed\u8a00",
+  zh: "\u4e2d\u6587",
+  en: "English",
+  ja: "\u65e5\u672c\u8a9e",
+  de: "Deutsch",
+};
+
+type TranslationDict = Record<string, string>;
+
+const zh: TranslationDict = {
+  "nav.sales": "\u9500\u552e\u5206\u6790",
+  "nav.finance": "\u8d22\u52a1\u5206\u6790",
+  "nav.inventory": "\u5e93\u5b58\u5206\u6790",
+  "nav.hr": "\u4eba\u529b\u8d44\u6e90",
+  "nav.energy": "\u80fd\u6e90\u5206\u6790",
+  "nav.procurement": "\u91c7\u8d2d\u5206\u6790",
+  "nav.custom": "\u81ea\u5b9a\u4e49",
+  "nav.comingSoon": "\u5373\u5c06\u63a8\u51fa",
+
+  "header.title": "ExcelPilot",
+  "header.tagline": "AI Excel \u5206\u6790\u5e73\u53f0",
+  "header.version": "v0.1.0",
+  "header.online": "Backend \u5df2\u8fde\u63a5",
+  "header.offline": "Backend \u79bb\u7ebf",
+  "header.checking": "\u68c0\u67e5\u4e2d...",
+
+  "lang.uiLabel": "UI \u8bed\u8a00",
+  "lang.reportLabel": "\u62a5\u544a\u8bed\u8a00",
+  "lang.followUI": "\u8ddf\u968f UI \u8bed\u8a00",
+
+  "step1.title": "\u4e0a\u4f20 Excel \u6587\u4ef6",
+  "step1.desc": "\u9009\u62e9 .xlsx \u6216 .xls \u6587\u4ef6\u8fdb\u884c\u5206\u6790",
+  "step1.dragHint": "\u62d6\u62fd Excel \u6587\u4ef6\u5230\u6b64\u5904\u6216\u70b9\u51fb\u6d4f\u89c8",
+  "step1.fileTypes": "\u652f\u6301 .xlsx \u548c .xls \u6587\u4ef6\uff0c\u6700\u5927 20 MB",
+  "step1.browse": "\u6d4f\u89c8\u6587\u4ef6",
+  "step1.uploadBtn": "\u4e0a\u4f20\u5e76\u5206\u6790",
+  "step1.uploading": "\u4e0a\u4f20\u4e2d...",
+
+  "step2.processing": "\u6b63\u5728\u5904\u7406\u6570\u636e...",
+  "step2.title": "\u6570\u636e\u9a8c\u8bc1",
+  "step2.desc": "\u6587\u4ef6\u5904\u7406\u6210\u529f",
+  "step2.uploaded": "\u5df2\u4e0a\u4f20",
+  "step2.worksheet": "\u5de5\u4f5c\u8868",
+  "step2.dataRows": "\u6570\u636e\u884c",
+  "step2.columns": "\u5217",
+
+  "step3.title": "AI \u5206\u6790",
+  "step3.desc": "\u5bf9\u6570\u636e\u8fd0\u884c\u9500\u552e\u5206\u6790",
+  "step3.analyze": "\u5206\u6790\u9500\u552e\u6570\u636e",
+  "step3.analyzing": "AI \u5206\u6790\u4e2d...",
+
+  "report.title": "\u5206\u6790\u62a5\u544a",
+  "report.desc": "AI \u751f\u6210\u7684\u4e1a\u52a1\u6d1e\u5bdf",
+  "report.salesIntel": "\u9500\u552e\u60c5\u62a5",
+  "report.aiGenerated": "AI \u751f\u6210",
+  "report.execSummary": "\u6267\u884c\u6458\u8981",
+  "report.keyFindings": "\u5173\u952e\u53d1\u73b0",
+  "report.insightsFound": "{n} \u6761\u6d1e\u5bdf",
+  "report.riskAnalysis": "\u98ce\u9669\u5206\u6790",
+  "report.risksFound": "\u53d1\u73b0 {n} \u4e2a\u98ce\u9669",
+  "report.recommendations": "\u5efa\u8bae",
+  "report.actionable": "\u53ef\u6267\u884c\u7684\u4e0b\u4e00\u6b65",
+  "report.kpi.rows": "\u6570\u636e\u884c",
+  "report.kpi.findings": "\u53d1\u73b0",
+  "report.kpi.risks": "\u98ce\u9669",
+  "report.kpi.suggestions": "\u5efa\u8bae",
+  "report.footer.completed": "AI \u5206\u6790\u5df2\u5b8c\u6210",
+  "report.footer.analysisTime": "\u5206\u6790\u65f6\u95f4",
+  "report.footer.dataSize": "\u6570\u636e\u89c4\u6a21",
+  "report.footer.generated": "\u62a5\u544a\u751f\u6210",
+  "report.footer.rows": "\u884c",
+  "report.multiLang": "\u68c0\u6d4b\u5230\u6e90\u6570\u636e\u5305\u542b\u591a\u79cd\u8bed\u8a00\u3002",
+
+  "recs.title": "\u63a8\u8350\u4e0b\u4e00\u6b65\u5206\u6790",
+  "chat.title": "\u7ee7\u7eed\u5206\u6790",
+  "chat.desc": "\u57fa\u4e8e\u5f53\u524d\u62a5\u544a\u7ee7\u7eed\u63d0\u95ee",
+  "chat.placeholder": "\u8f93\u5165\u95ee\u9898\u4ee5\u6df1\u5165\u5206\u6790\u6570\u636e...",
+  "chat.inputPlaceholder": "\u8f93\u5165\u60a8\u7684\u95ee\u9898...",
+  "chat.send": "\u53d1\u9001",
+  "chat.thinking": "AI \u601d\u8003\u4e2d...",
+  "chat.error": "\u62b1\u6b49\uff0c\u56de\u590d\u5931\u8d25\u3002\u8bf7\u91cd\u8bd5\u3002",
+  "chat.advancedInput": "+ \u81ea\u5b9a\u4e49\u63d0\u95ee",
+
+  "ws.actions": "Recommended Actions",
+  "ws.actionsDesc": "\u884c\u52a8\u8ba1\u5212\uff08\u672a\u6765\u7248\u672c\u63a8\u51fa\uff09",
+  "ws.optPortfolio": "\u4f18\u5316\u4ea7\u54c1\u7ec4\u5408",
+  "ws.optPortfolioDesc": "\u4ea7\u54c1\u6df7\u5408\u5206\u6790",
+  "ws.regionalStrat": "\u533a\u57df\u7b56\u7565",
+  "ws.regionalStratDesc": "\u5e02\u573a\u6269\u5c55\u8ba1\u5212",
+  "ws.revForecast": "\u6536\u5165\u9884\u6d4b",
+  "ws.revForecastDesc": "\u9884\u6d4b\u5efa\u6a21",
+  "error.uploadFailed": "\u4e0a\u4f20\u5931\u8d25\u3002",
+  "error.processingFailed": "\u5904\u7406\u5931\u8d25",
+  "error.analysisFailed": "\u5206\u6790\u5931\u8d25",
+  "error.generic": "\u64cd\u4f5c\u5931\u8d25",
+};
+
+const en: TranslationDict = {
+  "nav.sales": "Sales",
+  "nav.finance": "Finance",
+  "nav.inventory": "Inventory",
+  "nav.hr": "HR",
+  "nav.energy": "Energy",
+  "nav.procurement": "Procurement",
+  "nav.custom": "Custom",
+  "nav.comingSoon": "Coming Soon",
+
+  "header.title": "ExcelPilot",
+  "header.tagline": "AI Excel Analysis Platform",
+  "header.version": "v0.1.0",
+  "header.online": "Backend Online",
+  "header.offline": "Backend Offline",
+  "header.checking": "Checking...",
+
+  "lang.uiLabel": "UI Language",
+  "lang.reportLabel": "Report Language",
+  "lang.followUI": "Follow UI Language",
+
+  "step1.title": "Upload Excel File",
+  "step1.desc": "Select a .xlsx or .xls file to analyze",
+  "step1.dragHint": "Drag your Excel file here or click to browse",
+  "step1.fileTypes": "Supports .xlsx and .xls up to 20 MB",
+  "step1.browse": "Browse Files",
+  "step1.uploadBtn": "Upload & Analyze",
+  "step1.uploading": "Uploading...",
+
+  "step2.processing": "Processing your data...",
+  "step2.title": "Data Validation",
+  "step2.desc": "File processed successfully",
+  "step2.uploaded": "Uploaded",
+  "step2.worksheet": "Worksheet",
+  "step2.dataRows": "Data Rows",
+  "step2.columns": "Columns",
+
+  "step3.title": "AI Analysis",
+  "step3.desc": "Run sales analysis on your data",
+  "step3.analyze": "Analyze Sales Data",
+  "step3.analyzing": "AI Analyzing...",
+
+  "report.title": "Analysis Report",
+  "report.desc": "AI-generated business insights",
+  "report.salesIntel": "Sales Intelligence",
+  "report.aiGenerated": "AI-Generated",
+  "report.execSummary": "Executive Summary",
+  "report.keyFindings": "Key Findings",
+  "report.insightsFound": "{n} insights discovered",
+  "report.riskAnalysis": "Risk Analysis",
+  "report.risksFound": "{n} risks identified",
+  "report.recommendations": "Recommendations",
+  "report.actionable": "Actionable next steps",
+  "report.kpi.rows": "Data Rows",
+  "report.kpi.findings": "Findings",
+  "report.kpi.risks": "Risks",
+  "report.kpi.suggestions": "Suggestions",
+  "report.footer.completed": "AI Analysis Completed",
+  "report.footer.analysisTime": "Analysis Time",
+  "report.footer.dataSize": "Data Size",
+  "report.footer.generated": "Report Generated",
+  "report.footer.rows": "rows",
+  "report.multiLang": "Multiple languages detected in source data.",
+
+  "recs.title": "Recommended Next Analysis",
+  "chat.title": "Continue Analysis",
+  "chat.desc": "Ask follow-up questions based on the current report",
+  "chat.placeholder": "Ask a question to dive deeper into the data...",
+  "chat.inputPlaceholder": "Type your question...",
+  "chat.send": "Send",
+  "chat.thinking": "AI thinking...",
+  "chat.error": "Sorry, failed to respond. Please try again.",
+  "chat.advancedInput": "+ Custom Question",
+
+  "ws.actions": "Recommended Actions",
+  "ws.actionsDesc": "\u884c\u52a8\u8ba1\u5212\uff08\u672a\u6765\u7248\u672c\u63a8\u51fa\uff09",
+  "ws.optPortfolio": "\u4f18\u5316\u4ea7\u54c1\u7ec4\u5408",
+  "ws.optPortfolioDesc": "\u4ea7\u54c1\u6df7\u5408\u5206\u6790",
+  "ws.regionalStrat": "\u533a\u57df\u7b56\u7565",
+  "ws.regionalStratDesc": "\u5e02\u573a\u6269\u5c55\u8ba1\u5212",
+  "ws.revForecast": "\u6536\u5165\u9884\u6d4b",
+  "ws.revForecastDesc": "\u9884\u6d4b\u5efa\u6a21",
+  "error.uploadFailed": "Upload failed.",
+  "error.processingFailed": "Processing failed",
+  "error.analysisFailed": "Analysis failed",
+  "error.generic": "Operation failed",
+};
+
+const ja: TranslationDict = {
+  "nav.sales": "\u58f2\u4e0a\u5206\u6790",
+  "nav.finance": "\u8ca1\u52d9\u5206\u6790",
+  "nav.inventory": "\u5728\u5eab\u5206\u6790",
+  "nav.hr": "\u4eba\u4e8b",
+  "nav.energy": "\u30a8\u30cd\u30eb\u30ae\u30fc\u5206\u6790",
+  "nav.procurement": "\u8abf\u9054\u5206\u6790",
+  "nav.custom": "\u30ab\u30b9\u30bf\u30e0",
+  "nav.comingSoon": "\u8fd1\u65e5\u516c\u958b",
+
+  "header.title": "ExcelPilot",
+  "header.tagline": "AI Excel \u5206\u6790\u30d7\u30e9\u30c3\u30c8\u30d5\u30a9\u30fc\u30e0",
+  "header.version": "v0.1.0",
+  "header.online": "\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\u63a5\u7d9a\u6e08",
+  "header.offline": "\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\u30aa\u30d5\u30e9\u30a4\u30f3",
+  "header.checking": "\u78ba\u8a8d\u4e2d...",
+
+  "lang.uiLabel": "UI\u8a00\u8a9e",
+  "lang.reportLabel": "\u30ec\u30dd\u30fc\u30c8\u8a00\u8a9e",
+  "lang.followUI": "UI\u8a00\u8a9e\u306b\u5f93\u3046",
+
+  "step1.title": "Excel\u30d5\u30a1\u30a4\u30eb\u3092\u30a2\u30c3\u30d7\u30ed\u30fc\u30c9",
+  "step1.desc": "\u5206\u6790\u3059\u308b .xlsx \u307e\u305f\u306f .xls \u30d5\u30a1\u30a4\u30eb\u3092\u9078\u629e",
+  "step1.dragHint": "Excel\u30d5\u30a1\u30a4\u30eb\u3092\u30c9\u30e9\u30c3\u30b0\u3059\u308b\u304b\u3001\u30af\u30ea\u30c3\u30af\u3057\u3066\u53c2\u7167",
+  "step1.fileTypes": ".xlsx\u3001.xls\u306b\u5bfe\u5fdc\u3001\u6700\u592720MB",
+  "step1.browse": "\u30d5\u30a1\u30a4\u30eb\u3092\u53c2\u7167",
+  "step1.uploadBtn": "\u30a2\u30c3\u30d7\u30ed\u30fc\u30c9\u3068\u5206\u6790",
+  "step1.uploading": "\u30a2\u30c3\u30d7\u30ed\u30fc\u30c9\u4e2d...",
+
+  "step2.processing": "\u30c7\u30fc\u30bf\u3092\u51e6\u7406\u4e2d...",
+  "step2.title": "\u30c7\u30fc\u30bf\u691c\u8a3c",
+  "step2.desc": "\u30d5\u30a1\u30a4\u30eb\u306e\u51e6\u7406\u304c\u5b8c\u4e86\u3057\u307e\u3057\u305f",
+  "step2.uploaded": "\u30a2\u30c3\u30d7\u30ed\u30fc\u30c9\u6e08",
+  "step2.worksheet": "\u30ef\u30fc\u30af\u30b7\u30fc\u30c8",
+  "step2.dataRows": "\u30c7\u30fc\u30bf\u884c",
+  "step2.columns": "\u5217",
+
+  "step3.title": "AI\u5206\u6790",
+  "step3.desc": "\u58f2\u4e0a\u30c7\u30fc\u30bf\u3092\u5206\u6790",
+  "step3.analyze": "\u58f2\u4e0a\u30c7\u30fc\u30bf\u3092\u5206\u6790",
+  "step3.analyzing": "AI\u5206\u6790\u4e2d...",
+
+  "report.title": "\u5206\u6790\u30ec\u30dd\u30fc\u30c8",
+  "report.desc": "AI\u304c\u751f\u6210\u3057\u305f\u30d3\u30b8\u30cd\u30b9\u30a4\u30f3\u30b5\u30a4\u30c8",
+  "report.salesIntel": "\u58f2\u4e0a\u30a4\u30f3\u30c6\u30ea\u30b8\u30a7\u30f3\u30b9",
+  "report.aiGenerated": "AI\u751f\u6210",
+  "report.execSummary": "\u30a8\u30b0\u30bc\u30af\u30c6\u30a3\u30d6\u30b5\u30de\u30ea\u30fc",
+  "report.keyFindings": "\u4e3b\u8981\u306a\u767a\u898b",
+  "report.insightsFound": "{n}\u4ef6\u306e\u30a4\u30f3\u30b5\u30a4\u30c8",
+  "report.riskAnalysis": "\u30ea\u30b9\u30af\u5206\u6790",
+  "report.risksFound": "{n}\u4ef6\u306e\u30ea\u30b9\u30af\u3092\u691c\u51fa",
+  "report.recommendations": "\u63a8\u5968",
+  "report.actionable": "\u5b9f\u884c\u53ef\u80fd\u306a\u6b21\u306e\u30b9\u30c6\u30c3\u30d7",
+  "report.kpi.rows": "\u30c7\u30fc\u30bf\u884c",
+  "report.kpi.findings": "\u767a\u898b",
+  "report.kpi.risks": "\u30ea\u30b9\u30af",
+  "report.kpi.suggestions": "\u63d0\u6848",
+  "report.footer.completed": "AI\u5206\u6790\u304c\u5b8c\u4e86\u3057\u307e\u3057\u305f",
+  "report.footer.analysisTime": "\u5206\u6790\u6642\u9593",
+  "report.footer.dataSize": "\u30c7\u30fc\u30bf\u30b5\u30a4\u30ba",
+  "report.footer.generated": "\u30ec\u30dd\u30fc\u30c8\u751f\u6210",
+  "report.footer.rows": "\u884c",
+  "report.multiLang": "\u30bd\u30fc\u30b9\u30c7\u30fc\u30bf\u306b\u8907\u6570\u306e\u8a00\u8a9e\u304c\u691c\u51fa\u3055\u308c\u307e\u3057\u305f\u3002",
+
+  "recs.title": "\u63a8\u5968\u3055\u308c\u308b\u6b21\u306e\u5206\u6790",
+  "chat.title": "\u5206\u6790\u3092\u7d9a\u3051\u308b",
+  "chat.desc": "\u73fe\u5728\u306e\u30ec\u30dd\u30fc\u30c8\u306b\u57fa\u3065\u3044\u3066\u8cea\u554f\u3092\u7d9a\u3051\u308b",
+  "chat.placeholder": "\u30c7\u30fc\u30bf\u3092\u3055\u3089\u306b\u5206\u6790\u3059\u308b\u305f\u3081\u306e\u8cea\u554f\u3092\u5165\u529b...",
+  "chat.inputPlaceholder": "\u8cea\u554f\u3092\u5165\u529b...",
+  "chat.send": "\u9001\u4fe1",
+  "chat.thinking": "AI\u601d\u8003\u4e2d...",
+  "chat.error": "\u7533\u3057\u8a33\u3042\u308a\u307e\u305b\u3093\u3001\u5fdc\u7b54\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002\u518d\u8a66\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
+  "chat.advancedInput": "+ \u30ab\u30b9\u30bf\u30e0\u8cea\u554f",
+
+  "ws.actions": "Recommended Actions",
+  "ws.actionsDesc": "\u884c\u52a8\u8ba1\u5212\uff08\u672a\u6765\u7248\u672c\u63a8\u51fa\uff09",
+  "ws.optPortfolio": "\u4f18\u5316\u4ea7\u54c1\u7ec4\u5408",
+  "ws.optPortfolioDesc": "\u4ea7\u54c1\u6df7\u5408\u5206\u6790",
+  "ws.regionalStrat": "\u533a\u57df\u7b56\u7565",
+  "ws.regionalStratDesc": "\u5e02\u573a\u6269\u5c55\u8ba1\u5212",
+  "ws.revForecast": "\u6536\u5165\u9884\u6d4b",
+  "ws.revForecastDesc": "\u9884\u6d4b\u5efa\u6a21",
+  "error.uploadFailed": "\u30a2\u30c3\u30d7\u30ed\u30fc\u30c9\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002",
+  "error.processingFailed": "\u51e6\u7406\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+  "error.analysisFailed": "\u5206\u6790\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+  "error.generic": "\u64cd\u4f5c\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+};
+
+const de: TranslationDict = {
+  "nav.sales": "Vertrieb",
+  "nav.finance": "Finanzen",
+  "nav.inventory": "Inventar",
+  "nav.hr": "Personal",
+  "nav.energy": "Energie",
+  "nav.procurement": "Einkauf",
+  "nav.custom": "Benutzerdefiniert",
+  "nav.comingSoon": "Demn\u00e4chst",
+
+  "header.title": "ExcelPilot",
+  "header.tagline": "KI Excel Analyseplattform",
+  "header.version": "v0.1.0",
+  "header.online": "Backend Online",
+  "header.offline": "Backend Offline",
+  "header.checking": "Pr\u00fcfung...",
+
+  "lang.uiLabel": "UI-Sprache",
+  "lang.reportLabel": "Berichtssprache",
+  "lang.followUI": "UI-Sprache \u00fcbernehmen",
+
+  "step1.title": "Excel-Datei hochladen",
+  "step1.desc": "W\u00e4hlen Sie eine .xlsx- oder .xls-Datei zur Analyse",
+  "step1.dragHint": "Ziehen Sie Ihre Excel-Datei hierher oder klicken Sie zum Durchsuchen",
+  "step1.fileTypes": "Unterst\u00fctzt .xlsx und .xls bis 20 MB",
+  "step1.browse": "Dateien durchsuchen",
+  "step1.uploadBtn": "Hochladen & Analysieren",
+  "step1.uploading": "Wird hochgeladen...",
+
+  "step2.processing": "Daten werden verarbeitet...",
+  "step2.title": "Datenvalidierung",
+  "step2.desc": "Datei erfolgreich verarbeitet",
+  "step2.uploaded": "Hochgeladen",
+  "step2.worksheet": "Arbeitsblatt",
+  "step2.dataRows": "Datenzeilen",
+  "step2.columns": "Spalten",
+
+  "step3.title": "KI-Analyse",
+  "step3.desc": "Vertriebsanalyse f\u00fcr Ihre Daten ausf\u00fchren",
+  "step3.analyze": "Vertriebsdaten analysieren",
+  "step3.analyzing": "KI analysiert...",
+
+  "report.title": "Analysebericht",
+  "report.desc": "KI-generierte Gesch\u00e4ftseinblicke",
+  "report.salesIntel": "Vertriebsanalyse",
+  "report.aiGenerated": "KI-generiert",
+  "report.execSummary": "Zusammenfassung",
+  "report.keyFindings": "Wichtige Erkenntnisse",
+  "report.insightsFound": "{n} Erkenntnisse entdeckt",
+  "report.riskAnalysis": "Risikoanalyse",
+  "report.risksFound": "{n} Risiken identifiziert",
+  "report.recommendations": "Empfehlungen",
+  "report.actionable": "Umsetzbare n\u00e4chste Schritte",
+  "report.kpi.rows": "Datenzeilen",
+  "report.kpi.findings": "Erkenntnisse",
+  "report.kpi.risks": "Risiken",
+  "report.kpi.suggestions": "Vorschl\u00e4ge",
+  "report.footer.completed": "KI-Analyse abgeschlossen",
+  "report.footer.analysisTime": "Analysezeit",
+  "report.footer.dataSize": "Datengr\u00f6\u00dfe",
+  "report.footer.generated": "Bericht erstellt",
+  "report.footer.rows": "Zeilen",
+  "report.multiLang": "Mehrere Sprachen in den Quelldaten erkannt.",
+
+  "recs.title": "Empfohlene n\u00e4chste Analyse",
+  "chat.title": "Analyse fortsetzen",
+  "chat.desc": "Stellen Sie Folgefragen basierend auf dem aktuellen Bericht",
+  "chat.placeholder": "Stellen Sie eine Frage, um tiefer in die Daten einzutauchen...",
+  "chat.inputPlaceholder": "Ihre Frage eingeben...",
+  "chat.send": "Senden",
+  "chat.thinking": "KI denkt nach...",
+  "chat.error": "Entschuldigung, Antwort fehlgeschlagen. Bitte versuchen Sie es erneut.",
+  "chat.advancedInput": "+ Eigene Frage",
+
+  "ws.actions": "Recommended Actions",
+  "ws.actionsDesc": "\u884c\u52a8\u8ba1\u5212\uff08\u672a\u6765\u7248\u672c\u63a8\u51fa\uff09",
+  "ws.optPortfolio": "\u4f18\u5316\u4ea7\u54c1\u7ec4\u5408",
+  "ws.optPortfolioDesc": "\u4ea7\u54c1\u6df7\u5408\u5206\u6790",
+  "ws.regionalStrat": "\u533a\u57df\u7b56\u7565",
+  "ws.regionalStratDesc": "\u5e02\u573a\u6269\u5c55\u8ba1\u5212",
+  "ws.revForecast": "\u6536\u5165\u9884\u6d4b",
+  "ws.revForecastDesc": "\u9884\u6d4b\u5efa\u6a21",
+  "error.uploadFailed": "Upload fehlgeschlagen.",
+  "error.processingFailed": "Verarbeitung fehlgeschlagen",
+  "error.analysisFailed": "Analyse fehlgeschlagen",
+  "error.generic": "Vorgang fehlgeschlagen",
+};
+
+const dictionaries: Record<UILanguage, TranslationDict> = { zh, en, ja, de };
+
+export function t(lang: UILanguage, key: string, params?: Record<string, string | number>): string {
+  const dict = dictionaries[lang] || dictionaries.en;
+  let text = dict[key];
+  if (text === undefined) {
+    text = dictionaries.en[key];
+    if (text === undefined) return key;
+  }
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => {
+      text = text.replace(`{${k}}`, String(v));
+    });
+  }
+  return text;
+}
+
+export function getReportLang(uiLang: UILanguage, reportLang: ReportLanguage): string {
+  if (reportLang === "follow") return uiLang;
+  return reportLang;
+}

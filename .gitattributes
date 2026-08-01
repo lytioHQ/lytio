@@ -1,0 +1,4 @@
+﻿* text=auto eol=lf
+*.py text diff=python
+*.tsx text diff=typescript
+*.sql text diff=sql
