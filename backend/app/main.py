@@ -50,6 +50,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# TEMP DEBUG: verify requests pass through FastAPI middleware
+@app.middleware("http")
+async def debug_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-CORS-DEBUG"] = "middleware-ran"
+    return response
+
 # ── Production error handlers ──
 
 @app.exception_handler(Exception)
