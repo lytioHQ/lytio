@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -16,6 +16,28 @@ def _user_to_response(user) -> UserResponse:
         email=user.email,
         created_at=str(user.created_at) if user.created_at else None,
     )
+
+
+async def _require_auth(authorization: str | None = None):
+    """FastAPI dependency: extract and validate Bearer token."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing authorization header")
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization format")
+    token = authorization.removeprefix("Bearer ")
+    user_id = auth_service.decode_access_token(token)
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return authorization
+
+
+async def _get_user_from_token(db: AsyncSession, authorization: str):
+    token = authorization.removeprefix("Bearer ")
+    user_id = auth_service.decode_access_token(token)
+    user = await auth_service.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -67,25 +89,3 @@ async def get_my_plan(db: AsyncSession = Depends(get_db), authorization: str = D
             "unlimited_projects": flags.unlimited_projects,
         },
     )
-
-
-async def _require_auth(authorization: str | None = None):
-    """FastAPI dependency: extract and validate Bearer token."""
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Missing authorization header")
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid authorization format")
-    token = authorization.removeprefix("Bearer ")
-    user_id = auth_service.decode_access_token(token)
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    return authorization
-
-
-async def _get_user_from_token(db: AsyncSession, authorization: str):
-    token = authorization.removeprefix("Bearer ")
-    user_id = auth_service.decode_access_token(token)
-    user = await auth_service.get_user_by_id(db, user_id)
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
