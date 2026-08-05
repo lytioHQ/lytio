@@ -4,6 +4,8 @@
 > **Version:** 2.0 | 2026-07-31  
 > **Parent:** BRAND_CONSTITUTION.md Section 6  
 > **Mandate:** Global-first brand. Equal strength in English and Chinese without literal translation.
+>
+> **✅ Selected Name:** **Lytio / 理拓** — see [BRAND_NAME_LYTIO.md](BRAND_NAME_LYTIO.md). The candidates below are the pre-decision exploration record.
 
 ---
 
