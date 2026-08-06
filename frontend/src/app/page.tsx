@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
 import SecurityNotice from "@/components/security/SecurityNotice";
 import LandingPage from "@/components/landing/LandingPage";
+import BetaBanner from "@/components/BetaBanner";
 
 interface Project {
   id: number;
@@ -113,7 +114,12 @@ export default function WorkspacePage() {
 
   // Show landing page for unauthenticated visitors
   if (!authLoading && !user) {
-    return <LandingPage />;
+    return (
+      <>
+        <BetaBanner />
+        <LandingPage />
+      </>
+    );
   }
 
   if (authLoading || loading) {
@@ -122,6 +128,7 @@ export default function WorkspacePage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
+      <BetaBanner />
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div>

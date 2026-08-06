@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/lib/AuthContext";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 export default function RootLayout({
   children,
@@ -16,7 +17,10 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="min-h-screen bg-white text-gray-900 antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <FeedbackWidget />
+        </AuthProvider>
       </body>
     </html>
   );

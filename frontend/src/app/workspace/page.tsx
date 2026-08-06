@@ -6,6 +6,7 @@ import WorkspaceHeader from "@/components/workspace/WorkspaceHeader";
 import SummaryCards from "@/components/workspace/SummaryCards";
 import SectionCard from "@/components/workspace/SectionCard";
 import ActionPlaceholderCard from "@/components/workspace/ActionPlaceholderCard";
+import PipelineTimeline from "@/components/PipelineTimeline";
 import { t } from "@/lib/i18n";
 import { useAnalysisPipeline } from "@/lib/useAnalysisPipeline";
 
@@ -71,14 +72,9 @@ export default function WorkspacePage() {
           </SectionCard>
         )}
 
-        {/* Processing */}
-        {pipe.processing && (
-          <SectionCard title={T("step2.title")}>
-            <div className="flex items-center gap-3">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
-              <p className="text-sm text-slate-600">{T("step2.processing")}</p>
-            </div>
-          </SectionCard>
+        {/* Pipeline Progress Timeline */}
+        {pipe.stage !== "idle" && pipe.stage !== "done" && (
+          <PipelineTimeline lang={pipe.uiLang} stage={pipe.stage} failed={pipe.failed} />
         )}
 
         {/* Analyze */}

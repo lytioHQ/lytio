@@ -13,6 +13,16 @@ interface SemanticResult { workbook: string; tables: SemanticSheet[]; }
 export interface AnalysisResult { plugin: string; sheet: string; summary: string; highlights: string[]; warnings: string[]; recommendations: string[]; metadata: Record<string, unknown>; recommended_questions?: string[]; result?: Record<string, unknown> | null; is_legacy?: boolean; }
 export interface ChatContext { reportSummary: string; reportHighlights: string[]; reportWarnings: string[]; headers: string[]; columnTypes: Record<string, string>; rows: (string | number | boolean | null)[][]; sheetName: string; }
 
+export type PipelineStage =
+  | "idle"
+  | "uploading"
+  | "parsing"
+  | "detecting"
+  | "ready"
+  | "thinking"
+  | "generating"
+  | "done";
+
 function loadSetting<T>(key: string, fallback: T, validate: (v: string) => T | null): T {
   if (typeof window === "undefined") return fallback;
   try {
@@ -33,6 +43,8 @@ export function useAnalysisPipeline() {
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [stage, setStage] = useState<PipelineStage>("idle");
+  const [failed, setFailed] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [validated, setValidated] = useState<{ sheet: string; rows: number; cols: number } | null>(null);
@@ -67,32 +79,37 @@ export function useAnalysisPipeline() {
     setUploadResult(null); setError(null); setValidated(null);
     setAnalysis(null); setChatContext(null); setInitialQuestions([]); setResultData(null); setIsLegacy(false);
     setExtractData(null); setSemanticData(null);
+    setStage("idle");
+    setFailed(false);
   }
 
   async function handleUpload() {
     if (!file) return;
-    setUploading(true); reset();
+    setUploading(true); setFailed(false); reset();
+    setStage("uploading");
     const fd = new FormData(); fd.append("file", file);
     try {
       const r = await fetch(apiUrl + "/api/upload", { method: "POST", body: fd });
       const j = await r.json();
-      if (!r.ok) { setError(j.detail || "Upload failed"); return; }
+      if (!r.ok) { setError(j.detail || "Upload failed"); setFailed(true); return; }
       setUploadResult(j); setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       await runPipeline(j.saved_filename);
-    } catch { setError("Upload failed."); }
+    } catch { setError("Upload failed."); setFailed(true); }
     finally { setUploading(false); }
   }
 
   async function runPipeline(filename: string) {
     setProcessing(true);
     try {
+      setStage("parsing");
       const r2 = await fetch(apiUrl + "/api/workbook/extract", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ saved_filename: filename }),
       });
       const j2 = await r2.json(); if (!r2.ok) throw new Error(j2.detail); setExtractData(j2);
 
+      setStage("detecting");
       const r3 = await fetch(apiUrl + "/api/workbook/semantic", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ saved_filename: filename }),
@@ -101,8 +118,10 @@ export function useAnalysisPipeline() {
 
       const s = j2.sheets[0];
       setValidated({ sheet: s.name, rows: s.row_count, cols: s.column_count });
+      setStage("ready");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Processing failed");
+      setFailed(true);
     } finally { setProcessing(false); }
   }
 
@@ -113,7 +132,8 @@ export function useAnalysisPipeline() {
     const columnTypes: Record<string, string> = {};
     sheet.columns.forEach((c: ColumnInfo) => { columnTypes[c.name] = c.type; });
     const effectiveReportLang = getReportLang(uiLang, reportLang);
-    setAnalyzing(true); setError(null);
+    setAnalyzing(true); setError(null); setFailed(false);
+    setStage("thinking");
     try {
       const r = await fetch(apiUrl + "/api/analysis/sales", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -127,8 +147,10 @@ export function useAnalysisPipeline() {
       const j = await r.json();
       if (!r.ok) {
         const detail = Array.isArray(j.detail) ? j.detail.map((d: { msg: string }) => d.msg).join("; ") : (j.detail || "Analysis failed");
+        setFailed(true);
         throw new Error(detail);
       }
+      setStage("generating");
       setAnalysis(j);
       setInitialQuestions(j.recommended_questions || []);
       setResultData(j.result || null);
@@ -138,8 +160,10 @@ export function useAnalysisPipeline() {
         headers: xs.headers, columnTypes,
         rows: xs.rows.map((row: DataRow) => row.values), sheetName: sheet.sheet,
       });
+      setStage("done");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Analysis failed");
+      setFailed(true);
     } finally { setAnalyzing(false); }
   }
 
@@ -153,5 +177,6 @@ export function useAnalysisPipeline() {
     reportLang, setReportLang: handleReportLangChange,
     apiUrl, ready,
     resultData, isLegacy, handleUpload, handleAnalyze,
+    stage, failed,
   };
 }
