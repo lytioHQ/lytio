@@ -4,6 +4,7 @@ import MetricGrid from "@/components/business/MetricGrid";
 import InsightList from "@/components/business/InsightList";
 import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
+import RecommendedActionCards from "@/components/RecommendedActionCards";
 import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
 
 interface ResultData {
@@ -72,22 +73,23 @@ export default function AnalysisReport({
 
         {hasMultiLang && <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3"><p className="text-xs text-amber-700">{t("report.multiLang")}</p></div>}
 
-        {/* KPI Row */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <KPICard label={t("report.kpi.findings")} value={result.insights?.length || 0} />
-          <KPICard label={t("report.kpi.risks")} value={result.risks?.length || 0} />
-          <KPICard label={t("report.kpi.suggestions")} value={result.recommendations?.length || 0} />
-          {bh && <BusinessHealthCard data={bh} />}
-        </div>
-
-        {result.metrics && result.metrics.length > 0 && <MetricGrid metrics={result.metrics} />}
-
-        <InsightList insights={result.insights || []} />
-        <RiskList risks={result.risks || []} />
-
+        {/* Executive Summary */}
         {es && <ExecutiveSummaryCard content={es.content} />}
 
-        <RecommendationList recs={result.recommendations || []} />
+        {/* Business Health */}
+        {bh && <BusinessHealthCard data={bh} />}
+
+        {/* Key Metrics */}
+        {result.metrics && result.metrics.length > 0 && <MetricGrid metrics={result.metrics} />}
+
+        {/* Insights */}
+        <InsightList insights={result.insights || []} />
+
+        {/* Risks */}
+        <RiskList risks={result.risks || []} />
+
+        {/* Recommended Actions */}
+        <RecommendedActionCards lang={lang} recs={result.recommendations || []} summary={es?.content} />
 
         {/* Footer */}
         <div className="rounded-xl border border-slate-100 bg-slate-50/50 px-6 py-4">

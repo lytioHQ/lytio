@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import AnalysisReport from "@/components/AnalysisReport";
 import ChatPanel from "@/components/ChatPanel";
 import WorkspaceHeader from "@/components/workspace/WorkspaceHeader";
@@ -9,6 +11,10 @@ import ActionPlaceholderCard from "@/components/workspace/ActionPlaceholderCard"
 import PipelineTimeline from "@/components/PipelineTimeline";
 import { t } from "@/lib/i18n";
 import { useAnalysisPipeline } from "@/lib/useAnalysisPipeline";
+import { useAnalysisSession } from "@/lib/useAnalysisSession";
+import BusinessInsightJourney, { JourneyPhase } from "@/components/BusinessInsightJourney";
+import ContinueAnalysisPanel, { ContinueDirection } from "@/components/ContinueAnalysisPanel";
+import AnalysisHistoryPanel from "@/components/AnalysisHistoryPanel";
 
 const WORKSPACE_LABELS: Record<string, { title: string; subtitle: string }> = {
   zh: { title: "ExcelPilot", subtitle: "\u9500\u552e\u987e\u95ee\u5de5\u4f5c\u53f0" },
@@ -19,7 +25,29 @@ const WORKSPACE_LABELS: Record<string, { title: string; subtitle: string }> = {
 
 export default function WorkspacePage() {
   const pipe = useAnalysisPipeline();
+  const session = useAnalysisSession();
+  const [activeDirection, setActiveDirection] = useState<ContinueDirection | null>(null);
+
   const T = (key: string, params?: Record<string, string | number>) => t(pipe.uiLang, key, params);
+
+  useEffect(() => {
+    if (pipe.analysis) {
+      session.logInitial(T("history.initial"));
+      session.logRecommended(T("history.recommended"));
+    }
+  }, [pipe.analysis, session.logInitial, session.logRecommended, pipe.uiLang]);
+  const journeyPhase: JourneyPhase = !pipe.analysis
+    ? pipe.validated || pipe.stage !== "idle"
+      ? "ai-analysis"
+      : "upload"
+    : session.followUps.length === 0
+      ? "business-insight"
+      : "recommended-actions";
+
+  function handleContinue(direction: ContinueDirection, label: string) {
+    setActiveDirection(direction);
+    session.addFollowUp(direction, label);
+  }
   const ws = WORKSPACE_LABELS[pipe.uiLang] || WORKSPACE_LABELS.en;
 
   const summaryCards = [
@@ -88,22 +116,27 @@ export default function WorkspacePage() {
           </div>
         )}
 
-        {/* Summary Cards */}
-        {pipe.analysis && <SummaryCards cards={summaryCards} />}
-
-        {/* AI Report — no SectionCard wrapper, report has its own styling */}
+        {/* Business Insight Journey + Report + Continue + History */}
         {pipe.analysis && (
-          <AnalysisReport
-            plugin={pipe.analysis.plugin}
-            sheet={pipe.analysis.sheet}
-            summary={pipe.analysis.summary}
-            highlights={pipe.analysis.highlights}
-            warnings={pipe.analysis.warnings}
-            recommendations={pipe.analysis.recommendations}
-            metadata={pipe.analysis.metadata}
-            lang={pipe.uiLang}
-            t={(key, params) => t(pipe.uiLang, key, params)}
-          />
+          <div className="space-y-8">
+            <BusinessInsightJourney lang={pipe.uiLang} phase={journeyPhase} />
+            <SummaryCards cards={summaryCards} />
+            <AnalysisReport
+              plugin={pipe.analysis.plugin}
+              sheet={pipe.analysis.sheet}
+              summary={pipe.analysis.summary}
+              highlights={pipe.analysis.highlights}
+              warnings={pipe.analysis.warnings}
+              recommendations={pipe.analysis.recommendations}
+              metadata={pipe.analysis.metadata}
+              lang={pipe.uiLang}
+              t={(key, params) => t(pipe.uiLang, key, params)}
+              result={pipe.resultData}
+              isLegacy={pipe.isLegacy}
+            />
+            <ContinueAnalysisPanel lang={pipe.uiLang} active={activeDirection} onSelect={handleContinue} />
+            <AnalysisHistoryPanel lang={pipe.uiLang} entries={session.history} />
+          </div>
         )}
 
         {/* Recommended Analysis + Chat */}
