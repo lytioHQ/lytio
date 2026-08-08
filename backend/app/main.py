@@ -37,28 +37,23 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS from environment
-CORS_ORIGINS = os.getenv(
-    "CORS_ORIGINS",
-    "https://www.lytio.co,https://lytio.co,http://localhost:3000",
-).split(",")
+# CORS: always allow production frontends and local dev, even when
+# CORS_ORIGINS is partially set in the environment (e.g. on Railway).
+_DEFAULT_CORS_ORIGINS = [
+    "https://www.lytio.co",
+    "https://lytio.co",
+    "http://localhost:3000",
+]
+_env_cors = os.getenv("CORS_ORIGINS", "")
+_extra_cors = [o.strip().rstrip("/") for o in _env_cors.split(",") if o.strip()]
+CORS_ORIGINS = list(dict.fromkeys(_DEFAULT_CORS_ORIGINS + _extra_cors))
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in CORS_ORIGINS],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# TEMP DEBUG: verify requests pass through FastAPI middleware
-@app.middleware("http")
-async def debug_headers(request: Request, call_next):
-    _origin = request.headers.get("origin", "(none)")
-    logger.info(f"debug_cors method={request.method} path={request.url.path} origin={_origin}")
-    response = await call_next(request)
-    response.headers["X-CORS-DEBUG"] = "middleware-ran"
-    response.headers["X-DEBUG-ORIGIN"] = _origin
-    return response
 
 # ── Production error handlers ──
 
