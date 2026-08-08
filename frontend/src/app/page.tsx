@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/lib/AuthContext";
+import { TOKEN_KEY, useAuth } from "@/lib/AuthContext";
 import SecurityNotice from "@/components/security/SecurityNotice";
 import LandingPage from "@/components/landing/LandingPage";
 import BetaBanner from "@/components/BetaBanner";
@@ -53,7 +53,7 @@ export default function WorkspacePage() {
 
   useEffect(() => { if (!authLoading && !user) {} /* show landing page */ }, [authLoading, user, router]);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("excelpilot_token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
 
   useEffect(() => {
     if (!token) return;

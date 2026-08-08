@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/lib/AuthContext";
+import { TOKEN_KEY, useAuth } from "@/lib/AuthContext";
 
 interface PlanData {
   plan: string;
@@ -28,15 +28,18 @@ export default function SettingsPage() {
   const [planData, setPlanData] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiPolicy, setAiPolicy] = useState<Record<string, string> | null>(null);
-  const token = typeof window !== "undefined" ? localStorage.getItem("excelpilot_token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
 
   useEffect(() => { if (!authLoading && !user) router.push("/login"); }, [authLoading, user, router]);
 
   useEffect(() => {
     if (!token) return;
     fetch(API + "/api/auth/me/plan", { headers: { Authorization: "Bearer " + token } })
-      .then((r) => r.json())
-      .then((data) => setPlanData(data))
+      .then(async (r) => {
+        if (!r.ok) return; // 401 / error: keep logged-out state, do not crash
+        const data = await r.json();
+        setPlanData(data);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
     fetch(API + "/api/config/ai-policy")
@@ -87,7 +90,7 @@ export default function SettingsPage() {
 
           {/* Features */}
           <div className="mt-6 space-y-3">
-            {planData && Object.entries(planData.features).map(([key, enabled]) => (
+            {planData?.features && Object.entries(planData.features).map(([key, enabled]) => (
               <div key={key} className="flex items-center gap-3 rounded-lg border border-slate-100 px-4 py-3">
                 <span className={`text-sm ${enabled ? "text-emerald-600" : "text-slate-300"}`}>
                   {enabled ? "\u2713" : "\u2014"}

@@ -21,6 +21,9 @@ const AuthContext = createContext<AuthState | null>(null);
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
+// Single source of truth for the session token key (login/register/restore/logout).
+export const TOKEN_KEY = "excelpilot_token";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -28,13 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Restore session on mount
   useEffect(() => {
-    const saved = localStorage.getItem("excelpilot_token");
+    const saved = localStorage.getItem(TOKEN_KEY);
     if (saved) {
       setToken(saved);
       fetch(API + "/api/auth/me", { headers: { Authorization: "Bearer " + saved } })
         .then((r) => (r.ok ? r.json() : null))
-        .then((u) => { if (u) setUser(u); else { localStorage.removeItem("excelpilot_token"); setToken(null); } })
-        .catch(() => { localStorage.removeItem("excelpilot_token"); setToken(null); })
+        .then((u) => { if (u) setUser(u); else { localStorage.removeItem(TOKEN_KEY); setToken(null); } })
+        .catch(() => { localStorage.removeItem(TOKEN_KEY); setToken(null); })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -49,7 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const j = await r.json();
     if (!r.ok) throw new Error(j.detail || "Login failed");
-    localStorage.setItem("excelpilot_token", j.access_token);
+    if (!j.access_token) throw new Error("Login failed: no access token returned");
+    localStorage.setItem(TOKEN_KEY, j.access_token);
     setToken(j.access_token);
     setUser(j.user);
   }, []);
@@ -62,13 +66,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const j = await r.json();
     if (!r.ok) throw new Error(j.detail || "Registration failed");
-    localStorage.setItem("excelpilot_token", j.access_token);
+    if (!j.access_token) throw new Error("Registration failed: no access token returned");
+    localStorage.setItem(TOKEN_KEY, j.access_token);
     setToken(j.access_token);
     setUser(j.user);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("excelpilot_token");
+    localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
   }, []);

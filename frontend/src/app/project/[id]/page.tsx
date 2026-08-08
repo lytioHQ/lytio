@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/lib/AuthContext";
+import { TOKEN_KEY, useAuth } from "@/lib/AuthContext";
 
 interface ProjectData {
   id: number; title: string; industry: string; language: string;
@@ -35,7 +35,7 @@ export default function ProjectDashboard() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
-  const token = typeof window !== "undefined" ? localStorage.getItem("excelpilot_token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
 
   useEffect(() => { if (!authLoading && !user) router.push("/login"); }, [authLoading, user, router]);
 

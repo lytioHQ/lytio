@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/lib/AuthContext";
+import { TOKEN_KEY, useAuth } from "@/lib/AuthContext";
 import BusinessValue from "@/components/business/BusinessValue";
 import BusinessHealthCard from "@/components/business/BusinessHealthCard";
 import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
@@ -34,7 +34,7 @@ export default function ExecutiveReportPage() {
   const [report, setReport] = useState<ExecutiveReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const token = typeof window !== "undefined" ? localStorage.getItem("excelpilot_token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
 
   useEffect(() => { if (!authLoading && !user) router.push("/login"); }, [authLoading, user, router]);
 
