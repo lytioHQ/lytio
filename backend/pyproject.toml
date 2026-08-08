@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "excelpilot-backend"
 version = "0.1.0"
 description = "ExcelPilot - AI-powered Excel analysis platform"
@@ -11,6 +11,7 @@ dependencies = [
     "python-multipart>=0.0.12",
     "sqlalchemy[asyncio]>=2.0.0",
     "asyncpg>=0.30.0",
+    "bcrypt==4.0.1",
     "passlib[bcrypt]>=1.7.4",
     "python-jose[cryptography]>=3.3.0",
     "uvicorn[standard]>=0.30.0",
