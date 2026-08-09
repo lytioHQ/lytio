@@ -1,15 +1,18 @@
 "use client";
 import Link from "next/link";
+import LanguageSelector from "@/components/LanguageSelector";
+import { UILanguage } from "@/lib/i18n";
 
 interface Props {
   title: string;
   subtitle: string;
-  langLabel: string;
+  lang: UILanguage;
+  onLangChange: (lang: UILanguage) => void;
   pluginLabel: string;
   v1Label: string;
 }
 
-export default function WorkspaceHeader({ title, subtitle, langLabel, pluginLabel, v1Label }: Props) {
+export default function WorkspaceHeader({ title, subtitle, lang, onLangChange, pluginLabel, v1Label }: Props) {
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="flex items-center justify-between px-8 py-4">
@@ -19,7 +22,7 @@ export default function WorkspaceHeader({ title, subtitle, langLabel, pluginLabe
         </div>
         <div className="flex items-center gap-6">
           <span className="text-xs text-slate-400">{pluginLabel}</span>
-          <span className="text-xs text-slate-400">{langLabel}</span>
+          <LanguageSelector lang={lang} onChange={onLangChange} />
           <Link
             href="/"
             className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"

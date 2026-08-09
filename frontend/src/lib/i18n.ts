@@ -698,3 +698,79 @@ export function getReportLang(uiLang: UILanguage, reportLang: ReportLanguage): s
   if (reportLang === "follow") return uiLang;
   return reportLang;
 }
+// ── Language detection (M2.3) ──────────────────────────────────────────────
+
+export const UI_LANG_STORAGE_KEY = "excelpilot_ui_lang";
+export const UI_LANG_DETECT_COOKIE = "excelpilot_ui_lang_detect";
+
+const UI_LANG_SET: ReadonlySet<string> = new Set(SUPPORTED_UI_LANGS);
+
+export function isUILanguage(value: string | null | undefined): value is UILanguage {
+  return typeof value === "string" && (UI_LANG_SET as ReadonlySet<string>).has(value);
+}
+
+/** Map a browser language tag (navigator.language / Accept-Language) to a supported UI language. */
+export function browserToLang(language: string | null | undefined): UILanguage | null {
+  if (!language) return null;
+  const tag = language.toLowerCase();
+  if (tag === "zh" || tag.startsWith("zh-")) return "zh";
+  if (tag === "ja" || tag.startsWith("ja-")) return "ja";
+  if (tag === "de" || tag.startsWith("de-")) return "de";
+  if (tag === "en" || tag.startsWith("en-")) return "en";
+  return null;
+}
+
+/** Map an IP country code (ISO 3166-1 alpha-2) to a supported UI language. Unknown -> en. */
+export function countryToLang(country: string | null | undefined): UILanguage {
+  const c = (country || "").trim().toUpperCase();
+  if (c === "CN" || c === "TW" || c === "HK" || c === "MO") return "zh";
+  if (c === "JP") return "ja";
+  if (c === "DE" || c === "AT") return "de";
+  return "en";
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const prefix = name + "=";
+  for (const part of document.cookie.split(";")) {
+    const trimmed = part.trim();
+    if (trimmed.startsWith(prefix)) return decodeURIComponent(trimmed.slice(prefix.length));
+  }
+  return null;
+}
+
+/**
+ * Resolve the UI language for the current browser:
+ * 1. localStorage (user manual choice, highest priority)
+ * 2. navigator.language (browser language; IP must NOT override it)
+ * 3. excelpilot_ui_lang_detect cookie (IP country inferred by Edge middleware)
+ * 4. "zh" (product default)
+ */
+export function resolveInitialUiLang(): UILanguage {
+  if (typeof window !== "undefined") {
+    try {
+      const saved = window.localStorage.getItem(UI_LANG_STORAGE_KEY);
+      if (isUILanguage(saved)) return saved;
+    } catch { /* ignore */ }
+  }
+  if (typeof navigator !== "undefined") {
+    const browserLang = browserToLang(navigator.language);
+    if (browserLang) return browserLang;
+  }
+  const detected = readCookie(UI_LANG_DETECT_COOKIE);
+  if (isUILanguage(detected)) return detected;
+  return "zh";
+}
+
+/** Persist a manual language choice: localStorage (source of truth) + cookie + <html lang>. */
+export function persistUiLang(lang: UILanguage): void {
+  if (typeof window !== "undefined") {
+    try { window.localStorage.setItem(UI_LANG_STORAGE_KEY, lang); } catch { /* ignore */ }
+  }
+  if (typeof document !== "undefined") {
+    try {
+      document.cookie = `${UI_LANG_DETECT_COOKIE}=${encodeURIComponent(lang)}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+      document.documentElement.lang = lang;
+    } catch { /* ignore */ }
+  }
+}

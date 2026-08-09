@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { UILanguage, ReportLanguage, SUPPORTED_UI_LANGS, SUPPORTED_REPORT_LANGS, getReportLang } from "@/lib/i18n";
+import { UILanguage, ReportLanguage, SUPPORTED_REPORT_LANGS, getReportLang, resolveInitialUiLang, persistUiLang } from "@/lib/i18n";
 
 interface UploadResult { original_filename: string; saved_filename: string; file_size: number; status: string; }
 interface DataRow { row_index: number; values: (string | number | boolean | null)[]; }
@@ -56,9 +56,7 @@ export function useAnalysisPipeline() {
   const [extractData, setExtractData] = useState<ExtractResult | null>(null);
   const [semanticData, setSemanticData] = useState<SemanticResult | null>(null);
   const [activeIndustry, setActiveIndustry] = useState("sales");
-  const [uiLang, setUiLang] = useState<UILanguage>(() =>
-    loadSetting<UILanguage>("excelpilot_ui_lang", "zh", (v) => (SUPPORTED_UI_LANGS as readonly string[]).includes(v) ? (v as UILanguage) : null)
-  );
+  const [uiLang, setUiLang] = useState<UILanguage>(() => resolveInitialUiLang());
   const [reportLang, setReportLang] = useState<ReportLanguage>(() =>
     loadSetting<ReportLanguage>("excelpilot_report_lang", "follow", (v) => v === "follow" || (SUPPORTED_REPORT_LANGS as readonly string[]).includes(v) ? (v as ReportLanguage) : null)
   );
@@ -72,7 +70,7 @@ export function useAnalysisPipeline() {
       .catch(() => setStatus("offline"));
   }, [apiUrl]);
 
-  function handleUiLangChange(lang: UILanguage) { setUiLang(lang); saveSetting("excelpilot_ui_lang", lang); }
+  function handleUiLangChange(lang: UILanguage) { setUiLang(lang); persistUiLang(lang); }
   function handleReportLangChange(lang: ReportLanguage) { setReportLang(lang); saveSetting("excelpilot_report_lang", lang); }
 
   function reset() {

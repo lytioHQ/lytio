@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/AuthContext";
 import SecurityNotice from "@/components/security/SecurityNotice";
 import LandingPage from "@/components/landing/LandingPage";
 import BetaBanner from "@/components/BetaBanner";
+import LanguageSelector from "@/components/LanguageSelector";
+import { persistUiLang, resolveInitialUiLang, UILanguage } from "@/lib/i18n";
 
 interface Project {
   id: number;
@@ -41,6 +43,12 @@ function timeAgo(dateStr: string | null): string {
 export default function WorkspacePage() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
+  const [uiLang, setUiLang] = useState<UILanguage>(() => resolveInitialUiLang());
+
+  function handleUiLangChange(lang: UILanguage) {
+    setUiLang(lang);
+    persistUiLang(lang);
+  }
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -117,7 +125,17 @@ export default function WorkspacePage() {
   if (!authLoading && !user) {
     return (
       <>
-        <BetaBanner />
+        <BetaBanner lang={uiLang} />
+        <header className="border-b border-slate-100 bg-white">
+          <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
+            <span className="text-sm font-bold tracking-tight text-slate-900">Lytio</span>
+            <div className="flex items-center gap-4">
+              <LanguageSelector lang={uiLang} onChange={handleUiLangChange} />
+              <Link href="/login" className="text-xs text-slate-500 hover:text-slate-700 transition-colors">Login</Link>
+              <Link href="/register" className="rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 transition-colors">Sign up</Link>
+            </div>
+          </div>
+        </header>
         <LandingPage />
       </>
     );
@@ -129,7 +147,7 @@ export default function WorkspacePage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <BetaBanner />
+      <BetaBanner lang={uiLang} />
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div>
@@ -137,6 +155,7 @@ export default function WorkspacePage() {
             <p className="text-xs text-slate-400">Sales Consultant Workspace</p>
           </div>
           <div className="flex items-center gap-4">
+            <LanguageSelector lang={uiLang} onChange={handleUiLangChange} />
             <Link href="/workspace" className="text-xs text-slate-400 hover:text-slate-600">Workspace V2</Link>
             {plan && (
               <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${

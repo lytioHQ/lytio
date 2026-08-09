@@ -62,7 +62,8 @@ export default function WorkspacePage() {
       <WorkspaceHeader
         title={ws.title}
         subtitle={ws.subtitle}
-        langLabel={T("lang.uiLabel")}
+        lang={pipe.uiLang}
+        onLangChange={pipe.setUiLang}
         pluginLabel={T("nav.sales")}
         v1Label={"\u2190 " + T("chat.title")}
       />
