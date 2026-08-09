@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -18,7 +18,7 @@ def _user_to_response(user) -> UserResponse:
     )
 
 
-async def _require_auth(authorization: str | None = None):
+async def _require_auth(authorization: str | None = Header(None)):
     """FastAPI dependency: extract and validate Bearer token."""
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing authorization header")
