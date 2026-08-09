@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { TOKEN_KEY, useAuth } from "@/lib/AuthContext";
+import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
+import { useAuth } from "@/lib/AuthContext";
 import BusinessValue from "@/components/business/BusinessValue";
 import BusinessHealthCard from "@/components/business/BusinessHealthCard";
 import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
@@ -40,7 +41,7 @@ export default function ExecutiveReportPage() {
 
   useEffect(() => {
     if (!token || !id) return;
-    fetch(API + "/api/projects/" + id + "/executive", { headers: { Authorization: "Bearer " + token } })
+    apiFetch(API + "/api/projects/" + id + "/executive", { headers: { Authorization: "Bearer " + token } })
       .then((r) => { if (!r.ok) throw new Error("Failed"); return r.json(); })
       .then((data) => setReport(data))
       .catch(() => setError("Unable to load executive report. Run an analysis first."))

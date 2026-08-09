@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { TOKEN_KEY, useAuth } from "@/lib/AuthContext";
+import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
+import { useAuth } from "@/lib/AuthContext";
 import SecurityNotice from "@/components/security/SecurityNotice";
 import LandingPage from "@/components/landing/LandingPage";
 import BetaBanner from "@/components/BetaBanner";
@@ -57,7 +58,7 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(API + "/api/projects", { headers: { Authorization: "Bearer " + token } })
+    apiFetch(API + "/api/projects", { headers: { Authorization: "Bearer " + token } })
       .then((r) => r.json())
       .then((data) => setProjects(Array.isArray(data) ? data : []))
       .catch(() => {})
@@ -66,7 +67,7 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(API + "/api/auth/me/plan", { headers: { Authorization: "Bearer " + token } })
+    apiFetch(API + "/api/auth/me/plan", { headers: { Authorization: "Bearer " + token } })
       .then((r) => r.json())
       .then((data) => setPlan(data))
       .catch(() => {});

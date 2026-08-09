@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { TOKEN_KEY, useAuth } from "@/lib/AuthContext";
+import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
+import { useAuth } from "@/lib/AuthContext";
 import BusinessHealthCard from "@/components/business/BusinessHealthCard";
 import MetricGrid from "@/components/business/MetricGrid";
 import InsightList from "@/components/business/InsightList";
@@ -39,7 +40,7 @@ export default function ReportPage() {
     // GET /api/analysis-runs/{id} - but we don't have that endpoint yet.
     // Use the result_json stored in the run. Let me fetch from a simple endpoint.
     // For now, we parse the summary.
-    fetch(API + "/api/analysis-runs/" + runId, { headers: { Authorization: "Bearer " + token } })
+    apiFetch(API + "/api/analysis-runs/" + runId, { headers: { Authorization: "Bearer " + token } })
       .then(r => r.json())
       .then((data: RunData) => setRun(data))
       .catch(() => {})

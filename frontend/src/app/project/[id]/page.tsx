@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { TOKEN_KEY, useAuth } from "@/lib/AuthContext";
+import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
+import { useAuth } from "@/lib/AuthContext";
 
 interface ProjectData {
   id: number; title: string; industry: string; language: string;
@@ -41,12 +42,12 @@ export default function ProjectDashboard() {
 
   useEffect(() => {
     if (!token || !id) return;
-    fetch(API + "/api/projects/" + id, { headers: { Authorization: "Bearer " + token } })
+    apiFetch(API + "/api/projects/" + id, { headers: { Authorization: "Bearer " + token } })
       .then((r) => (r.ok ? r.json() : null))
       .then((p) => { if (p) setProject(p); else router.push("/"); })
       .catch(() => router.push("/"))
       .finally(() => setLoading(false));
-    fetch(API + "/api/projects/" + id + "/timeline", { headers: { Authorization: "Bearer " + token } })
+    apiFetch(API + "/api/projects/" + id + "/timeline", { headers: { Authorization: "Bearer " + token } })
       .then(r => r.json())
       .then((data: TimelineItem[]) => setTimeline(data || []))
       .catch(() => {});
@@ -58,10 +59,10 @@ export default function ProjectDashboard() {
     setUploading(true);
     try {
       const fd = new FormData(); fd.append("file", file);
-      const r = await fetch(API + "/api/upload", { method: "POST", headers: { Authorization: "Bearer " + token }, body: fd });
+      const r = await apiFetch(API + "/api/upload", { method: "POST", headers: { Authorization: "Bearer " + token }, body: fd });
       if (!r.ok) throw new Error("Upload failed");
       const up = await r.json();
-      await fetch(API + "/api/projects/" + id + "/file", {
+      await apiFetch(API + "/api/projects/" + id + "/file", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({ original_filename: up.original_filename, saved_filename: up.saved_filename }),

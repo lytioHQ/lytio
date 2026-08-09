@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
 
 interface User {
   id: number;
@@ -21,9 +22,6 @@ const AuthContext = createContext<AuthState | null>(null);
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-// Single source of truth for the session token key (login/register/restore/logout).
-export const TOKEN_KEY = "excelpilot_token";
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -34,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem(TOKEN_KEY);
     if (saved) {
       setToken(saved);
-      fetch(API + "/api/auth/me", { headers: { Authorization: "Bearer " + saved } })
+      apiFetch(API + "/api/auth/me", { headers: { Authorization: "Bearer " + saved } })
         .then((r) => (r.ok ? r.json() : null))
         .then((u) => { if (u) setUser(u); else { localStorage.removeItem(TOKEN_KEY); setToken(null); } })
         .catch(() => { localStorage.removeItem(TOKEN_KEY); setToken(null); })
@@ -45,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const r = await fetch(API + "/api/auth/login", {
+    const r = await apiFetch(API + "/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -59,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    const r = await fetch(API + "/api/auth/register", {
+    const r = await apiFetch(API + "/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),

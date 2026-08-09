@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { TOKEN_KEY, useAuth } from "@/lib/AuthContext";
+import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
+import { useAuth } from "@/lib/AuthContext";
 
 interface PlanData {
   plan: string;
@@ -34,7 +35,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(API + "/api/auth/me/plan", { headers: { Authorization: "Bearer " + token } })
+    apiFetch(API + "/api/auth/me/plan", { headers: { Authorization: "Bearer " + token } })
       .then(async (r) => {
         if (!r.ok) return; // 401 / error: keep logged-out state, do not crash
         const data = await r.json();
@@ -42,7 +43,7 @@ export default function SettingsPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-    fetch(API + "/api/config/ai-policy")
+    apiFetch(API + "/api/config/ai-policy")
       .then((r) => r.json())
       .then((data) => setAiPolicy(data))
       .catch(() => {});
