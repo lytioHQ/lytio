@@ -48,19 +48,19 @@ export default function SecurityNotice({ lang }: { lang: UILanguage }) {
           <ul className="mt-3 space-y-1.5">
             <li className="flex items-center gap-2 text-xs text-emerald-700">
               <span className="text-emerald-500">&#x2713;</span>
-              {policy?.encryption || T("security.encryptionFallback")}
+              {T("security.policy.encryption")}
             </li>
             <li className="flex items-center gap-2 text-xs text-emerald-700">
               <span className="text-emerald-500">&#x2713;</span>
-              {policy?.privacy || T("security.privacyFallback")}
+              {T("security.policy.privacy")}
             </li>
             <li className="flex items-center gap-2 text-xs text-emerald-700">
               <span className="text-emerald-500">&#x2713;</span>
-              {policy?.data_usage || T("security.dataUsageFallback")}
+              {T("security.policy.dataUsage")}
             </li>
             <li className="flex items-center gap-2 text-xs text-emerald-700">
               <span className="text-emerald-500">&#x2713;</span>
-              {policy?.deletion || T("security.deletionFallback")}
+              {T("security.policy.deletion")}
             </li>
           </ul>
           <button

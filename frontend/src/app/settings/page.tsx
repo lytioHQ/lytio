@@ -33,6 +33,13 @@ const POLICY_KEYS: Record<string, string> = {
   privacy: "settings.privacy",
   encryption: "settings.policy.encryption",
 };
+const POLICY_VALUE_KEYS: Record<string, string> = {
+  data_usage: "security.policy.dataUsage",
+  retention: "security.policy.retention",
+  deletion: "security.policy.deletion",
+  privacy: "security.policy.privacy",
+  encryption: "security.policy.encryption",
+};
 
 export default function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -146,7 +153,7 @@ export default function SettingsPage() {
                 <span className="mt-0.5 text-emerald-500 text-sm">&#x2713;</span>
                 <div>
                   <p className="text-xs font-medium text-slate-700 capitalize">{POLICY_KEYS[key] ? T(POLICY_KEYS[key]) : key.replace(/_/g, " ")}</p>
-                  <p className="text-xs text-slate-500">{value}</p>
+                  <p className="text-xs text-slate-500">{POLICY_VALUE_KEYS[key] ? T(POLICY_VALUE_KEYS[key]) : value}</p>
                 </div>
               </div>
             ))}
