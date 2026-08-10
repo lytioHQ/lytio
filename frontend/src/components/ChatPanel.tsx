@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import RecommendationCards from "@/components/RecommendationCards";
+import { Button } from "@/components/ui";
 import { UILanguage, ReportLanguage, getReportLang } from "@/lib/i18n";
 
 interface Message {
@@ -114,18 +115,18 @@ export default function ChatPanel({
 
       {/* Chat history */}
       {hasMessages && (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="max-h-96 overflow-y-auto px-6 py-4 space-y-4">
+        <div className="overflow-hidden rounded-card border border-border bg-surface">
+          <div className="max-h-96 space-y-4 overflow-y-auto px-4 py-5 md:px-6">
             {messages.map((msg, i) => (
               <div
                 key={i}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
+                  className={`max-w-[85%] rounded-control px-4 py-3 text-body leading-relaxed ${
                     msg.role === "user"
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-700"
+                      ? "bg-accent text-white"
+                      : "border border-border bg-surface text-ink"
                   }`}
                 >
                   <p className="whitespace-pre-line">{msg.content}</p>
@@ -134,10 +135,10 @@ export default function ChatPanel({
             ))}
             {sending && (
               <div className="flex justify-start">
-                <div className="rounded-xl bg-slate-100 px-4 py-3">
+                <div className="rounded-control border border-border bg-surface px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
-                    <span className="text-xs text-slate-400">{t("chat.thinking")}</span>
+                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-border border-t-accent" />
+                    <span className="text-caption text-secondary">{t("chat.thinking")}</span>
                   </div>
                 </div>
               </div>
@@ -148,11 +149,11 @@ export default function ChatPanel({
       )}
 
       {/* Free-text input — demoted, collapsible */}
-      <div className="border-t border-slate-100 pt-4">
+      <div className="border-t border-border pt-4">
         {!showInput && !hasMessages ? (
           <button
             onClick={() => setShowInput(true)}
-            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-sm text-secondary transition-colors hover:text-ink"
           >
             {t("chat.advancedInput")}
           </button>
@@ -165,15 +166,11 @@ export default function ChatPanel({
               onKeyDown={handleKeyDown}
               placeholder={t("chat.inputPlaceholder")}
               disabled={sending}
-              className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 disabled:bg-slate-100"
+              className="h-11 flex-1 rounded-control border border-border bg-canvas px-4 text-base text-ink placeholder:text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40 disabled:opacity-50"
             />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || sending}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-            >
+            <Button onClick={handleSend} disabled={!input.trim() || sending}>
               {t("chat.send")}
-            </button>
+            </Button>
           </div>
         )}
       </div>
