@@ -54,17 +54,17 @@ export default function ExecutiveReportPage() {
 
   if (authLoading || loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-white">
-        <p className="text-sm text-slate-400">{T("exec.loading")}</p>
+      <main className="flex min-h-screen items-center justify-center bg-canvas">
+        <p className="text-sm text-secondary">{T("exec.loading")}</p>
       </main>
     );
   }
 
   if (error || !report) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white">
-        <p className="text-sm text-slate-500">{error || T("exec.notFound")}</p>
-        <Link href={`/project/${id}`} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-canvas">
+        <p className="text-sm text-secondary">{error || T("exec.notFound")}</p>
+        <Link href={`/project/${id}`} className="inline-flex h-9 items-center rounded-control border border-border bg-surface px-4 text-sm text-ink transition-colors hover:bg-canvas">
           {T("nav.backDashboard")}
         </Link>
       </main>
@@ -76,29 +76,30 @@ export default function ExecutiveReportPage() {
     : "";
 
   return (
-    <main className="min-h-screen bg-slate-50 print:bg-white">
+    <main className="min-h-screen bg-canvas print:bg-white">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white print:border-none">
-        <div className="mx-auto max-w-4xl px-6 py-6">
-          <Link href={`/project/${id}`} className="text-xs text-slate-400 hover:text-slate-600">{T("nav.dashboard")}</Link>
-          <h1 className="mt-3 text-xl font-bold tracking-tight text-slate-900">{report.title}</h1>
-          <div className="mt-1 flex items-center gap-4">
-            <span className="text-xs text-slate-400">{report.project_name}</span>
+      <header className="border-b border-border bg-surface print:border-none">
+        <div className="mx-auto max-w-4xl px-4 py-8 md:px-6">
+          <Link href={`/project/${id}`} className="text-sm text-secondary transition-colors hover:text-ink">{T("nav.dashboard")}</Link>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-accent">ExcelPilot</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-3xl">{report.title}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <span className="text-sm text-secondary">{report.project_name}</span>
             {generatedDate && (
               <>
-                <span className="text-slate-300">&middot;</span>
-                <span className="text-xs text-slate-400">{T("exec.generated", { date: generatedDate })}</span>
+                <span className="text-border">&middot;</span>
+                <span className="text-sm text-secondary">{T("exec.generated", { date: generatedDate })}</span>
               </>
             )}
             {report.is_legacy && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">{T("exec.legacy")}</span>
+              <span className="rounded-full bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">{T("exec.legacy")}</span>
             )}
           </div>
         </div>
       </header>
 
       {/* Report Body */}
-      <article className="mx-auto max-w-4xl px-6 py-10">
+      <article className="mx-auto max-w-4xl px-4 py-10 md:px-6">
         <div className="space-y-8">
           {/* Business Health */}
           {report.business_health && <BusinessHealthCard data={report.business_health} lang={uiLang} />}
@@ -132,10 +133,10 @@ export default function ExecutiveReportPage() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-16 border-t border-slate-100 pt-6">
+        <footer className="mt-16 border-t border-border pt-6">
           <div className="flex flex-col items-center gap-1">
-            <p className="text-xs text-slate-300">{T("exec.brand")}</p>
-            <p className="text-[10px] text-slate-300">{T("exec.footer", { n: report.key_metrics.length, date: generatedDate })}</p>
+            <p className="text-sm text-secondary/70">{T("exec.brand")}</p>
+            <p className="text-caption text-secondary/60">{T("exec.footer", { n: report.key_metrics.length, date: generatedDate })}</p>
           </div>
         </footer>
       </article>

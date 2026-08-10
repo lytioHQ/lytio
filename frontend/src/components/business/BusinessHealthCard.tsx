@@ -4,21 +4,21 @@ interface HealthData { score: number; level: string; summary: string; }
 
 export default function BusinessHealthCard({ data, lang }: { data: HealthData; lang: UILanguage }) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
-  const color = data.score >= 80 ? "emerald" : data.score >= 60 ? "blue" : data.score >= 40 ? "amber" : "red";
+  const color = data.score >= 80 ? "success" : data.score >= 60 ? "accent" : data.score >= 40 ? "warning" : "danger";
   const colors: Record<string, string> = {
-    emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    blue: "border-blue-200 bg-blue-50 text-blue-700",
-    amber: "border-amber-200 bg-amber-50 text-amber-700",
-    red: "border-red-200 bg-red-50 text-red-700",
+    success: "border-success/30 bg-success/5 text-success",
+    accent: "border-accent/30 bg-accent/5 text-accent",
+    warning: "border-warning/30 bg-warning/5 text-warning",
+    danger: "border-danger/30 bg-danger/5 text-danger",
   };
   return (
-    <div className={`rounded-xl border ${colors[color]} p-5`}>
-      <p className="text-[11px] font-semibold uppercase tracking-wider opacity-70">{T("landing.diff.businessHealth")}</p>
-      <div className="mt-2 flex items-baseline gap-2">
-        <span className="text-3xl font-bold tabular-nums">{data.score}</span>
-        <span className="text-sm font-medium opacity-70">{data.level}</span>
+    <div className={`rounded-card border ${colors[color]} p-6 md:p-8`}>
+      <p className="text-caption font-medium text-secondary">{T("landing.diff.businessHealth")}</p>
+      <div className="mt-3 flex items-baseline gap-3">
+        <span className="text-5xl font-semibold leading-none tabular-nums">{data.score}</span>
+        <span className="text-base font-medium">{data.level}</span>
       </div>
-      <p className="mt-2 text-xs opacity-80">{data.summary}</p>
+      <p className="mt-3 max-w-[680px] text-body leading-relaxed text-ink/80">{data.summary}</p>
     </div>
   );
 }

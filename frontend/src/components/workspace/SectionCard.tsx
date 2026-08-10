@@ -6,10 +6,10 @@ interface Props {
 
 export default function SectionCard({ title, subtitle, children }: Props) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-card border border-border bg-surface p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div className="mb-5">
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-        {subtitle && <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>}
+        <h3 className="text-h3 text-ink">{title}</h3>
+        {subtitle && <p className="mt-1 text-caption leading-relaxed text-secondary">{subtitle}</p>}
       </div>
       {children}
     </section>

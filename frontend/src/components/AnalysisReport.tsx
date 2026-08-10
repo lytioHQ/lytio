@@ -6,6 +6,7 @@ import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
 import RecommendedActionCards from "@/components/RecommendedActionCards";
 import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
+import MetricCard from "@/components/ui/MetricCard";
 
 interface ResultData {
   business_health?: { score: number; level: string; summary: string } | null;
@@ -30,15 +31,6 @@ interface AnalysisReportProps {
   isLegacy?: boolean;
 }
 
-function KPICard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-slate-900 tabular-nums">{value}</p>
-    </div>
-  );
-}
-
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
   return `${(ms / 1000).toFixed(1)}s`;
@@ -56,22 +48,41 @@ export default function AnalysisReport({
   const latency = typeof metadata.latency_ms === "number" ? metadata.latency_ms : null;
   const hasMultiLang = !!metadata.multi_language;
 
+  const reportHeader = (
+    <div className="overflow-hidden rounded-card border border-border bg-ink">
+      <div className="px-6 py-8 md:px-8 md:py-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+          {plugin === "sales" ? t("report.salesIntel") : t("report.pluginAnalysis", { plugin })}
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white md:text-3xl">{sheet}</h1>
+        <p className="mt-1 text-sm text-white/60">{dateStr}</p>
+      </div>
+    </div>
+  );
+
+  const footer = (
+    <div className="rounded-card border border-border bg-canvas px-6 py-4">
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm text-secondary">
+        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-success" />{t("report.footer.completed")}</span>
+        {latency != null && <span>{t("report.footer.analysisTime")}: {formatDuration(latency)}</span>}
+        <span>{t("report.footer.generated")}: {dateStr} {timeStr}</span>
+      </div>
+    </div>
+  );
+
   // V2 structured data
   if (result && !isLegacy) {
     const bh = result.business_health;
     const es = result.executive_summary;
     return (
       <div className="space-y-8">
-        {/* Header */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-lg">
-          <div className="px-8 py-10">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">{plugin === "sales" ? t("report.salesIntel") : t("report.pluginAnalysis", { plugin })}</p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-white">{sheet}</h1>
-            <p className="mt-1 text-sm text-slate-400">{dateStr}</p>
-          </div>
-        </div>
+        {reportHeader}
 
-        {hasMultiLang && <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3"><p className="text-xs text-amber-700">{t("report.multiLang")}</p></div>}
+        {hasMultiLang && (
+          <div className="rounded-control border border-warning/20 bg-warning/5 px-5 py-3">
+            <p className="text-sm text-warning">{t("report.multiLang")}</p>
+          </div>
+        )}
 
         {/* Executive Summary */}
         {es && <ExecutiveSummaryCard content={es.content} lang={lang} />}
@@ -91,14 +102,7 @@ export default function AnalysisReport({
         {/* Recommended Actions */}
         <RecommendedActionCards lang={lang} recs={result.recommendations || []} summary={es?.content} />
 
-        {/* Footer */}
-        <div className="rounded-xl border border-slate-100 bg-slate-50/50 px-6 py-4">
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />{t("report.footer.completed")}</span>
-            {latency != null && <span>{t("report.footer.analysisTime")}: {formatDuration(latency)}</span>}
-            <span>{t("report.footer.generated")}: {dateStr} {timeStr}</span>
-          </div>
-        </div>
+        {footer}
       </div>
     );
   }
@@ -106,25 +110,19 @@ export default function AnalysisReport({
   // Legacy format
   return (
     <div className="space-y-8">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-lg">
-        <div className="px-8 py-10">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">{plugin === "sales" ? t("report.salesIntel") : t("report.pluginAnalysis", { plugin })}</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-white">{sheet}</h1>
-          <p className="mt-1 text-sm text-slate-400">{dateStr}</p>
-        </div>
-      </div>
+      {reportHeader}
 
       {isLegacy && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3">
-          <p className="text-xs text-amber-700">{t("report.legacyFormat")}</p>
+        <div className="rounded-control border border-warning/20 bg-warning/5 px-5 py-3">
+          <p className="text-sm text-warning">{t("report.legacyFormat")}</p>
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <KPICard label={t("report.kpi.findings")} value={highlights.length} />
-        <KPICard label={t("report.kpi.risks")} value={warnings.length} />
-        <KPICard label={t("report.kpi.suggestions")} value={recs.length} />
-        <KPICard label={t("report.kpi.rows")} value="-" />
+        <MetricCard label={t("report.kpi.findings")} value={highlights.length} />
+        <MetricCard label={t("report.kpi.risks")} value={warnings.length} />
+        <MetricCard label={t("report.kpi.suggestions")} value={recs.length} />
+        <MetricCard label={t("report.kpi.rows")} value="-" />
       </div>
 
       <ExecutiveSummaryCard content={summary} lang={lang} />
@@ -133,13 +131,7 @@ export default function AnalysisReport({
       <RiskList risks={warnings.map((w) => ({ title: w, description: "", severity: "medium" }))} lang={lang} />
       <RecommendationList recs={recs.map((r) => ({ title: r, description: "", priority: "medium" }))} lang={lang} />
 
-      <div className="rounded-xl border border-slate-100 bg-slate-50/50 px-6 py-4">
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-xs text-slate-400">
-          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />{t("report.footer.completed")}</span>
-          {latency != null && <span>{t("report.footer.analysisTime")}: {formatDuration(latency)}</span>}
-          <span>{t("report.footer.generated")}: {dateStr} {timeStr}</span>
-        </div>
-      </div>
+      {footer}
     </div>
   );
 }

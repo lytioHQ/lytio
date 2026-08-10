@@ -14,18 +14,18 @@ interface Props {
 
 export default function WorkspaceHeader({ title, subtitle, lang, onLangChange, pluginLabel, v1Label }: Props) {
   return (
-    <header className="border-b border-slate-200 bg-white">
-      <div className="flex items-center justify-between px-8 py-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">{title}</h1>
-          <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
+    <header className="border-b border-border bg-surface">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-6 md:px-8">
+        <div className="min-w-0">
+          <h1 className="text-[26px] font-semibold tracking-tight text-ink md:text-[28px]">{title}</h1>
+          <p className="mt-1 text-[15px] leading-relaxed text-secondary md:text-base">{subtitle}</p>
         </div>
-        <div className="flex items-center gap-6">
-          <span className="text-xs text-slate-400">{pluginLabel}</span>
+        <div className="flex shrink-0 items-center gap-4 md:gap-6">
+          <span className="hidden text-sm text-secondary sm:inline">{pluginLabel}</span>
           <LanguageSelector lang={lang} onChange={onLangChange} />
           <Link
             href="/"
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+            className="inline-flex h-9 items-center rounded-control border border-border px-3.5 text-sm text-secondary transition-colors hover:bg-canvas hover:text-ink"
           >
             {v1Label}
           </Link>

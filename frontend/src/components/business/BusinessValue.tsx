@@ -69,74 +69,74 @@ export default function BusinessValue({ currentHealth, currentHealthLevel, recom
 
   const highPriority = recommendations.filter((r) => r.priority === "high").length;
   const healthDeltaStr = totalDelta >= 0 ? `+${totalDelta}` : `${totalDelta}`;
-  const healthColor = totalDelta > 0 ? "text-emerald-600" : totalDelta < 0 ? "text-red-500" : "text-slate-600";
-  const confColor: Record<string, string> = { high: "text-emerald-600", medium: "text-amber-600", low: "text-red-500" };
+  const healthColor = totalDelta > 0 ? "text-success" : totalDelta < 0 ? "text-danger" : "text-secondary";
+  const confColor: Record<string, string> = { high: "text-success", medium: "text-warning", low: "text-danger" };
 
   return (
-    <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-white p-6 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-blue-500 mb-1">{T("biz.businessValue")}</p>
-      <p className="text-xs text-slate-500 mb-5">
+    <div className="rounded-card border border-border bg-surface p-6">
+      <p className="text-caption font-semibold text-accent">{T("biz.businessValue")}</p>
+      <p className="mb-5 mt-1 text-sm leading-relaxed text-secondary">
         {T("biz.valueIntro")}
       </p>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {/* Business Health */}
-        <div className="rounded-xl border border-slate-100 bg-white p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{T("landing.diff.businessHealth")}</p>
+        <div className="rounded-control border border-border bg-canvas p-5">
+          <p className="text-caption font-medium text-secondary">{T("landing.diff.businessHealth")}</p>
           <div className="mt-3">
-            <span className="text-2xl font-bold text-slate-700 tabular-nums">{currentHealth}</span>
+            <span className="text-3xl font-semibold text-ink tabular-nums">{currentHealth}</span>
           </div>
           <div className="mt-1 flex items-center gap-1.5">
-            <span className={`text-xs font-semibold ${healthColor}`}>{T("biz.potentialPts", { delta: healthDeltaStr })}</span>
+            <span className={`text-sm font-semibold ${healthColor}`}>{T("biz.potentialPts", { delta: healthDeltaStr })}</span>
           </div>
-          <p className="mt-1 text-[10px] text-slate-400">{T("biz.currentLevel", { level: currentHealthLevel })}</p>
+          <p className="mt-1 text-caption text-secondary">{T("biz.currentLevel", { level: currentHealthLevel })}</p>
         </div>
 
         {/* High Risks */}
-        <div className="rounded-xl border border-slate-100 bg-white p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{T("biz.highRisks")}</p>
+        <div className="rounded-control border border-border bg-canvas p-5">
+          <p className="text-caption font-medium text-secondary">{T("biz.highRisks")}</p>
           <div className="mt-3 flex items-end gap-3">
             <div>
-              <p className="text-[10px] text-slate-400">{T("biz.current")}</p>
-              <span className="text-2xl font-bold text-red-500 tabular-nums">{highRisks}</span>
+              <p className="text-caption text-secondary">{T("biz.current")}</p>
+              <span className="text-3xl font-semibold text-danger tabular-nums">{highRisks}</span>
             </div>
             {mitigatedRisks > 0 && (
               <div>
-                <p className="text-[10px] text-slate-400">{T("biz.mitigated")}</p>
-                <span className="text-2xl font-bold text-emerald-600 tabular-nums">{mitigatedRisks}</span>
+                <p className="text-caption text-secondary">{T("biz.mitigated")}</p>
+                <span className="text-3xl font-semibold text-success tabular-nums">{mitigatedRisks}</span>
               </div>
             )}
           </div>
-          <p className="mt-1 text-[10px] text-slate-400">
+          <p className="mt-1 text-caption text-secondary">
             {mitigatedRisks > 0 ? T("biz.potentiallyMitigated", { n: mitigatedRisks }) : T("biz.noneAddressed")}
           </p>
         </div>
 
         {/* Recommendations */}
-        <div className="rounded-xl border border-slate-100 bg-white p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{T("report.recommendations")}</p>
+        <div className="rounded-control border border-border bg-canvas p-5">
+          <p className="text-caption font-medium text-secondary">{T("report.recommendations")}</p>
           <div className="mt-3">
-            <span className="text-2xl font-bold text-slate-900 tabular-nums">{recommendations.length}</span>
+            <span className="text-3xl font-semibold text-ink tabular-nums">{recommendations.length}</span>
           </div>
-          <p className="mt-1 text-[10px] text-slate-400">{T("biz.highPriorityCount", { n: highPriority })}</p>
+          <p className="mt-1 text-caption text-secondary">{T("biz.highPriorityCount", { n: highPriority })}</p>
         </div>
 
         {/* Confidence */}
-        <div className="rounded-xl border border-slate-100 bg-white p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{T("biz.confidence")}</p>
+        <div className="rounded-control border border-border bg-canvas p-5">
+          <p className="text-caption font-medium text-secondary">{T("biz.confidence")}</p>
           <div className="mt-3">
-            <span className={`text-2xl font-bold tabular-nums ${confColor[aggregateConf] || "text-slate-400"}`}>
+            <span className={`text-3xl font-semibold tabular-nums ${confColor[aggregateConf] || "text-secondary"}`}>
               {aggregateConf ? T("biz.level." + aggregateConf) : "\u2014"}
             </span>
           </div>
-          <p className="mt-1 text-[10px] text-slate-400">
+          <p className="mt-1 text-caption text-secondary">
             {confidences.length > 0 ? T("biz.estimatesCount", { n: confidences.length }) : T("biz.noEstimates")}
           </p>
         </div>
       </div>
 
       {/* Disclaimer */}
-      <p className="mt-4 text-[10px] text-slate-400 italic leading-relaxed">
+      <p className="mt-4 text-caption italic leading-relaxed text-secondary/70">
         {T("biz.disclaimer")}
       </p>
     </div>

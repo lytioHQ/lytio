@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { t, UILanguage } from "@/lib/i18n";
+import { Button } from "@/components/ui";
 
 const STORAGE_KEY = "excelpilot_security_notice_dismissed";
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
@@ -37,38 +38,35 @@ export default function SecurityNotice({ lang }: { lang: UILanguage }) {
   if (!visible) return null;
 
   return (
-    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-6 shadow-sm">
+    <div className="rounded-card border border-success/20 bg-success/5 p-6">
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 text-lg">&#x1f512;</span>
+        <span className="mt-0.5 text-lg" aria-hidden>&#x1f512;</span>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-emerald-800">{T("security.title")}</h3>
-          <p className="mt-1 text-xs text-emerald-700">
+          <h3 className="text-base font-semibold text-ink">{T("security.title")}</h3>
+          <p className="mt-1 text-sm leading-relaxed text-secondary">
             {T("security.intro")}
           </p>
-          <ul className="mt-3 space-y-1.5">
-            <li className="flex items-center gap-2 text-xs text-emerald-700">
-              <span className="text-emerald-500">&#x2713;</span>
+          <ul className="mt-3 space-y-2">
+            <li className="flex items-center gap-2 text-sm text-secondary">
+              <span className="font-semibold text-success">&#x2713;</span>
               {T("security.policy.encryption")}
             </li>
-            <li className="flex items-center gap-2 text-xs text-emerald-700">
-              <span className="text-emerald-500">&#x2713;</span>
+            <li className="flex items-center gap-2 text-sm text-secondary">
+              <span className="font-semibold text-success">&#x2713;</span>
               {T("security.policy.privacy")}
             </li>
-            <li className="flex items-center gap-2 text-xs text-emerald-700">
-              <span className="text-emerald-500">&#x2713;</span>
+            <li className="flex items-center gap-2 text-sm text-secondary">
+              <span className="font-semibold text-success">&#x2713;</span>
               {T("security.policy.dataUsage")}
             </li>
-            <li className="flex items-center gap-2 text-xs text-emerald-700">
-              <span className="text-emerald-500">&#x2713;</span>
+            <li className="flex items-center gap-2 text-sm text-secondary">
+              <span className="font-semibold text-success">&#x2713;</span>
               {T("security.policy.deletion")}
             </li>
           </ul>
-          <button
-            onClick={dismiss}
-            className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
-          >
+          <Button variant="secondary" onClick={dismiss} className="mt-5">
             {T("security.gotIt")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

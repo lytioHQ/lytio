@@ -51,8 +51,8 @@ export default function ReportPage() {
       .finally(() => setLoading(false));
   }, [token, runId, id, router]);
 
-  if (authLoading || loading) return <main className="flex min-h-screen items-center justify-center bg-slate-50"><p className="text-sm text-slate-400">{T("home.loading")}</p></main>;
-  if (!run) return <main className="flex min-h-screen items-center justify-center bg-slate-50"><p className="text-sm text-slate-400">{T("exec.notFound")}</p></main>;
+  if (authLoading || loading) return <main className="flex min-h-screen items-center justify-center bg-canvas"><p className="text-sm text-secondary">{T("home.loading")}</p></main>;
+  if (!run) return <main className="flex min-h-screen items-center justify-center bg-canvas"><p className="text-sm text-secondary">{T("exec.notFound")}</p></main>;
 
   // Parse result_json if available
   let resultData = null;
@@ -63,26 +63,26 @@ export default function ReportPage() {
   const dateStr = run.created_at ? new Date(run.created_at).toLocaleDateString(localeForLang(uiLang), { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+    <main className="min-h-screen bg-canvas">
+      <header className="border-b border-border bg-surface">
+        <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between md:px-6">
           <div>
-            <Link href={`/project/${id}`} className="text-xs text-slate-400 hover:text-slate-600">{T("nav.backDashboard")}</Link>
-            <h1 className="mt-1 text-sm font-semibold text-slate-900">{T("reportPage.historical")}</h1>
-            <p className="text-xs text-slate-400">{dateStr}</p>
+            <Link href={`/project/${id}`} className="text-sm text-secondary transition-colors hover:text-ink">{T("nav.backDashboard")}</Link>
+            <h1 className="mt-1 text-xl font-semibold tracking-tight text-ink md:text-2xl">{T("reportPage.historical")}</h1>
+            <p className="mt-0.5 text-sm text-secondary">{dateStr}</p>
           </div>
           {run.business_health_score != null && (
-            <div className="text-right">
-              <p className="text-xs text-slate-400">{T("landing.diff.businessHealth")}</p>
-              <p className="text-2xl font-bold text-slate-900">{run.business_health_score}</p>
+            <div className="shrink-0">
+              <p className="text-caption text-secondary">{T("landing.diff.businessHealth")}</p>
+              <p className="text-3xl font-semibold text-ink tabular-nums">{run.business_health_score}</p>
             </div>
           )}
         </div>
       </header>
 
-      <div className="mx-auto max-w-4xl space-y-8 px-6 py-10">
+      <div className="mx-auto max-w-4xl space-y-8 px-4 py-10 md:px-6">
         {run.is_legacy && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3"><p className="text-xs text-amber-700">{T("reportPage.legacy")}</p></div>
+          <div className="rounded-control border border-warning/20 bg-warning/5 px-5 py-3"><p className="text-sm text-warning">{T("reportPage.legacy")}</p></div>
         )}
 
         {resultData ? (
@@ -95,8 +95,8 @@ export default function ReportPage() {
             <RecommendationList recs={resultData.recommendations || []} lang={uiLang} />
           </>
         ) : (
-          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
-            <p className="text-sm text-slate-500">{run.summary || T("reportPage.noContent")}</p>
+          <div className="rounded-card border border-border bg-surface p-8 text-center">
+            <p className="text-sm leading-relaxed text-secondary">{run.summary || T("reportPage.noContent")}</p>
           </div>
         )}
       </div>

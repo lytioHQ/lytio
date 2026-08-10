@@ -13,9 +13,9 @@ export interface EvidenceData {
 }
 
 const CONF_COLORS: Record<string, string> = {
-  high: "bg-emerald-100 text-emerald-700",
-  medium: "bg-amber-100 text-amber-700",
-  low: "bg-red-100 text-red-700",
+  high: "bg-success/10 text-success",
+  medium: "bg-warning/10 text-warning",
+  low: "bg-danger/10 text-danger",
 };
 
 const CONF_KEYS: Record<string, string> = {
@@ -36,46 +36,46 @@ export default function EvidenceCard({ evidence, lang }: { evidence: EvidenceDat
     <div className="mt-2">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600 transition-colors"
+        className="flex items-center gap-1.5 text-caption font-medium text-secondary transition-colors hover:text-ink"
       >
         <span className={`transition-transform ${open ? "rotate-90" : ""}`}>&#9654;</span>
         {T("biz.whyConclusion")}
         {evidence.confidence && (
-          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${CONF_COLORS[evidence.confidence] || "bg-slate-100 text-slate-500"}`}>
+          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-xs font-medium ${CONF_COLORS[evidence.confidence] || "bg-canvas text-secondary"}`}>
             {CONF_KEYS[evidence.confidence] ? T(CONF_KEYS[evidence.confidence]) : evidence.confidence}
           </span>
         )}
       </button>
       {open && (
-        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-1.5">
+        <div className="mt-2 space-y-2 rounded-control border border-border bg-canvas p-3.5">
           {evidence.source_sheet && (
-            <div className="flex gap-2 text-[11px]">
-              <span className="font-medium text-slate-500 shrink-0">{T("biz.sheet")}</span>
-              <span className="text-slate-700">{evidence.source_sheet}</span>
+            <div className="flex gap-2 text-caption">
+              <span className="shrink-0 font-medium text-secondary">{T("biz.sheet")}</span>
+              <span className="text-ink">{evidence.source_sheet}</span>
             </div>
           )}
           {evidence.source_range && (
-            <div className="flex gap-2 text-[11px]">
-              <span className="font-medium text-slate-500 shrink-0">{T("biz.range")}</span>
-              <span className="text-slate-700 font-mono">{evidence.source_range}</span>
+            <div className="flex gap-2 text-caption">
+              <span className="shrink-0 font-medium text-secondary">{T("biz.range")}</span>
+              <span className="font-mono text-ink">{evidence.source_range}</span>
             </div>
           )}
           {evidence.source_columns && evidence.source_columns.length > 0 && (
-            <div className="flex gap-2 text-[11px]">
-              <span className="font-medium text-slate-500 shrink-0">{T("biz.columns")}</span>
-              <span className="text-slate-700">{evidence.source_columns.join(", ")}</span>
+            <div className="flex gap-2 text-caption">
+              <span className="shrink-0 font-medium text-secondary">{T("biz.columns")}</span>
+              <span className="text-ink">{evidence.source_columns.join(", ")}</span>
             </div>
           )}
           {evidence.source_rows && (
-            <div className="flex gap-2 text-[11px]">
-              <span className="font-medium text-slate-500 shrink-0">{T("biz.rows")}</span>
-              <span className="text-slate-700">{evidence.source_rows}</span>
+            <div className="flex gap-2 text-caption">
+              <span className="shrink-0 font-medium text-secondary">{T("biz.rows")}</span>
+              <span className="text-ink">{evidence.source_rows}</span>
             </div>
           )}
           {evidence.reason && (
-            <div className="flex gap-2 text-[11px]">
-              <span className="font-medium text-slate-500 shrink-0">{T("biz.reason")}</span>
-              <span className="text-slate-700">{evidence.reason}</span>
+            <div className="flex gap-2 text-caption">
+              <span className="shrink-0 font-medium text-secondary">{T("biz.reason")}</span>
+              <span className="text-ink">{evidence.reason}</span>
             </div>
           )}
         </div>

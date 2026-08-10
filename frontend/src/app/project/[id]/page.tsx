@@ -7,6 +7,7 @@ import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/lib/AuthContext";
 import { localeForLang, t, UILanguage } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
+import { Button, Card, MetricCard } from "@/components/ui";
 
 interface ProjectData {
   id: number; title: string; industry: string; language: string;
@@ -19,10 +20,10 @@ const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 interface TimelineItem { id: number; created_at: string | null; business_health_score: number | null; summary: string | null; }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-600",
-  ready: "bg-blue-100 text-blue-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  archived: "bg-slate-100 text-slate-400",
+  draft: "bg-canvas text-secondary",
+  ready: "bg-accent/10 text-accent",
+  completed: "bg-success/10 text-success",
+  archived: "bg-canvas text-secondary/60",
 };
 
 const STATUS_KEYS: Record<string, string> = {
@@ -31,6 +32,11 @@ const STATUS_KEYS: Record<string, string> = {
   completed: "proj.status.completed",
   archived: "proj.status.archived",
 };
+
+const PRIMARY_LINK =
+  "inline-flex h-11 items-center justify-center rounded-control bg-ink px-5 text-sm font-medium text-white transition-colors hover:bg-[#3A3A3C]";
+const SECONDARY_LINK =
+  "inline-flex h-11 items-center justify-center rounded-control border border-border bg-surface px-5 text-sm font-medium text-ink transition-colors hover:bg-canvas";
 
 function formatDate(d: string | null, lang: UILanguage): string {
   if (!d) return "-";
@@ -84,7 +90,7 @@ export default function ProjectDashboard() {
   }
 
   if (authLoading || loading) {
-    return <main className="flex min-h-screen items-center justify-center bg-slate-50"><p className="text-sm text-slate-400">{T("home.loading")}</p></main>;
+    return <main className="flex min-h-screen items-center justify-center bg-canvas"><p className="text-sm text-secondary">{T("home.loading")}</p></main>;
   }
   if (!project) return null;
 
@@ -93,160 +99,149 @@ export default function ProjectDashboard() {
   const hasFile = !!project.original_filename;
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-canvas">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-xs text-slate-400 hover:text-slate-600">{T("nav.backWorkspace")}</Link>
-            <div>
-              <h1 className="text-lg font-bold text-slate-900">{project.title}</h1>
-              <div className="flex items-center gap-3 mt-0.5">
-                <span className="text-xs text-slate-400 capitalize">{project.industry}</span>
-                <span className="text-xs text-slate-300">&middot;</span>
-                <span className="text-xs text-slate-400">{project.language === "zh" ? "中文" : project.language === "ja" ? "日本語" : project.language === "de" ? "Deutsch" : "English"}</span>
-                <span className="text-xs text-slate-300">&middot;</span>
-                <span className="text-xs text-slate-400">{T("proj.created", { date: formatDate(project.created_at, uiLang) })}</span>
-                <span className="text-xs text-slate-300">&middot;</span>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColor}`}>{T(statusKey)}</span>
-                <span className="text-xs text-slate-300">&middot;</span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                  {T("proj.secure")}
-                </span>
-              </div>
+      <header className="border-b border-border bg-surface">
+        <div className="mx-auto flex max-w-5xl flex-col gap-5 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-8">
+          <div className="min-w-0">
+            <Link href="/" className="text-sm text-secondary transition-colors hover:text-ink">{T("nav.backWorkspace")}</Link>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink md:text-3xl">{project.title}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span className="text-sm capitalize text-secondary">{project.industry}</span>
+              <span className="text-border">&middot;</span>
+              <span className="text-sm text-secondary">{project.language === "zh" ? "中文" : project.language === "ja" ? "日本語" : project.language === "de" ? "Deutsch" : "English"}</span>
+              <span className="text-border">&middot;</span>
+              <span className="text-sm text-secondary">{T("proj.created", { date: formatDate(project.created_at, uiLang) })}</span>
+              <span className="text-border">&middot;</span>
+              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColor}`}>{T(statusKey)}</span>
+              <span className="text-border">&middot;</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
+                {T("proj.secure")}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-3">
             {project.status === "completed" && (
-              <Link
-                href={`/project/${id}/executive`}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm"
-              >
+              <Link href={`/project/${id}/executive`} className={SECONDARY_LINK}>
                 {T("proj.executiveReport")}
               </Link>
             )}
-            <Link
-              href={`/project/${id}/analysis`}
-              className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 shadow-sm"
-            >
+            <Link href={`/project/${id}/analysis`} className={PRIMARY_LINK}>
               {hasFile ? T("proj.continueAnalysis") : T("proj.startAnalysis")}
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl space-y-8 px-6 py-10">
+      <div className="mx-auto max-w-5xl space-y-8 px-4 py-10 md:px-8">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <SummaryCard label={T("landing.diff.businessHealth")} value={project.status === "completed" ? "\u2713" : hasFile ? "--" : "\u2014"} sub={project.status === "completed" ? T("proj.healthReady") : hasFile ? T("proj.healthRun") : T("proj.healthNoData")} />
-          <SummaryCard label={T("report.kpi.findings")} value={project.status === "completed" ? "\u2713" : "\u2014"} sub={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
-          <SummaryCard label={T("report.kpi.risks")} value={project.status === "completed" ? "\u2713" : "\u2014"} sub={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
-          <SummaryCard label={T("report.kpi.suggestions")} value={project.status === "completed" ? "\u2713" : "\u2014"} sub={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
+          <MetricCard label={T("landing.diff.businessHealth")} value={project.status === "completed" ? "\u2713" : hasFile ? "--" : "\u2014"} description={project.status === "completed" ? T("proj.healthReady") : hasFile ? T("proj.healthRun") : T("proj.healthNoData")} />
+          <MetricCard label={T("report.kpi.findings")} value={project.status === "completed" ? "\u2713" : "\u2014"} description={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
+          <MetricCard label={T("report.kpi.risks")} value={project.status === "completed" ? "\u2713" : "\u2014"} description={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
+          <MetricCard label={T("report.kpi.suggestions")} value={project.status === "completed" ? "\u2713" : "\u2014"} description={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
         </div>
 
         {/* Latest Report */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-900">{T("proj.latestAnalysis")}</h3>
-          <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-            <p className="text-sm text-slate-400">{project.status === "completed" && project.latest_summary ? project.latest_summary.slice(0, 200) + "..." : hasFile ? T("proj.noAnalysisYet") : T("proj.uploadFirst")}</p>
-            <p className="mt-1 text-xs text-slate-300">{hasFile ? T("proj.clickContinue") : T("proj.useStart")}</p>
-            <Link href={`/project/${id}/analysis`} className="mt-4 inline-flex text-xs font-medium text-slate-600 hover:text-slate-900">
-              {`${hasFile ? T("proj.continueAnalysis") : T("proj.startAnalysis")} \u2192`}
+        <Card>
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0">
+              <h2 className="text-h3 text-ink">{T("proj.latestAnalysis")}</h2>
+              <p className="mt-1.5 max-w-[640px] text-sm leading-relaxed text-secondary">
+                {project.status === "completed" && project.latest_summary ? project.latest_summary.slice(0, 200) + "..." : hasFile ? T("proj.noAnalysisYet") : T("proj.uploadFirst")}
+              </p>
+              <p className="mt-1 text-caption text-secondary">{hasFile ? T("proj.clickContinue") : T("proj.useStart")}</p>
+            </div>
+            <Link href={`/project/${id}/analysis`} className={`${PRIMARY_LINK} shrink-0`}>
+              {hasFile ? T("proj.continueAnalysis") : T("proj.startAnalysis")} →
             </Link>
           </div>
-        </div>
+        </Card>
 
         {/* Next Actions */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-900">{T("proj.nextSteps")}</h3>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <Card>
+          <h2 className="text-h3 text-ink">{T("proj.nextSteps")}</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
             {[
               { title: T("proj.step.upload"), desc: T("proj.step.uploadDesc") },
               { title: T("proj.step.run"), desc: T("proj.step.runDesc") },
               { title: T("proj.step.review"), desc: T("proj.step.reviewDesc") },
             ].map((item, i) => (
-              <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-sm font-medium text-slate-700">{item.title}</p>
-                <p className="mt-1 text-xs text-slate-400">{item.desc}</p>
-              </div>
+              <Card key={i} variant="subtle" className="p-5">
+                <p className="text-[15px] font-medium text-ink">{item.title}</p>
+                <p className="mt-1 text-sm leading-relaxed text-secondary">{item.desc}</p>
+              </Card>
             ))}
           </div>
-        </div>
-
+        </Card>
 
         {/* Business Timeline */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-900">{T("landing.diff.timeline")}</h3>
+        <Card>
+          <h2 className="text-h3 text-ink">{T("landing.diff.timeline")}</h2>
           {timeline.length === 0 ? (
-            <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-              <p className="text-sm text-slate-400">{T("proj.timelineEmpty")}</p>
-              <p className="mt-1 text-xs text-slate-300">{T("proj.timelineEmptyDesc")}</p>
+            <div className="mt-4 rounded-card border border-dashed border-border bg-canvas p-10 text-center">
+              <p className="text-base font-medium text-secondary">{T("proj.timelineEmpty")}</p>
+              <p className="mt-1 text-sm text-secondary">{T("proj.timelineEmptyDesc")}</p>
             </div>
           ) : (
             <div className="mt-4 space-y-3">
               {timeline.map((item) => {
                 const score = item.business_health_score;
                 const color = score != null
-                  ? score >= 90 ? "border-l-emerald-500 bg-emerald-50/30"
-                  : score >= 75 ? "border-l-blue-500 bg-blue-50/30"
-                  : score >= 60 ? "border-l-amber-500 bg-amber-50/30"
-                  : "border-l-red-500 bg-red-50/30"
-                  : "border-l-slate-300 bg-slate-50/50";
+                  ? score >= 90 ? "border-l-success bg-success/5"
+                  : score >= 75 ? "border-l-accent bg-accent/5"
+                  : score >= 60 ? "border-l-warning bg-warning/5"
+                  : "border-l-danger bg-danger/5"
+                  : "border-l-border bg-canvas";
                 const dateStr = item.created_at
                   ? new Date(item.created_at).toLocaleDateString(localeForLang(uiLang), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                   : "";
                 return (
-                  <div key={item.id} className={`rounded-xl border border-slate-200 border-l-4 ${color} p-4`}>
+                  <div key={item.id} className={`rounded-card border border-border border-l-4 ${color} p-4`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {score != null && <span className="text-lg font-bold text-slate-800 tabular-nums">{score}</span>}
-                        <span className="text-xs text-slate-400">{dateStr}</span>
+                        {score != null && <span className="text-lg font-semibold text-ink tabular-nums">{score}</span>}
+                        <span className="text-caption text-secondary">{dateStr}</span>
                       </div>
-                      <Link href={`/project/${id}/report/${item.id}`} className="text-xs font-medium text-slate-600 hover:text-slate-900">{T("proj.viewReport")}</Link>
+                      <Link href={`/project/${id}/report/${item.id}`} className="text-sm font-medium text-accent hover:underline">{T("proj.viewReport")}</Link>
                     </div>
-                    {item.summary && <p className="mt-2 text-xs text-slate-500 line-clamp-2">{item.summary}</p>}
+                    {item.summary && <p className="mt-2 text-sm leading-relaxed text-secondary line-clamp-2">{item.summary}</p>}
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Dataset */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-900">{T("proj.dataset")}</h3>
+        <Card>
+          <h2 className="text-h3 text-ink">{T("proj.dataset")}</h2>
           {hasFile ? (
-            <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-              <div>
-                <p className="text-sm font-medium text-slate-700">{project.original_filename}</p>
-                <p className="mt-0.5 text-xs text-slate-400">{T("proj.uploadedReady")}</p>
+            <div className="mt-4 flex flex-col items-start justify-between gap-4 rounded-control border border-border bg-canvas p-4 sm:flex-row sm:items-center">
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-medium text-ink">{project.original_filename}</p>
+                <p className="mt-0.5 text-caption text-secondary">{T("proj.uploadedReady")}</p>
               </div>
-              <label className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
+              <label className="inline-flex h-9 shrink-0 cursor-pointer items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-canvas">
                 {uploading ? T("proj.uploading") : T("proj.replaceDataset")}
                 <input type="file" accept=".xlsx,.xls" onChange={handleReplaceFile} className="hidden" disabled={uploading} />
               </label>
             </div>
           ) : (
-            <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-              <p className="text-sm text-slate-400">{T("proj.noDataset")}</p>
-              <label className="mt-4 inline-flex cursor-pointer rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800">
-                {uploading ? T("proj.uploading") : T("proj.step.upload")}
-                <input type="file" accept=".xlsx,.xls" onChange={handleReplaceFile} className="hidden" disabled={uploading} />
-              </label>
+            <div className="mt-4 rounded-card border border-dashed border-border bg-canvas p-10 text-center">
+              <p className="text-base font-medium text-secondary">{T("proj.noDataset")}</p>
+              <div className="mt-4 flex justify-center">
+                <Button
+                  onClick={() => document.getElementById("ws-file-input")?.click()}
+                >
+                  {uploading ? T("proj.uploading") : T("proj.step.upload")}
+                </Button>
+                <input id="ws-file-input" type="file" accept=".xlsx,.xls" onChange={handleReplaceFile} className="hidden" disabled={uploading} />
+              </div>
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </main>
-  );
-}
-
-function SummaryCard({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-slate-900 tabular-nums">{value}</p>
-      <p className="mt-1 text-xs text-slate-400">{sub}</p>
-    </div>
   );
 }

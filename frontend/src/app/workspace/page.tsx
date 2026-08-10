@@ -9,6 +9,7 @@ import SummaryCards from "@/components/workspace/SummaryCards";
 import SectionCard from "@/components/workspace/SectionCard";
 import ActionPlaceholderCard from "@/components/workspace/ActionPlaceholderCard";
 import PipelineTimeline from "@/components/PipelineTimeline";
+import { Button } from "@/components/ui";
 import { t } from "@/lib/i18n";
 import { useAnalysisPipeline } from "@/lib/useAnalysisPipeline";
 import { useAnalysisSession } from "@/lib/useAnalysisSession";
@@ -58,7 +59,7 @@ export default function WorkspacePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-canvas">
       <WorkspaceHeader
         title={ws.title}
         subtitle={ws.subtitle}
@@ -68,36 +69,44 @@ export default function WorkspacePage() {
         v1Label={"\u2190 " + T("chat.title")}
       />
 
-      <div className="mx-auto max-w-5xl space-y-8 px-8 py-10">
+      <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 md:px-8 md:py-10">
         {/* Error */}
         {pipe.error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
-            <p className="text-sm font-medium text-red-700">{pipe.error}</p>
+          <div className="rounded-control border border-danger/20 bg-danger/5 px-5 py-4">
+            <p className="text-sm font-medium text-danger">{pipe.error}</p>
           </div>
         )}
 
         {/* Upload */}
         {!pipe.validated && (
           <SectionCard title={T("step1.title")} subtitle={T("step1.desc")}>
-            <div className="flex items-center gap-4">
-              <input
-                ref={pipe.fileInputRef}
-                type="file" accept=".xlsx,.xls"
-                onChange={(e) => pipe.setFile(e.target.files?.[0] || null)}
-                className="hidden" id="ws-file"
-              />
-              <label htmlFor="ws-file" className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
-                {pipe.file ? pipe.file.name : T("step1.browse")}
-              </label>
-              <button
-                onClick={pipe.handleUpload}
-                disabled={!pipe.file || pipe.uploading}
-                className="rounded-lg bg-slate-900 px-5 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {pipe.uploading ? T("step1.uploading") : T("step1.uploadBtn")}
-              </button>
+            <div className="rounded-card border border-border bg-canvas px-6 py-12 text-center md:px-10">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-control bg-surface text-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]" aria-hidden>
+                &#x1F4CA;
+              </div>
+              <h3 className="mt-5 text-lg font-semibold text-ink">
+                {pipe.file ? pipe.file.name : T("step1.dragHint")}
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-secondary">{T("step1.fileTypes")}</p>
+              <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <input
+                  ref={pipe.fileInputRef}
+                  type="file" accept=".xlsx,.xls"
+                  onChange={(e) => pipe.setFile(e.target.files?.[0] || null)}
+                  className="hidden" id="ws-file"
+                />
+                <label htmlFor="ws-file" className="inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-control border border-border bg-surface px-5 text-sm font-medium text-ink transition-colors hover:bg-canvas sm:w-auto">
+                  {T("step1.browse")}
+                </label>
+                <Button
+                  onClick={pipe.handleUpload}
+                  disabled={!pipe.file || pipe.uploading}
+                  className="w-full sm:w-auto"
+                >
+                  {pipe.uploading ? T("step1.uploading") : T("step1.uploadBtn")}
+                </Button>
+              </div>
             </div>
-            <p className="mt-3 text-[11px] text-slate-400">{T("step1.fileTypes")}</p>
           </SectionCard>
         )}
 
@@ -108,12 +117,12 @@ export default function WorkspacePage() {
 
         {/* Analyze */}
         {pipe.ready && !pipe.analysis && (
-          <div className="text-center">
-            <button onClick={pipe.handleAnalyze} disabled={pipe.analyzing} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50">
+          <div className="flex justify-center py-4">
+            <Button onClick={pipe.handleAnalyze} disabled={pipe.analyzing} className="px-8">
               {pipe.analyzing ? (
                 <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />{T("step3.analyzing")}</>
               ) : T("step3.analyze")}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -161,10 +170,10 @@ export default function WorkspacePage() {
           </SectionCard>
         )}
 
-        {/* Recommended Actions — placeholder */}
+        {/* Recommended Actions placeholder */}
         {pipe.analysis && (
           <SectionCard title={T("ws.actions")} subtitle={T("ws.actionsDesc")}>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-3">
               <ActionPlaceholderCard title={T("ws.optPortfolio")} desc={T("ws.optPortfolioDesc")} />
               <ActionPlaceholderCard title={T("ws.regionalStrat")} desc={T("ws.regionalStratDesc")} />
               <ActionPlaceholderCard title={T("ws.revForecast")} desc={T("ws.revForecastDesc")} />

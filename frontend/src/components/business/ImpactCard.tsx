@@ -11,9 +11,9 @@ export interface ImpactData {
 }
 
 const CONF_COLORS: Record<string, string> = {
-  high: "bg-emerald-100 text-emerald-700",
-  medium: "bg-amber-100 text-amber-700",
-  low: "bg-red-100 text-red-700",
+  high: "bg-success/10 text-success",
+  medium: "bg-warning/10 text-warning",
+  low: "bg-danger/10 text-danger",
 };
 
 const CONF_KEYS: Record<string, string> = {
@@ -34,30 +34,30 @@ export default function ImpactCard({ impact, lang }: { impact: ImpactData; lang:
     <div className="mt-2">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-[11px] font-medium text-blue-500 hover:text-blue-700 transition-colors"
+        className="flex items-center gap-1.5 text-caption font-medium text-accent transition-colors hover:text-ink"
       >
         <span className={`transition-transform ${open ? "rotate-90" : ""}`}>&#9654;</span>
         {T("biz.expectedImpact")}
         {impact.confidence && (
-          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${CONF_COLORS[impact.confidence] || "bg-slate-100 text-slate-500"}`}>
+          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-xs font-medium ${CONF_COLORS[impact.confidence] || "bg-canvas text-secondary"}`}>
             {CONF_KEYS[impact.confidence] ? T(CONF_KEYS[impact.confidence]) : impact.confidence}
           </span>
         )}
       </button>
       {open && (
-        <div className="mt-2 rounded-lg border border-blue-100 bg-blue-50/50 p-4 space-y-3">
+        <div className="mt-2 space-y-3 rounded-control border border-accent/20 bg-accent/5 p-4">
           {impact.business_health_change && (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-400 mb-1">{T("biz.estimatedHealth")}</p>
+              <p className="mb-1 text-caption font-semibold text-accent">{T("biz.estimatedHealth")}</p>
               <div className="flex items-center gap-4">
                 <div className="text-center">
-                  <p className="text-[10px] text-slate-400">{T("biz.current")}</p>
-                  <p className="text-lg font-bold text-slate-700 tabular-nums">&mdash;</p>
+                  <p className="text-caption text-secondary">{T("biz.current")}</p>
+                  <p className="text-xl font-semibold text-ink tabular-nums">&mdash;</p>
                 </div>
-                <span className="text-slate-300">&rarr;</span>
+                <span className="text-secondary">&rarr;</span>
                 <div className="text-center">
-                  <p className="text-[10px] text-slate-400">{T("biz.expected")}</p>
-                  <p className={`text-lg font-bold tabular-nums ${impact.business_health_change.startsWith("+") ? "text-emerald-600" : impact.business_health_change.startsWith("-") ? "text-red-500" : "text-slate-700"}`}>
+                  <p className="text-caption text-secondary">{T("biz.expected")}</p>
+                  <p className={`text-xl font-semibold tabular-nums ${impact.business_health_change.startsWith("+") ? "text-success" : impact.business_health_change.startsWith("-") ? "text-danger" : "text-ink"}`}>
                     {impact.business_health_change.startsWith("+") || impact.business_health_change.startsWith("-") ? impact.business_health_change : "+" + impact.business_health_change}
                   </p>
                 </div>
@@ -65,15 +65,15 @@ export default function ImpactCard({ impact, lang }: { impact: ImpactData; lang:
             </div>
           )}
           {impact.risk_change && (
-            <div className="flex gap-2 text-[11px]">
-              <span className="font-medium text-slate-500 shrink-0">{T("biz.riskImpact")}</span>
-              <span className="text-slate-700">{impact.risk_change}</span>
+            <div className="flex gap-2 text-caption">
+              <span className="shrink-0 font-medium text-secondary">{T("biz.riskImpact")}</span>
+              <span className="text-ink">{impact.risk_change}</span>
             </div>
           )}
           {impact.expected_result && (
-            <div className="flex gap-2 text-[11px]">
-              <span className="font-medium text-slate-500 shrink-0">{T("biz.expectedResult")}</span>
-              <span className="text-slate-700">{impact.expected_result}</span>
+            <div className="flex gap-2 text-caption">
+              <span className="shrink-0 font-medium text-secondary">{T("biz.expectedResult")}</span>
+              <span className="text-ink">{impact.expected_result}</span>
             </div>
           )}
         </div>

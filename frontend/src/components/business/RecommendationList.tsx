@@ -10,22 +10,22 @@ interface RecData {
   expected_impact?: ImpactData | null;
 }
 
-const PRI_COLORS: Record<string, string> = { high: "bg-blue-600", medium: "bg-slate-600", low: "bg-slate-400" };
+const PRI_COLORS: Record<string, string> = { high: "bg-accent", medium: "bg-ink", low: "bg-secondary" };
 
 export default function RecommendationList({ recs, lang }: { recs: RecData[]; lang: UILanguage }) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
   if (!recs.length) return null;
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">{T("biz.recsTitle", { n: recs.length })}</p>
+      <p className="mb-4 text-h3 text-ink">{T("biz.recsTitle", { n: recs.length })}</p>
       <div className="space-y-3">
         {recs.map((item, i) => (
-          <div key={i} className="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
+          <div key={i} className="rounded-card border border-border bg-surface p-5">
             <div className="flex gap-4">
-              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${PRI_COLORS[item.priority] || "bg-slate-600"} text-xs font-bold text-white`}>{i + 1}</span>
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-control ${PRI_COLORS[item.priority] || "bg-ink"} text-xs font-bold text-white`}>{i + 1}</span>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-800">{item.title}</p>
-                <p className="mt-1 text-sm text-slate-600 leading-relaxed">{item.description}</p>
+                <p className="text-[15px] font-semibold text-ink">{item.title}</p>
+                <p className="mt-1 text-sm leading-relaxed text-secondary">{item.description}</p>
                 {item.expected_impact && <ImpactCard impact={item.expected_impact} lang={lang} />}
                 {item.evidence && <EvidenceCard evidence={item.evidence} lang={lang} />}
               </div>

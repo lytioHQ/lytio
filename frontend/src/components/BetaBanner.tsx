@@ -8,16 +8,16 @@ interface Props {
 
 export default function BetaBanner({ lang = "en" }: Props) {
   return (
-    <div className="border-b border-amber-200 bg-amber-50 px-6 py-2.5 text-center">
-      <p className="text-xs font-medium text-amber-700">
-        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-bold tracking-wide uppercase">
+    <div className="border-b border-warning/20 bg-warning/5 px-4 py-3 text-center md:px-6">
+      <p className="text-sm leading-relaxed text-ink">
+        <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 font-semibold text-warning">
           {t(lang, "beta.badge")}
         </span>
-        <span className="mx-2">&middot;</span>
+        <span className="mx-2 text-secondary">&middot;</span>
         <span>
           {t(lang, "beta.version")}: <span className="font-semibold">{t(lang, "header.version")}</span>
         </span>
-        <span className="mx-2">&middot;</span>
+        <span className="mx-2 text-secondary">&middot;</span>
         <span>{t(lang, "beta.message")}</span>
       </p>
     </div>
