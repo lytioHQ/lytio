@@ -1,6 +1,7 @@
 "use client";
 
 import { t, UILanguage } from "@/lib/i18n";
+import Card from "@/components/ui/Card";
 
 export type JourneyPhase =
   | "upload"
@@ -20,10 +21,10 @@ export default function BusinessInsightJourney({ lang, phase }: Props) {
   const phaseIdx = ORDER.indexOf(phase);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <Card>
       <div className="mb-5 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-slate-900">{t(lang, "journey.title")}</h3>
-        <span className="text-[11px] text-slate-400">
+        <h3 className="text-h3 text-ink">{t(lang, "journey.title")}</h3>
+        <span className="text-caption text-secondary">
           {phaseIdx + 1} / {ORDER.length}
         </span>
       </div>
@@ -39,7 +40,7 @@ export default function BusinessInsightJourney({ lang, phase }: Props) {
               {i < ORDER.length - 1 && (
                 <span
                   className={`absolute left-1/2 top-3.5 hidden h-0.5 w-full sm:block ${
-                    completed ? "bg-emerald-400" : "bg-slate-200"
+                    completed ? "bg-success/50" : "bg-border"
                   }`}
                   aria-hidden
                 />
@@ -48,10 +49,10 @@ export default function BusinessInsightJourney({ lang, phase }: Props) {
               <span
                 className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-semibold ${
                   completed
-                    ? "border-emerald-400 bg-emerald-50 text-emerald-600"
+                    ? "border-success bg-success/15 text-success"
                     : active
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-white text-slate-400"
+                      ? "border-accent bg-accent text-white"
+                      : "border-border bg-surface text-secondary"
                 }`}
               >
                 {completed ? (
@@ -64,19 +65,19 @@ export default function BusinessInsightJourney({ lang, phase }: Props) {
               </span>
 
               <p
-                className={`mt-2 hidden text-[11px] font-medium sm:block ${
-                  active ? "text-slate-900" : completed ? "text-slate-600" : "text-slate-400"
+                className={`mt-2 hidden text-caption font-medium sm:block ${
+                  active ? "text-ink" : completed ? "text-secondary" : "text-secondary/60"
                 }`}
               >
                 {t(lang, `journey.${step}`)}
               </p>
-              <p className={`mt-2 block text-[10px] sm:hidden ${active ? "text-slate-900 font-medium" : "text-slate-400"}`}>
+              <p className={`mt-2 block text-xs sm:hidden ${active ? "font-medium text-ink" : "text-secondary"}`}>
                 {t(lang, `journey.${step}`)}
               </p>
             </li>
           );
         })}
       </ol>
-    </section>
+    </Card>
   );
 }

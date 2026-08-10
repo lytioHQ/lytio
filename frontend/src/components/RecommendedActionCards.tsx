@@ -1,6 +1,7 @@
 "use client";
 
 import { t, UILanguage } from "@/lib/i18n";
+import Card from "@/components/ui/Card";
 
 export interface ActionData {
   title: string;
@@ -18,21 +19,21 @@ const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
 const PRIORITY_META: Record<string, { labelKey: string; border: string; badge: string; dot: string }> = {
   high: {
     labelKey: "actions.high",
-    border: "border-l-red-500",
-    badge: "bg-red-50 text-red-700",
-    dot: "bg-red-500",
+    border: "border-l-danger",
+    badge: "bg-danger/10 text-danger",
+    dot: "bg-danger",
   },
   medium: {
     labelKey: "actions.medium",
-    border: "border-l-amber-500",
-    badge: "bg-amber-50 text-amber-700",
-    dot: "bg-amber-500",
+    border: "border-l-warning",
+    badge: "bg-warning/10 text-warning",
+    dot: "bg-warning",
   },
   low: {
     labelKey: "actions.low",
-    border: "border-l-emerald-500",
-    badge: "bg-emerald-50 text-emerald-700",
-    dot: "bg-emerald-500",
+    border: "border-l-secondary",
+    badge: "bg-canvas text-secondary",
+    dot: "bg-secondary",
   },
 };
 
@@ -55,10 +56,10 @@ export default function RecommendedActionCards({ lang, recs, summary }: Props) {
   let actions = recs.length > 0 ? recs : fallbackFromSummary(summary);
   if (actions.length === 0) {
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-900">{T("actions.title")}</h3>
-        <p className="mt-2 text-xs text-slate-400">{T("actions.empty")}</p>
-      </section>
+      <Card>
+        <h3 className="text-h3 text-ink">{T("actions.title")}</h3>
+        <p className="mt-2 text-sm text-secondary">{T("actions.empty")}</p>
+      </Card>
     );
   }
 
@@ -73,8 +74,8 @@ export default function RecommendedActionCards({ lang, recs, summary }: Props) {
   );
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h3 className="mb-4 text-sm font-semibold text-slate-900">{T("actions.title")}</h3>
+    <Card>
+      <h3 className="mb-4 text-h3 text-ink">{T("actions.title")}</h3>
 
       {groups.map(([priority, items]) => {
         const meta = PRIORITY_META[priority] || PRIORITY_META.medium;
@@ -82,7 +83,7 @@ export default function RecommendedActionCards({ lang, recs, summary }: Props) {
           <div key={priority} className="mb-5 last:mb-0">
             <div className="mb-2 flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${meta.dot}`} aria-hidden />
-              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${meta.badge}`}>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${meta.badge}`}>
                 {T(meta.labelKey)} ({items.length})
               </span>
             </div>
@@ -90,11 +91,11 @@ export default function RecommendedActionCards({ lang, recs, summary }: Props) {
               {items.map((item, i) => (
                 <div
                   key={i}
-                  className={`rounded-xl border border-slate-200 border-l-4 ${meta.border} bg-white p-4 shadow-sm`}
+                  className={`rounded-card border border-border border-l-4 ${meta.border} bg-surface p-4`}
                 >
-                  <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                  <p className="text-[15px] font-semibold text-ink">{item.title}</p>
                   {item.description && item.description !== item.title && (
-                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.description}</p>
+                    <p className="mt-1 text-body leading-relaxed text-secondary">{item.description}</p>
                   )}
                 </div>
               ))}
@@ -102,6 +103,6 @@ export default function RecommendedActionCards({ lang, recs, summary }: Props) {
           </div>
         );
       })}
-    </section>
+    </Card>
   );
 }
