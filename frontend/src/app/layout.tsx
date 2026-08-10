@@ -23,7 +23,7 @@ export default async function RootLayout({
 
   return (
     <html lang={htmlLang}>
-      <body className="min-h-screen bg-white text-gray-900 antialiased">
+      <body className="min-h-screen bg-canvas text-ink antialiased">
         <AuthProvider>
           {children}
           <FeedbackWidget />

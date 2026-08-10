@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family:
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF Pro Text",
+      "PingFang SC",
+      "Hiragino Sans GB",
+      "Microsoft YaHei",
+      "Noto Sans SC",
+      sans-serif;
+    background-color: theme("colors.canvas");
+    color: theme("colors.ink");
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  ::selection {
+    background-color: theme("colors.accent");
+    color: #ffffff;
+  }
+}
