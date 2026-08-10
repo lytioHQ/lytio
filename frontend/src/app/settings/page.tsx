@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/lib/AuthContext";
+import LanguageSelector from "@/components/LanguageSelector";
+import { t, UILanguage } from "@/lib/i18n";
+import { useUiLang } from "@/lib/useUiLang";
 
 interface PlanData {
   plan: string;
@@ -15,17 +18,27 @@ interface PlanData {
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-const FEATURE_LABELS: Record<string, string> = {
-  can_export_report: "Executive Report Export",
-  can_keep_unlimited_history: "Unlimited History",
-  can_use_future_plugins: "Future Plugins (Finance, HR, etc.)",
-  can_remove_branding: "Remove ExcelPilot Branding",
-  unlimited_projects: "Unlimited Projects",
+const FEATURE_KEYS: Record<string, string> = {
+  can_export_report: "settings.feature.exportReport",
+  can_keep_unlimited_history: "settings.feature.unlimitedHistory",
+  can_use_future_plugins: "settings.feature.futurePlugins",
+  can_remove_branding: "settings.feature.removeBranding",
+  unlimited_projects: "settings.feature.unlimitedProjects",
+};
+
+const POLICY_KEYS: Record<string, string> = {
+  data_usage: "settings.policy.dataUsage",
+  retention: "settings.policy.retention",
+  deletion: "settings.policy.deletion",
+  privacy: "settings.privacy",
+  encryption: "settings.policy.encryption",
 };
 
 export default function SettingsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { uiLang, handleUiLangChange } = useUiLang();
+  const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const [planData, setPlanData] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiPolicy, setAiPolicy] = useState<Record<string, string> | null>(null);
@@ -50,7 +63,7 @@ export default function SettingsPage() {
   }, [token]);
 
   if (authLoading || loading) {
-    return <main className="flex min-h-screen items-center justify-center bg-slate-50"><p className="text-sm text-slate-400">Loading&hellip;</p></main>;
+    return <main className="flex min-h-screen items-center justify-center bg-slate-50"><p className="text-sm text-slate-400">{T("settings.loading")}</p></main>;
   }
 
   const isPro = planData?.plan === "pro";
@@ -60,10 +73,13 @@ export default function SettingsPage() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-xs text-slate-400 hover:text-slate-600">&larr; Workspace</Link>
-            <h1 className="text-lg font-bold text-slate-900">Settings</h1>
+            <Link href="/" className="text-xs text-slate-400 hover:text-slate-600">{T("nav.backWorkspace")}</Link>
+            <h1 className="text-lg font-bold text-slate-900">{T("settings.title")}</h1>
           </div>
-          {user && <span className="text-xs text-slate-400">{user.email}</span>}
+          <div className="flex items-center gap-4">
+            {user && <span className="text-xs text-slate-400">{user.email}</span>}
+            <LanguageSelector lang={uiLang} onChange={handleUiLangChange} />
+          </div>
         </div>
       </header>
 
@@ -71,20 +87,20 @@ export default function SettingsPage() {
 
         {/* Subscription Card */}
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-sm font-semibold text-slate-900">Subscription</h2>
-          <p className="mt-1 text-xs text-slate-400">Your current plan and available features.</p>
+          <h2 className="text-sm font-semibold text-slate-900">{T("settings.subscription")}</h2>
+          <p className="mt-1 text-xs text-slate-400">{T("settings.subscriptionDesc")}</p>
 
           <div className="mt-6 flex items-center gap-4">
             <span className={`rounded-xl px-4 py-2 text-sm font-bold ${
               isPro ? "bg-slate-900 text-white" : "bg-amber-100 text-amber-700"
             }`}>
-              {isPro ? "Pro" : "Free Trial"}
+              {isPro ? T("home.planPro") : T("settings.freeTrial")}
             </span>
             {!isPro && planData && (
               <span className="text-sm text-slate-500">
                 {planData.remaining_days > 0
-                  ? `${planData.remaining_days} day${planData.remaining_days !== 1 ? "s" : ""} remaining`
-                  : "Trial expired"}
+                  ? T("settings.daysRemaining", { n: planData.remaining_days })
+                  : T("settings.trialExpired")}
               </span>
             )}
           </div>
@@ -97,9 +113,9 @@ export default function SettingsPage() {
                   {enabled ? "\u2713" : "\u2014"}
                 </span>
                 <span className={`text-xs ${enabled ? "text-slate-700" : "text-slate-400"}`}>
-                  {FEATURE_LABELS[key] || key}
+                  {FEATURE_KEYS[key] ? T(FEATURE_KEYS[key]) : key}
                 </span>
-                {!enabled && <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-400">Pro</span>}
+                {!enabled && <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-400">{T("home.planPro")}</span>}
               </div>
             ))}
           </div>
@@ -107,13 +123,13 @@ export default function SettingsPage() {
           {/* Upgrade */}
           {!isPro && (
             <div className="mt-8 rounded-xl border border-blue-100 bg-blue-50 p-5">
-              <p className="text-sm font-semibold text-blue-800">Upgrade to Pro</p>
-              <p className="mt-1 text-xs text-blue-600">Unlock executive reports, unlimited history, and all future plugins.</p>
+              <p className="text-sm font-semibold text-blue-800">{T("settings.upgradeTitle")}</p>
+              <p className="mt-1 text-xs text-blue-600">{T("settings.upgradeDesc")}</p>
               <button
                 disabled
                 className="mt-4 rounded-lg bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white opacity-50 cursor-not-allowed"
               >
-                Coming Soon
+                {T("settings.comingSoon")}
               </button>
             </div>
           )}
@@ -121,15 +137,15 @@ export default function SettingsPage() {
 
         {/* Privacy */}
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-sm font-semibold text-slate-900">Privacy</h2>
-          <p className="mt-1 text-xs text-slate-400">How your data is handled.</p>
+          <h2 className="text-sm font-semibold text-slate-900">{T("settings.privacy")}</h2>
+          <p className="mt-1 text-xs text-slate-400">{T("settings.privacyDesc")}</p>
 
           <div className="mt-6 space-y-3">
             {aiPolicy && Object.entries(aiPolicy).filter(([k]) => k !== "version").map(([key, value]) => (
               <div key={key} className="flex items-start gap-3 rounded-lg border border-slate-100 px-4 py-3">
                 <span className="mt-0.5 text-emerald-500 text-sm">&#x2713;</span>
                 <div>
-                  <p className="text-xs font-medium text-slate-700 capitalize">{key.replace(/_/g, " ")}</p>
+                  <p className="text-xs font-medium text-slate-700 capitalize">{POLICY_KEYS[key] ? T(POLICY_KEYS[key]) : key.replace(/_/g, " ")}</p>
                   <p className="text-xs text-slate-500">{value}</p>
                 </div>
               </div>
@@ -137,13 +153,13 @@ export default function SettingsPage() {
           </div>
 
           <div className="mt-8 border-t border-red-100 pt-6">
-            <p className="text-sm font-semibold text-red-700">Delete Account</p>
-            <p className="mt-1 text-xs text-red-500">Permanently delete your account and all associated data. This action cannot be undone.</p>
+            <p className="text-sm font-semibold text-red-700">{T("settings.deleteTitle")}</p>
+            <p className="mt-1 text-xs text-red-500">{T("settings.deleteDesc")}</p>
             <button
               disabled
               className="mt-4 rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-400 cursor-not-allowed"
             >
-              Coming Soon
+              {T("settings.comingSoon")}
             </button>
           </div>
         </div>

@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/lib/AuthContext";
+import { localeForLang, t, UILanguage } from "@/lib/i18n";
+import { useUiLang } from "@/lib/useUiLang";
 
 interface ProjectData {
   id: number; title: string; industry: string; language: string;
@@ -16,22 +18,31 @@ const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 interface TimelineItem { id: number; created_at: string | null; business_health_score: number | null; summary: string | null; }
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  draft: { label: "Draft", color: "bg-slate-100 text-slate-600" },
-  ready: { label: "Ready", color: "bg-blue-100 text-blue-700" },
-  completed: { label: "Completed", color: "bg-emerald-100 text-emerald-700" },
-  archived: { label: "Archived", color: "bg-slate-100 text-slate-400" },
+const STATUS_COLORS: Record<string, string> = {
+  draft: "bg-slate-100 text-slate-600",
+  ready: "bg-blue-100 text-blue-700",
+  completed: "bg-emerald-100 text-emerald-700",
+  archived: "bg-slate-100 text-slate-400",
 };
 
-function formatDate(d: string | null): string {
+const STATUS_KEYS: Record<string, string> = {
+  draft: "proj.status.draft",
+  ready: "proj.status.ready",
+  completed: "proj.status.completed",
+  archived: "proj.status.archived",
+};
+
+function formatDate(d: string | null, lang: UILanguage): string {
   if (!d) return "-";
-  return new Date(d).toLocaleDateString("zh-CN", { year: "numeric", month: "short", day: "numeric" });
+  return new Date(d).toLocaleDateString(localeForLang(lang), { year: "numeric", month: "short", day: "numeric" });
 }
 
 export default function ProjectDashboard() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { uiLang } = useUiLang();
+  const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -73,11 +84,12 @@ export default function ProjectDashboard() {
   }
 
   if (authLoading || loading) {
-    return <main className="flex min-h-screen items-center justify-center bg-slate-50"><p className="text-sm text-slate-400">Loading...</p></main>;
+    return <main className="flex min-h-screen items-center justify-center bg-slate-50"><p className="text-sm text-slate-400">{T("home.loading")}</p></main>;
   }
   if (!project) return null;
 
-  const status = STATUS_LABELS[project.status] || STATUS_LABELS.draft;
+  const statusKey = STATUS_KEYS[project.status] || STATUS_KEYS.draft;
+  const statusColor = STATUS_COLORS[project.status] || STATUS_COLORS.draft;
   const hasFile = !!project.original_filename;
 
   return (
@@ -86,7 +98,7 @@ export default function ProjectDashboard() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-xs text-slate-400 hover:text-slate-600">&larr; Workspace</Link>
+            <Link href="/" className="text-xs text-slate-400 hover:text-slate-600">{T("nav.backWorkspace")}</Link>
             <div>
               <h1 className="text-lg font-bold text-slate-900">{project.title}</h1>
               <div className="flex items-center gap-3 mt-0.5">
@@ -94,12 +106,12 @@ export default function ProjectDashboard() {
                 <span className="text-xs text-slate-300">&middot;</span>
                 <span className="text-xs text-slate-400">{project.language === "zh" ? "中文" : project.language === "ja" ? "日本語" : project.language === "de" ? "Deutsch" : "English"}</span>
                 <span className="text-xs text-slate-300">&middot;</span>
-                <span className="text-xs text-slate-400">Created {formatDate(project.created_at)}</span>
+                <span className="text-xs text-slate-400">{T("proj.created", { date: formatDate(project.created_at, uiLang) })}</span>
                 <span className="text-xs text-slate-300">&middot;</span>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${status.color}`}>{status.label}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColor}`}>{T(statusKey)}</span>
                 <span className="text-xs text-slate-300">&middot;</span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                  &#x1f512; Secure
+                  {T("proj.secure")}
                 </span>
               </div>
             </div>
@@ -110,14 +122,14 @@ export default function ProjectDashboard() {
                 href={`/project/${id}/executive`}
                 className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm"
               >
-                Executive Report
+                {T("proj.executiveReport")}
               </Link>
             )}
             <Link
               href={`/project/${id}/analysis`}
               className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 shadow-sm"
             >
-              {hasFile ? "Continue Analysis" : "Start Analysis"}
+              {hasFile ? T("proj.continueAnalysis") : T("proj.startAnalysis")}
             </Link>
           </div>
         </div>
@@ -126,32 +138,32 @@ export default function ProjectDashboard() {
       <div className="mx-auto max-w-5xl space-y-8 px-6 py-10">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <SummaryCard label="Business Health" value={project.status === "completed" ? "\u2713" : hasFile ? "--" : "\u2014"} sub={project.status === "completed" ? "Analysis ready" : hasFile ? "Run analysis" : "No data"} />
-          <SummaryCard label="Findings" value={project.status === "completed" ? "\u2713" : "\u2014"} sub={project.status === "completed" ? "Available" : "Pending analysis"} />
-          <SummaryCard label="Risks" value={project.status === "completed" ? "\u2713" : "\u2014"} sub={project.status === "completed" ? "Available" : "Pending analysis"} />
-          <SummaryCard label="Recommendations" value={project.status === "completed" ? "\u2713" : "\u2014"} sub={project.status === "completed" ? "Available" : "Pending analysis"} />
+          <SummaryCard label={T("landing.diff.businessHealth")} value={project.status === "completed" ? "\u2713" : hasFile ? "--" : "\u2014"} sub={project.status === "completed" ? T("proj.healthReady") : hasFile ? T("proj.healthRun") : T("proj.healthNoData")} />
+          <SummaryCard label={T("report.kpi.findings")} value={project.status === "completed" ? "\u2713" : "\u2014"} sub={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
+          <SummaryCard label={T("report.kpi.risks")} value={project.status === "completed" ? "\u2713" : "\u2014"} sub={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
+          <SummaryCard label={T("report.kpi.suggestions")} value={project.status === "completed" ? "\u2713" : "\u2014"} sub={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
         </div>
 
         {/* Latest Report */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-900">Latest Analysis</h3>
+          <h3 className="text-sm font-semibold text-slate-900">{T("proj.latestAnalysis")}</h3>
           <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-            <p className="text-sm text-slate-400">{project.status === "completed" && project.latest_summary ? project.latest_summary.slice(0, 200) + "..." : hasFile ? "No analysis generated yet." : "Upload a dataset to begin analysis."}</p>
-            <p className="mt-1 text-xs text-slate-300">{hasFile ? "Click Continue Analysis to generate your first report." : "Use Start Analysis to upload your Excel file."}</p>
+            <p className="text-sm text-slate-400">{project.status === "completed" && project.latest_summary ? project.latest_summary.slice(0, 200) + "..." : hasFile ? T("proj.noAnalysisYet") : T("proj.uploadFirst")}</p>
+            <p className="mt-1 text-xs text-slate-300">{hasFile ? T("proj.clickContinue") : T("proj.useStart")}</p>
             <Link href={`/project/${id}/analysis`} className="mt-4 inline-flex text-xs font-medium text-slate-600 hover:text-slate-900">
-              {hasFile ? "Continue Analysis \u2192" : "Start Analysis \u2192"}
+              {`${hasFile ? T("proj.continueAnalysis") : T("proj.startAnalysis")} \u2192`}
             </Link>
           </div>
         </div>
 
         {/* Next Actions */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-900">Recommended Next Steps</h3>
+          <h3 className="text-sm font-semibold text-slate-900">{T("proj.nextSteps")}</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {[
-              { title: "Upload Dataset", desc: "Add your Excel file to begin" },
-              { title: "Run AI Analysis", desc: "Generate business insights" },
-              { title: "Review Report", desc: "Explore findings and risks" },
+              { title: T("proj.step.upload"), desc: T("proj.step.uploadDesc") },
+              { title: T("proj.step.run"), desc: T("proj.step.runDesc") },
+              { title: T("proj.step.review"), desc: T("proj.step.reviewDesc") },
             ].map((item, i) => (
               <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p className="text-sm font-medium text-slate-700">{item.title}</p>
@@ -164,11 +176,11 @@ export default function ProjectDashboard() {
 
         {/* Business Timeline */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-900">Business Timeline</h3>
+          <h3 className="text-sm font-semibold text-slate-900">{T("landing.diff.timeline")}</h3>
           {timeline.length === 0 ? (
             <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-              <p className="text-sm text-slate-400">No analysis yet.</p>
-              <p className="mt-1 text-xs text-slate-300">Run your first analysis to build the timeline.</p>
+              <p className="text-sm text-slate-400">{T("proj.timelineEmpty")}</p>
+              <p className="mt-1 text-xs text-slate-300">{T("proj.timelineEmptyDesc")}</p>
             </div>
           ) : (
             <div className="mt-4 space-y-3">
@@ -181,7 +193,7 @@ export default function ProjectDashboard() {
                   : "border-l-red-500 bg-red-50/30"
                   : "border-l-slate-300 bg-slate-50/50";
                 const dateStr = item.created_at
-                  ? new Date(item.created_at).toLocaleDateString("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                  ? new Date(item.created_at).toLocaleDateString(localeForLang(uiLang), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                   : "";
                 return (
                   <div key={item.id} className={`rounded-xl border border-slate-200 border-l-4 ${color} p-4`}>
@@ -190,7 +202,7 @@ export default function ProjectDashboard() {
                         {score != null && <span className="text-lg font-bold text-slate-800 tabular-nums">{score}</span>}
                         <span className="text-xs text-slate-400">{dateStr}</span>
                       </div>
-                      <Link href={`/project/${id}/report/${item.id}`} className="text-xs font-medium text-slate-600 hover:text-slate-900">View Report &rarr;</Link>
+                      <Link href={`/project/${id}/report/${item.id}`} className="text-xs font-medium text-slate-600 hover:text-slate-900">{T("proj.viewReport")}</Link>
                     </div>
                     {item.summary && <p className="mt-2 text-xs text-slate-500 line-clamp-2">{item.summary}</p>}
                   </div>
@@ -202,23 +214,23 @@ export default function ProjectDashboard() {
 
         {/* Dataset */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-900">Current Dataset</h3>
+          <h3 className="text-sm font-semibold text-slate-900">{T("proj.dataset")}</h3>
           {hasFile ? (
             <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 p-4">
               <div>
                 <p className="text-sm font-medium text-slate-700">{project.original_filename}</p>
-                <p className="mt-0.5 text-xs text-slate-400">Uploaded &middot; Ready for analysis</p>
+                <p className="mt-0.5 text-xs text-slate-400">{T("proj.uploadedReady")}</p>
               </div>
               <label className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
-                {uploading ? "Uploading..." : "Replace Dataset"}
+                {uploading ? T("proj.uploading") : T("proj.replaceDataset")}
                 <input type="file" accept=".xlsx,.xls" onChange={handleReplaceFile} className="hidden" disabled={uploading} />
               </label>
             </div>
           ) : (
             <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-              <p className="text-sm text-slate-400">No dataset uploaded yet.</p>
+              <p className="text-sm text-slate-400">{T("proj.noDataset")}</p>
               <label className="mt-4 inline-flex cursor-pointer rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800">
-                {uploading ? "Uploading..." : "Upload Dataset"}
+                {uploading ? T("proj.uploading") : T("proj.step.upload")}
                 <input type="file" accept=".xlsx,.xls" onChange={handleReplaceFile} className="hidden" disabled={uploading} />
               </label>
             </div>

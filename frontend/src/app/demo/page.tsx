@@ -9,6 +9,7 @@ import MetricGrid from "@/components/business/MetricGrid";
 import InsightList from "@/components/business/InsightList";
 import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
+import { useUiLang } from "@/lib/useUiLang";
 
 function formatDate(d: string): string {
   return new Date(d).toLocaleDateString("en-US", {
@@ -21,6 +22,7 @@ function formatDate(d: string): string {
 }
 
 export default function DemoPage() {
+  const { uiLang } = useUiLang();
   const d = DEMO_DATA;
 
   return (
@@ -77,25 +79,26 @@ export default function DemoPage() {
           recommendations={d.recommendations}
           risks={d.risks}
           hasImpact={d.recommendations.some((r) => r.expected_impact)}
+          lang={uiLang}
         />
 
         {/* Business Health */}
-        <BusinessHealthCard data={d.business_health} />
+        <BusinessHealthCard data={d.business_health} lang={uiLang} />
 
         {/* Executive Summary */}
-        <ExecutiveSummaryCard content={d.executive_summary.content} />
+        <ExecutiveSummaryCard content={d.executive_summary.content} lang={uiLang} />
 
         {/* Key Metrics */}
-        <MetricGrid metrics={d.metrics} />
+        <MetricGrid metrics={d.metrics} lang={uiLang} />
 
         {/* Key Insights */}
-        <InsightList insights={d.insights} />
+        <InsightList insights={d.insights} lang={uiLang} />
 
         {/* Risks */}
-        <RiskList risks={d.risks} />
+        <RiskList risks={d.risks} lang={uiLang} />
 
         {/* Recommendations */}
-        <RecommendationList recs={d.recommendations} />
+        <RecommendationList recs={d.recommendations} lang={uiLang} />
 
         {/* Timeline */}
         <div>

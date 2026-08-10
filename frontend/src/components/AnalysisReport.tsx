@@ -74,19 +74,19 @@ export default function AnalysisReport({
         {hasMultiLang && <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3"><p className="text-xs text-amber-700">{t("report.multiLang")}</p></div>}
 
         {/* Executive Summary */}
-        {es && <ExecutiveSummaryCard content={es.content} />}
+        {es && <ExecutiveSummaryCard content={es.content} lang={lang} />}
 
         {/* Business Health */}
-        {bh && <BusinessHealthCard data={bh} />}
+        {bh && <BusinessHealthCard data={bh} lang={lang} />}
 
         {/* Key Metrics */}
-        {result.metrics && result.metrics.length > 0 && <MetricGrid metrics={result.metrics} />}
+        {result.metrics && result.metrics.length > 0 && <MetricGrid metrics={result.metrics} lang={lang} />}
 
         {/* Insights */}
-        <InsightList insights={result.insights || []} />
+        <InsightList insights={result.insights || []} lang={lang} />
 
         {/* Risks */}
-        <RiskList risks={result.risks || []} />
+        <RiskList risks={result.risks || []} lang={lang} />
 
         {/* Recommended Actions */}
         <RecommendedActionCards lang={lang} recs={result.recommendations || []} summary={es?.content} />
@@ -127,11 +127,11 @@ export default function AnalysisReport({
         <KPICard label={t("report.kpi.rows")} value="-" />
       </div>
 
-      <ExecutiveSummaryCard content={summary} />
+      <ExecutiveSummaryCard content={summary} lang={lang} />
 
-      <InsightList insights={highlights.map((h) => ({ title: h, description: "", confidence: "medium" }))} />
-      <RiskList risks={warnings.map((w) => ({ title: w, description: "", severity: "medium" }))} />
-      <RecommendationList recs={recs.map((r) => ({ title: r, description: "", priority: "medium" }))} />
+      <InsightList insights={highlights.map((h) => ({ title: h, description: "", confidence: "medium" }))} lang={lang} />
+      <RiskList risks={warnings.map((w) => ({ title: w, description: "", severity: "medium" }))} lang={lang} />
+      <RecommendationList recs={recs.map((r) => ({ title: r, description: "", priority: "medium" }))} lang={lang} />
 
       <div className="rounded-xl border border-slate-100 bg-slate-50/50 px-6 py-4">
         <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-xs text-slate-400">
