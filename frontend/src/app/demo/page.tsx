@@ -9,6 +9,7 @@ import MetricGrid from "@/components/business/MetricGrid";
 import InsightList from "@/components/business/InsightList";
 import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
+import { Card, MetricCard } from "@/components/ui";
 import { useUiLang } from "@/lib/useUiLang";
 import { t, localeForLang } from "@/lib/i18n";
 
@@ -22,6 +23,9 @@ function formatDate(d: string, locale: string): string {
   });
 }
 
+const PRIMARY_LINK =
+  "inline-flex h-11 items-center justify-center rounded-control bg-ink px-5 text-sm font-medium text-white transition-colors hover:bg-[#3A3A3C]";
+
 export default function DemoPage() {
   const { uiLang } = useUiLang();
   const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
@@ -30,50 +34,47 @@ export default function DemoPage() {
   const highPriorityCount = d.recommendations.filter((r) => r.priority === "high").length;
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-canvas">
       {/* Demo Banner */}
-      <div className="border-b border-amber-200 bg-amber-50 px-6 py-2.5 text-center">
-        <p className="text-xs font-medium text-amber-700">
+      <div className="border-b border-warning/20 bg-warning/5 px-4 py-3 text-center md:px-6">
+        <p className="text-sm leading-relaxed text-ink">
           &#x1f3ac; {T("demo.banner")}{" "}
-          <Link href="/register" className="underline hover:text-amber-900">
+          <Link href="/register" className="font-medium text-accent underline-offset-2 hover:underline">
             {T("demo.startRealAnalysis")}
           </Link>
         </p>
       </div>
 
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-lg font-bold text-slate-900">{d.project.title}</h1>
-            <div className="flex items-center gap-3 mt-0.5">
-              <span className="text-xs text-slate-400 capitalize">{d.project.industry}</span>
-              <span className="text-xs text-slate-300">&middot;</span>
-              <span className="text-xs text-slate-400">{T("demo.projectLang")}</span>
-              <span className="text-xs text-slate-300">&middot;</span>
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">{T("demo.demoBadge")}</span>
-              <span className="text-xs text-slate-300">&middot;</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+      <header className="border-b border-border bg-surface">
+        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between md:px-8">
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold tracking-tight text-ink md:text-2xl">{d.project.title}</h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span className="text-sm capitalize text-secondary">{d.project.industry}</span>
+              <span className="text-border">&middot;</span>
+              <span className="text-sm text-secondary">{T("demo.projectLang")}</span>
+              <span className="text-border">&middot;</span>
+              <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">{T("demo.demoBadge")}</span>
+              <span className="text-border">&middot;</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
                 {T("demo.readOnly")}
               </span>
             </div>
           </div>
-          <Link
-            href="/register"
-            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 shadow-sm"
-          >
+          <Link href="/register" className={`${PRIMARY_LINK} shrink-0`}>
             {T("demo.startCta")}
           </Link>
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl space-y-8 px-6 py-10">
+      <div className="mx-auto max-w-5xl space-y-8 px-4 py-10 md:px-8">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <SummaryCard label={T("demo.summaryHealth")} value={`${d.business_health.score}`} sub={d.business_health.level} />
-          <SummaryCard label={T("demo.summaryFindings")} value={`${d.insights.length}`} sub={T("demo.summaryInsightsSub")} />
-          <SummaryCard label={T("demo.summaryRisks")} value={`${d.risks.length}`} sub={T("demo.highSeverity", { n: highRiskCount })} />
-          <SummaryCard label={T("demo.summaryRecs")} value={`${d.recommendations.length}`} sub={T("demo.highPriority", { n: highPriorityCount })} />
+          <MetricCard label={T("demo.summaryHealth")} value={`${d.business_health.score}`} description={d.business_health.level} />
+          <MetricCard label={T("demo.summaryFindings")} value={`${d.insights.length}`} description={T("demo.summaryInsightsSub")} />
+          <MetricCard label={T("demo.summaryRisks")} value={`${d.risks.length}`} description={T("demo.highSeverity", { n: highRiskCount })} />
+          <MetricCard label={T("demo.summaryRecs")} value={`${d.recommendations.length}`} description={T("demo.highPriority", { n: highPriorityCount })} />
         </div>
 
         {/* Business Value */}
@@ -106,27 +107,25 @@ export default function DemoPage() {
 
         {/* Timeline */}
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">{T("demo.timelineTitle")}</p>
+          <p className="mb-4 text-h3 text-ink">{T("demo.timelineTitle")}</p>
           <div className="space-y-3">
             {d.timeline.map((item) => {
               const score = item.business_health_score;
               const color =
                 score >= 90
-                  ? "border-l-emerald-500 bg-emerald-50/30"
+                  ? "border-l-success bg-success/5"
                   : score >= 75
-                    ? "border-l-blue-500 bg-blue-50/30"
+                    ? "border-l-accent bg-accent/5"
                     : score >= 60
-                      ? "border-l-amber-500 bg-amber-50/30"
-                      : "border-l-red-500 bg-red-50/30";
+                      ? "border-l-warning bg-warning/5"
+                      : "border-l-danger bg-danger/5";
               return (
-                <div key={item.id} className={`rounded-xl border border-slate-200 border-l-4 ${color} p-4`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold text-slate-800 tabular-nums">{score}</span>
-                      <span className="text-xs text-slate-400">{formatDate(item.created_at, localeForLang(uiLang))}</span>
-                    </div>
+                <div key={item.id} className={`rounded-card border border-border border-l-4 ${color} p-4`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-semibold text-ink tabular-nums">{score}</span>
+                    <span className="text-caption text-secondary">{formatDate(item.created_at, localeForLang(uiLang))}</span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500 line-clamp-2">{item.summary}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-secondary line-clamp-2">{item.summary}</p>
                 </div>
               );
             })}
@@ -134,29 +133,18 @@ export default function DemoPage() {
         </div>
 
         {/* CTA Footer */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">{T("demo.ctaTitle")}</h2>
-          <p className="mt-2 text-sm text-slate-500">
+        <Card className="p-8 text-center md:p-12">
+          <h2 className="text-h2 text-ink">{T("demo.ctaTitle")}</h2>
+          <p className="mx-auto mt-2 max-w-[640px] text-body leading-relaxed text-secondary">
             {T("demo.ctaDesc")}
           </p>
-          <Link
-            href="/register"
-            className="mt-6 inline-flex rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 shadow-sm"
-          >
-            {T("demo.ctaStart")}
-          </Link>
-        </div>
+          <div className="mt-6 flex justify-center">
+            <Link href="/register" className={`${PRIMARY_LINK} px-8`}>
+              {T("demo.ctaStart")}
+            </Link>
+          </div>
+        </Card>
       </div>
     </main>
-  );
-}
-
-function SummaryCard({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-slate-900 tabular-nums">{value}</p>
-      <p className="mt-1 text-xs text-slate-400">{sub}</p>
-    </div>
   );
 }

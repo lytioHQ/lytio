@@ -6,6 +6,10 @@ import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
 import { useUiLang } from "@/lib/useUiLang";
 import { t } from "@/lib/i18n";
+import { Button, Card } from "@/components/ui";
+
+const inputClasses =
+  "h-12 w-full rounded-control border border-border bg-surface px-4 text-base text-ink placeholder:text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40";
 
 export default function RegisterPage() {
   const { register: doRegister } = useAuth();
@@ -34,67 +38,69 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm">
+    <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-16">
+      <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">ExcelPilot</h1>
-          <p className="mt-1 text-sm text-slate-500">{T("auth.register.title")}</p>
+          <h1 className="text-h1 text-ink">ExcelPilot</h1>
+          <p className="mt-2 text-base text-secondary">{T("auth.register.title")}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
-          )}
+        <Card className="p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="rounded-control border border-danger/20 bg-danger/5 px-4 py-2.5 text-sm text-danger">{error}</div>
+            )}
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">{T("auth.register.name")}</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-              placeholder={T("auth.register.namePlaceholder")}
-            />
-          </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-ink">{T("auth.register.name")}</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className={inputClasses}
+                placeholder={T("auth.register.namePlaceholder")}
+              />
+            </div>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">{T("auth.register.email")}</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-              placeholder={T("auth.register.emailPlaceholder")}
-            />
-          </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-ink">{T("auth.register.email")}</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className={inputClasses}
+                placeholder={T("auth.register.emailPlaceholder")}
+              />
+            </div>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">{T("auth.register.password")}</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-              placeholder={T("auth.register.passwordPlaceholder")}
-            />
-          </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-ink">{T("auth.register.password")}</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className={inputClasses}
+                placeholder={T("auth.register.passwordPlaceholder")}
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
-          >
-            {loading ? T("auth.register.creating") : T("auth.register.create")}
-          </button>
-        </form>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? T("auth.register.creating") : T("auth.register.create")}
+            </Button>
+          </form>
+        </Card>
 
-        <p className="mt-4 text-center text-xs text-slate-400">
+        <p className="mt-5 text-center text-sm text-secondary">
           {T("auth.register.hasAccount")}{" "}
-          <Link href="/login" className="font-medium text-slate-700 hover:text-slate-900">
+          <Link href="/login" className="font-medium text-accent hover:underline">
             {T("auth.register.signIn")}
           </Link>
         </p>

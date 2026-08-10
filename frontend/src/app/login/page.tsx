@@ -6,6 +6,10 @@ import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
 import { useUiLang } from "@/lib/useUiLang";
 import { t } from "@/lib/i18n";
+import { Button, Card } from "@/components/ui";
+
+const inputClasses =
+  "h-12 w-full rounded-control border border-border bg-surface px-4 text-base text-ink placeholder:text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -32,32 +36,34 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm">
+    <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-16">
+      <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">ExcelPilot</h1>
-          <p className="mt-1 text-sm text-slate-500">{T("auth.login.title")}</p>
+          <h1 className="text-h1 text-ink">ExcelPilot</h1>
+          <p className="mt-2 text-base text-secondary">{T("auth.login.title")}</p>
         </div>
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">{T("auth.login.email")}</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400" placeholder={T("auth.login.emailPlaceholder")} />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">{T("auth.login.password")}</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400" placeholder={T("auth.login.passwordPlaceholder")} />
-          </div>
-          <button type="submit" disabled={loading} className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50">
-            {loading ? T("auth.login.signingIn") : T("auth.login.signIn")}
-          </button>
-        </form>
-        <p className="mt-4 text-center text-xs text-slate-400">
+        <Card className="p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && <div className="rounded-control border border-danger/20 bg-danger/5 px-4 py-2.5 text-sm text-danger">{error}</div>}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-ink">{T("auth.login.email")}</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClasses} placeholder={T("auth.login.emailPlaceholder")} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-ink">{T("auth.login.password")}</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className={inputClasses} placeholder={T("auth.login.passwordPlaceholder")} />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? T("auth.login.signingIn") : T("auth.login.signIn")}
+            </Button>
+          </form>
+        </Card>
+        <p className="mt-5 text-center text-sm text-secondary">
           {T("auth.login.noAccount")}{" "}
-          <Link href="/register" className="font-medium text-slate-700 hover:text-slate-900">{T("auth.login.createOne")}</Link>
+          <Link href="/register" className="font-medium text-accent hover:underline">{T("auth.login.createOne")}</Link>
         </p>
-        <div className="mt-4 text-center">
-          <Link href="/demo" className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-700 hover:bg-amber-100 transition-colors">
+        <div className="mt-4 flex justify-center">
+          <Link href="/demo" className="inline-flex h-11 items-center gap-1.5 rounded-control border border-border bg-surface px-5 text-sm font-medium text-ink transition-colors hover:bg-canvas">
             {T("auth.tryDemo")}
           </Link>
         </div>

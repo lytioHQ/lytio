@@ -6,6 +6,7 @@ import Link from "next/link";
 import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/lib/AuthContext";
 import LanguageSelector from "@/components/LanguageSelector";
+import { Button, Card, SectionTitle } from "@/components/ui";
 import { t, UILanguage } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 
@@ -70,41 +71,39 @@ export default function SettingsPage() {
   }, [token]);
 
   if (authLoading || loading) {
-    return <main className="flex min-h-screen items-center justify-center bg-slate-50"><p className="text-sm text-slate-400">{T("settings.loading")}</p></main>;
+    return <main className="flex min-h-screen items-center justify-center bg-canvas"><p className="text-sm text-secondary">{T("settings.loading")}</p></main>;
   }
 
   const isPro = planData?.plan === "pro";
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+    <main className="min-h-screen bg-canvas">
+      <header className="border-b border-border bg-surface">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-5 md:px-6">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-xs text-slate-400 hover:text-slate-600">{T("nav.backWorkspace")}</Link>
-            <h1 className="text-lg font-bold text-slate-900">{T("settings.title")}</h1>
+            <Link href="/" className="text-sm text-secondary transition-colors hover:text-ink">{T("nav.backWorkspace")}</Link>
+            <h1 className="text-xl font-semibold tracking-tight text-ink md:text-2xl">{T("settings.title")}</h1>
           </div>
           <div className="flex items-center gap-4">
-            {user && <span className="text-xs text-slate-400">{user.email}</span>}
+            {user && <span className="hidden text-sm text-secondary sm:inline">{user.email}</span>}
             <LanguageSelector lang={uiLang} onChange={handleUiLangChange} />
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl px-6 py-10 space-y-8">
-
+      <div className="mx-auto max-w-3xl space-y-8 px-4 py-10 md:px-6">
         {/* Subscription Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-sm font-semibold text-slate-900">{T("settings.subscription")}</h2>
-          <p className="mt-1 text-xs text-slate-400">{T("settings.subscriptionDesc")}</p>
+        <Card>
+          <SectionTitle title={T("settings.subscription")} description={T("settings.subscriptionDesc")} />
 
-          <div className="mt-6 flex items-center gap-4">
-            <span className={`rounded-xl px-4 py-2 text-sm font-bold ${
-              isPro ? "bg-slate-900 text-white" : "bg-amber-100 text-amber-700"
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <span className={`inline-flex w-fit items-center rounded-control px-5 py-2 text-lg font-semibold ${
+              isPro ? "bg-ink text-white" : "bg-warning/10 text-warning"
             }`}>
               {isPro ? T("home.planPro") : T("settings.freeTrial")}
             </span>
             {!isPro && planData && (
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-secondary">
                 {planData.remaining_days > 0
                   ? T("settings.daysRemaining", { n: planData.remaining_days })
                   : T("settings.trialExpired")}
@@ -115,62 +114,50 @@ export default function SettingsPage() {
           {/* Features */}
           <div className="mt-6 space-y-3">
             {planData?.features && Object.entries(planData.features).map(([key, enabled]) => (
-              <div key={key} className="flex items-center gap-3 rounded-lg border border-slate-100 px-4 py-3">
-                <span className={`text-sm ${enabled ? "text-emerald-600" : "text-slate-300"}`}>
+              <div key={key} className="flex items-center gap-4 rounded-control border border-border bg-canvas px-4 py-4">
+                <span className={`text-lg ${enabled ? "text-success" : "text-secondary/40"}`}>
                   {enabled ? "\u2713" : "\u2014"}
                 </span>
-                <span className={`text-xs ${enabled ? "text-slate-700" : "text-slate-400"}`}>
+                <p className="flex-1 text-h3 text-ink">
                   {FEATURE_KEYS[key] ? T(FEATURE_KEYS[key]) : key}
-                </span>
-                {!enabled && <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-400">{T("home.planPro")}</span>}
+                </p>
+                {!enabled && <span className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-secondary">{T("home.planPro")}</span>}
               </div>
             ))}
           </div>
 
           {/* Upgrade */}
           {!isPro && (
-            <div className="mt-8 rounded-xl border border-blue-100 bg-blue-50 p-5">
-              <p className="text-sm font-semibold text-blue-800">{T("settings.upgradeTitle")}</p>
-              <p className="mt-1 text-xs text-blue-600">{T("settings.upgradeDesc")}</p>
-              <button
-                disabled
-                className="mt-4 rounded-lg bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white opacity-50 cursor-not-allowed"
-              >
-                {T("settings.comingSoon")}
-              </button>
+            <div className="mt-8 rounded-control border border-accent/20 bg-accent/5 p-6">
+              <p className="text-[15px] font-semibold text-ink">{T("settings.upgradeTitle")}</p>
+              <p className="mt-1 text-sm leading-relaxed text-secondary">{T("settings.upgradeDesc")}</p>
+              <Button disabled className="mt-4">{T("settings.comingSoon")}</Button>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Privacy */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-sm font-semibold text-slate-900">{T("settings.privacy")}</h2>
-          <p className="mt-1 text-xs text-slate-400">{T("settings.privacyDesc")}</p>
+        <Card>
+          <SectionTitle title={T("settings.privacy")} description={T("settings.privacyDesc")} />
 
           <div className="mt-6 space-y-3">
             {aiPolicy && Object.entries(aiPolicy).filter(([k]) => k !== "version").map(([key, value]) => (
-              <div key={key} className="flex items-start gap-3 rounded-lg border border-slate-100 px-4 py-3">
-                <span className="mt-0.5 text-emerald-500 text-sm">&#x2713;</span>
-                <div>
-                  <p className="text-xs font-medium text-slate-700 capitalize">{POLICY_KEYS[key] ? T(POLICY_KEYS[key]) : key.replace(/_/g, " ")}</p>
-                  <p className="text-xs text-slate-500">{POLICY_VALUE_KEYS[key] ? T(POLICY_VALUE_KEYS[key]) : value}</p>
+              <div key={key} className="flex items-start gap-4 rounded-control border border-border bg-canvas px-4 py-4">
+                <span className="mt-1 text-base text-success">&#x2713;</span>
+                <div className="min-w-0">
+                  <p className="text-h3 capitalize text-ink">{POLICY_KEYS[key] ? T(POLICY_KEYS[key]) : key.replace(/_/g, " ")}</p>
+                  <p className="mt-1 max-w-[680px] text-body leading-relaxed text-secondary">{POLICY_VALUE_KEYS[key] ? T(POLICY_VALUE_KEYS[key]) : value}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-8 border-t border-red-100 pt-6">
-            <p className="text-sm font-semibold text-red-700">{T("settings.deleteTitle")}</p>
-            <p className="mt-1 text-xs text-red-500">{T("settings.deleteDesc")}</p>
-            <button
-              disabled
-              className="mt-4 rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-400 cursor-not-allowed"
-            >
-              {T("settings.comingSoon")}
-            </button>
+          <div className="mt-8 border-t border-border pt-6">
+            <p className="text-[15px] font-semibold text-danger">{T("settings.deleteTitle")}</p>
+            <p className="mt-1 text-sm leading-relaxed text-secondary">{T("settings.deleteDesc")}</p>
+            <Button variant="danger" disabled className="mt-4">{T("settings.comingSoon")}</Button>
           </div>
-        </div>
-
+        </Card>
       </div>
     </main>
   );
