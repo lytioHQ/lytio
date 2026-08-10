@@ -4,10 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/AuthContext";
+import { useUiLang } from "@/lib/useUiLang";
+import { t } from "@/lib/i18n";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
+  const { uiLang } = useUiLang();
+  const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,7 +25,7 @@ export default function LoginPage() {
       await login(email, password);
       router.push("/");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : T("auth.login.fallbackError"));
     } finally {
       setLoading(false);
     }
@@ -32,28 +36,29 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <h1 className="text-xl font-bold tracking-tight text-slate-900">ExcelPilot</h1>
-          <p className="mt-1 text-sm text-slate-500">Sign in to your account</p>
+          <p className="mt-1 text-sm text-slate-500">{T("auth.login.title")}</p>
         </div>
         <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
           {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>}
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400" placeholder="you@company.com" />
+            <label className="block text-xs font-medium text-slate-600 mb-1">{T("auth.login.email")}</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400" placeholder={T("auth.login.emailPlaceholder")} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Password</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400" placeholder="Enter your password" />
+            <label className="block text-xs font-medium text-slate-600 mb-1">{T("auth.login.password")}</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400" placeholder={T("auth.login.passwordPlaceholder")} />
           </div>
           <button type="submit" disabled={loading} className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50">
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? T("auth.login.signingIn") : T("auth.login.signIn")}
           </button>
         </form>
         <p className="mt-4 text-center text-xs text-slate-400">
-          Don&apos;t have an account? <Link href="/register" className="font-medium text-slate-700 hover:text-slate-900">Create one</Link>
+          {T("auth.login.noAccount")}{" "}
+          <Link href="/register" className="font-medium text-slate-700 hover:text-slate-900">{T("auth.login.createOne")}</Link>
         </p>
         <div className="mt-4 text-center">
           <Link href="/demo" className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-700 hover:bg-amber-100 transition-colors">
-            &#x1f3ac; Try Demo
+            {T("auth.tryDemo")}
           </Link>
         </div>
       </div>

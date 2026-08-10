@@ -65,7 +65,7 @@ export default function AnalysisReport({
         {/* Header */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-lg">
           <div className="px-8 py-10">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">{plugin === "sales" ? t("report.salesIntel") : `${plugin} Analysis`}</p>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">{plugin === "sales" ? t("report.salesIntel") : t("report.pluginAnalysis", { plugin })}</p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-white">{sheet}</h1>
             <p className="mt-1 text-sm text-slate-400">{dateStr}</p>
           </div>
@@ -108,7 +108,7 @@ export default function AnalysisReport({
     <div className="space-y-8">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-lg">
         <div className="px-8 py-10">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">{plugin === "sales" ? t("report.salesIntel") : `${plugin} Analysis`}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">{plugin === "sales" ? t("report.salesIntel") : t("report.pluginAnalysis", { plugin })}</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-white">{sheet}</h1>
           <p className="mt-1 text-sm text-slate-400">{dateStr}</p>
         </div>
@@ -116,7 +116,7 @@ export default function AnalysisReport({
 
       {isLegacy && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3">
-          <p className="text-xs text-amber-700">This report uses the legacy format. Re-run analysis for structured data.</p>
+          <p className="text-xs text-amber-700">{t("report.legacyFormat")}</p>
         </div>
       )}
 

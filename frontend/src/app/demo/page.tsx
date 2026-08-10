@@ -10,9 +10,10 @@ import InsightList from "@/components/business/InsightList";
 import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
 import { useUiLang } from "@/lib/useUiLang";
+import { t, localeForLang } from "@/lib/i18n";
 
-function formatDate(d: string): string {
-  return new Date(d).toLocaleDateString("en-US", {
+function formatDate(d: string, locale: string): string {
+  return new Date(d).toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -23,16 +24,19 @@ function formatDate(d: string): string {
 
 export default function DemoPage() {
   const { uiLang } = useUiLang();
+  const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const d = DEMO_DATA;
+  const highRiskCount = d.risks.filter((r) => r.severity === "high").length;
+  const highPriorityCount = d.recommendations.filter((r) => r.priority === "high").length;
 
   return (
     <main className="min-h-screen bg-slate-50">
       {/* Demo Banner */}
       <div className="border-b border-amber-200 bg-amber-50 px-6 py-2.5 text-center">
         <p className="text-xs font-medium text-amber-700">
-          &#x1f3ac; <span className="font-semibold">Demo Mode</span> &mdash; Sample data. No files uploaded.{" "}
+          &#x1f3ac; {T("demo.banner")}{" "}
           <Link href="/register" className="underline hover:text-amber-900">
-            Start your first real analysis &rarr;
+            {T("demo.startRealAnalysis")}
           </Link>
         </p>
       </div>
@@ -45,12 +49,12 @@ export default function DemoPage() {
             <div className="flex items-center gap-3 mt-0.5">
               <span className="text-xs text-slate-400 capitalize">{d.project.industry}</span>
               <span className="text-xs text-slate-300">&middot;</span>
-              <span className="text-xs text-slate-400">English</span>
+              <span className="text-xs text-slate-400">{T("demo.projectLang")}</span>
               <span className="text-xs text-slate-300">&middot;</span>
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">Demo</span>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">{T("demo.demoBadge")}</span>
               <span className="text-xs text-slate-300">&middot;</span>
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                &#x1f512; Read-only
+                {T("demo.readOnly")}
               </span>
             </div>
           </div>
@@ -58,7 +62,7 @@ export default function DemoPage() {
             href="/register"
             className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 shadow-sm"
           >
-            Start Your First Analysis
+            {T("demo.startCta")}
           </Link>
         </div>
       </header>
@@ -66,10 +70,10 @@ export default function DemoPage() {
       <div className="mx-auto max-w-5xl space-y-8 px-6 py-10">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <SummaryCard label="Business Health" value={`${d.business_health.score}`} sub={d.business_health.level} />
-          <SummaryCard label="Findings" value={`${d.insights.length}`} sub="Key insights" />
-          <SummaryCard label="Risks" value={`${d.risks.length}`} sub={`${d.risks.filter((r) => r.severity === "high").length} high severity`} />
-          <SummaryCard label="Recommendations" value={`${d.recommendations.length}`} sub={`${d.recommendations.filter((r) => r.priority === "high").length} high priority`} />
+          <SummaryCard label={T("demo.summaryHealth")} value={`${d.business_health.score}`} sub={d.business_health.level} />
+          <SummaryCard label={T("demo.summaryFindings")} value={`${d.insights.length}`} sub={T("demo.summaryInsightsSub")} />
+          <SummaryCard label={T("demo.summaryRisks")} value={`${d.risks.length}`} sub={T("demo.highSeverity", { n: highRiskCount })} />
+          <SummaryCard label={T("demo.summaryRecs")} value={`${d.recommendations.length}`} sub={T("demo.highPriority", { n: highPriorityCount })} />
         </div>
 
         {/* Business Value */}
@@ -102,7 +106,7 @@ export default function DemoPage() {
 
         {/* Timeline */}
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Business Timeline</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">{T("demo.timelineTitle")}</p>
           <div className="space-y-3">
             {d.timeline.map((item) => {
               const score = item.business_health_score;
@@ -119,7 +123,7 @@ export default function DemoPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-slate-800 tabular-nums">{score}</span>
-                      <span className="text-xs text-slate-400">{formatDate(item.created_at)}</span>
+                      <span className="text-xs text-slate-400">{formatDate(item.created_at, localeForLang(uiLang))}</span>
                     </div>
                   </div>
                   <p className="mt-2 text-xs text-slate-500 line-clamp-2">{item.summary}</p>
@@ -131,15 +135,15 @@ export default function DemoPage() {
 
         {/* CTA Footer */}
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">Ready to analyze your own data?</h2>
+          <h2 className="text-lg font-bold text-slate-900">{T("demo.ctaTitle")}</h2>
           <p className="mt-2 text-sm text-slate-500">
-            Upload your Excel file and get AI-powered business insights in seconds.
+            {T("demo.ctaDesc")}
           </p>
           <Link
             href="/register"
             className="mt-6 inline-flex rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 shadow-sm"
           >
-            Start Your First Analysis &rarr;
+            {T("demo.ctaStart")}
           </Link>
         </div>
       </div>
