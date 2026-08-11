@@ -13,8 +13,8 @@ export default function RecommendationCards({ questions, onSelect, sending, t }:
   return (
     <div>
       <div className="mb-3 flex items-center gap-2">
-        <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+        <p className="text-caption font-semibold uppercase tracking-wider text-secondary">
           {t("recs.title")}
         </p>
       </div>
@@ -24,15 +24,13 @@ export default function RecommendationCards({ questions, onSelect, sending, t }:
             key={i}
             onClick={() => !sending && onSelect(q)}
             disabled={sending}
-            className="group rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:border-slate-400 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            className="group rounded-card border border-border bg-surface p-4 text-left transition-colors hover:border-accent/40 hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-50"
           >
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-[10px] font-bold text-slate-500 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-control bg-accent/10 text-xs font-bold text-accent transition-colors group-hover:bg-accent group-hover:text-white">
                 {i + 1}
               </span>
-              <p className="text-sm font-medium text-slate-700 leading-snug group-hover:text-slate-900">
-                {q}
-              </p>
+              <p className="text-body font-medium text-ink">{q}</p>
             </div>
           </button>
         ))}
