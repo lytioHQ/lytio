@@ -163,23 +163,23 @@ export default function WorkspacePage() {
     <main className="min-h-screen bg-canvas">
       <BetaBanner lang={uiLang} />
       <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-6 py-5">
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-ink">ExcelPilot</h1>
             <p className="mt-0.5 text-sm text-secondary">{T("home.subtitle")}</p>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:gap-5">
             <LanguageSelector lang={uiLang} onChange={handleUiLangChange} />
             <Link href="/workspace" className="text-sm text-secondary transition-colors hover:text-ink">{T("home.workspaceV2")}</Link>
             {plan && (
-              <span className={`rounded-full px-2.5 py-1 text-caption font-semibold ${
+              <span className={`hidden rounded-full px-2.5 py-1 text-caption font-semibold sm:inline ${
                 plan.plan === "pro" ? "bg-ink text-white" : "bg-warning/10 text-warning"
               }`}>
                 {plan.plan === "pro" ? T("home.planPro") : T("home.planTrial", { n: plan.remaining_days })}
               </span>
             )}
             <Link href="/settings" className="text-sm text-secondary transition-colors hover:text-ink">{T("home.settings")}</Link>
-            {user && <span className="text-sm font-medium text-ink">{user.name}</span>}
+            {user && <span className="hidden text-sm font-medium text-ink sm:inline">{user.name}</span>}
             <button onClick={logout} className="text-sm text-secondary transition-colors hover:text-ink">{T("home.logout")}</button>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function WorkspacePage() {
       {/* New Analysis Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-md space-y-5 rounded-card border border-border bg-surface p-6 shadow-lg">
+          <div className="w-full max-w-md space-y-5 rounded-card border border-border bg-surface p-6 shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
             <h3 className="text-lg font-semibold text-ink">{T("home.modalTitle")}</h3>
             {error && <div className="rounded-control border border-danger/20 bg-danger/5 px-3 py-2 text-sm text-danger">{error}</div>}
             <div>

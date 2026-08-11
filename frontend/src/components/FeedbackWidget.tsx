@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { t, UILanguage, SUPPORTED_UI_LANGS } from "@/lib/i18n";
+import { isUILanguage, resolveInitialUiLang, t, UILanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui";
 
 type FeedbackType = "bug" | "feature" | "suggestion";
@@ -12,7 +12,7 @@ const inputClasses =
   "w-full rounded-control border border-border bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40";
 
 export default function FeedbackWidget() {
-  const [lang, setLang] = useState<UILanguage>("zh");
+  const [lang, setLang] = useState<UILanguage>(() => resolveInitialUiLang());
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<FeedbackType | null>(null);
   const [title, setTitle] = useState("");
@@ -20,12 +20,19 @@ export default function FeedbackWidget() {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("excelpilot_ui_lang");
-      if (raw && (SUPPORTED_UI_LANGS as readonly string[]).includes(raw)) setLang(raw as UILanguage);
-    } catch {
-      /* ignore */
-    }
+    // Keep the widget language in sync with <html lang>, which persistUiLang
+    // updates on every language switch (homepage/workspace/settings selectors).
+    const el = document.documentElement;
+    const sync = () => {
+      setLang((prev) => {
+        const raw = el.lang;
+        return isUILanguage(raw) && raw !== prev ? raw : prev;
+      });
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(el, { attributes: true, attributeFilter: ["lang"] });
+    return () => observer.disconnect();
   }, []);
 
   const T = (key: string) => t(lang, key);
@@ -74,7 +81,7 @@ export default function FeedbackWidget() {
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/30" onClick={reset} aria-hidden />
-          <div className="relative w-full max-w-md rounded-card border border-border bg-surface p-6 shadow-xl">
+          <div className="relative w-full max-w-md rounded-card border border-border bg-surface p-6 shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
             {submitted ? (
               <div className="space-y-4 text-center">
                 <h3 className="text-h3 text-ink">{T("feedback.thanks")}</h3>

@@ -10,7 +10,7 @@ interface RecData {
   expected_impact?: ImpactData | null;
 }
 
-const PRI_COLORS: Record<string, string> = { high: "bg-accent", medium: "bg-ink", low: "bg-secondary" };
+const PRI_COLORS: Record<string, string> = { high: "bg-danger", medium: "bg-warning", low: "bg-secondary" };
 
 export default function RecommendationList({ recs, lang }: { recs: RecData[]; lang: UILanguage }) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);

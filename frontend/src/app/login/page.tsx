@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useUiLang } from "@/lib/useUiLang";
 import { t } from "@/lib/i18n";
 import { Button, Card } from "@/components/ui";
+import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 
 const inputClasses =
   "h-12 w-full rounded-control border border-border bg-surface px-4 text-base text-ink placeholder:text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40";
@@ -63,7 +64,7 @@ export default function LoginPage() {
           <Link href="/register" className="font-medium text-accent hover:underline">{T("auth.login.createOne")}</Link>
         </p>
         <div className="mt-4 flex justify-center">
-          <Link href="/demo" className="inline-flex h-11 items-center gap-1.5 rounded-control border border-border bg-surface px-5 text-sm font-medium text-ink transition-colors hover:bg-canvas">
+          <Link href="/demo" className={`${buttonBaseClasses} ${buttonVariantClasses.secondary}`}>
             {T("auth.tryDemo")}
           </Link>
         </div>

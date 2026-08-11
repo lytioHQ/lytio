@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { localeForLang, t, UILanguage } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 import { Button, Card, MetricCard } from "@/components/ui";
+import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 
 interface ProjectData {
   id: number; title: string; industry: string; language: string;
@@ -33,10 +34,8 @@ const STATUS_KEYS: Record<string, string> = {
   archived: "proj.status.archived",
 };
 
-const PRIMARY_LINK =
-  "inline-flex h-11 items-center justify-center rounded-control bg-ink px-5 text-sm font-medium text-white transition-colors hover:bg-[#3A3A3C]";
-const SECONDARY_LINK =
-  "inline-flex h-11 items-center justify-center rounded-control border border-border bg-surface px-5 text-sm font-medium text-ink transition-colors hover:bg-canvas";
+const PRIMARY_LINK = "${buttonBaseClasses} ${buttonVariantClasses.primary}";
+const SECONDARY_LINK = "${buttonBaseClasses} ${buttonVariantClasses.secondary}";
 
 function formatDate(d: string | null, lang: UILanguage): string {
   if (!d) return "-";

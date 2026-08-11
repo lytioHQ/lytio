@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LANG_LABELS, SUPPORTED_UI_LANGS, UILanguage } from "@/lib/i18n";
+import { LANG_LABELS, SUPPORTED_UI_LANGS, t, UILanguage } from "@/lib/i18n";
 
 interface Props {
   lang: UILanguage;
@@ -46,7 +46,7 @@ export default function LanguageSelector({ lang, onChange }: Props) {
       {open && (
         <ul
           role="listbox"
-          aria-label="UI language"
+          aria-label={t(lang, "lang.uiLabel")}
           className="absolute right-0 z-50 mt-1.5 w-36 overflow-hidden rounded-card border border-border bg-surface py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
         >
           {SUPPORTED_UI_LANGS.map((code) => (

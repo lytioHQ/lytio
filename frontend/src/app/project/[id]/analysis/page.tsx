@@ -5,9 +5,9 @@ import Link from "next/link";
 import { t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 import { Card, SectionTitle } from "@/components/ui";
+import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 
-const PRIMARY_LINK =
-  "inline-flex h-11 items-center justify-center rounded-control bg-ink px-5 text-sm font-medium text-white transition-colors hover:bg-[#3A3A3C]";
+const PRIMARY_LINK = "${buttonBaseClasses} ${buttonVariantClasses.primary}";
 
 export default function AnalysisPage() {
   const { id } = useParams<{ id: string }>();
