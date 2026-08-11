@@ -24,10 +24,10 @@ from app.api.analysis_runs import router as analysis_runs_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
-    logger.info("excelpilot.startup", extra={"event": "startup"})
+    logger.info("lytio.startup", extra={"event": "startup"})
     await init_db()
     yield
-    logger.info("excelpilot.shutdown", extra={"event": "shutdown"})
+    logger.info("lytio.shutdown", extra={"event": "shutdown"})
 
 
 app = FastAPI(

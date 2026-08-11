@@ -27,7 +27,7 @@ class StructuredFormatter(logging.Formatter):
 def setup_logging():
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(StructuredFormatter())
-    root = logging.getLogger("excelpilot")
+    root = logging.getLogger("lytio")
     root.handlers.clear()
     root.addHandler(handler)
     root.setLevel(logging.INFO)
