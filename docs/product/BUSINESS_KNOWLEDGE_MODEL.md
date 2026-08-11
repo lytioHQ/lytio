@@ -1,4 +1,4 @@
-# ExcelPilot Business Knowledge Model v1.0
+# Lytio Business Knowledge Model v1.0
 
 **Status:** Active  
 **Version:** 1.0  
@@ -12,13 +12,13 @@
 
 ### Why Business Objects Exist
 
-ExcelPilot is a platform of industry consultants. If every consultant speaks a different language, the platform cannot grow. A Sales Consultant must produce outputs that a Finance Consultant can consume. An HR Consultant must understand risk in the same way an Inventory Consultant does.
+Lytio is a platform of industry consultants. If every consultant speaks a different language, the platform cannot grow. A Sales Consultant must produce outputs that a Finance Consultant can consume. An HR Consultant must understand risk in the same way an Inventory Consultant does.
 
 Business Objects are the **universal vocabulary** of the platform.
 
 ### The Core Question
 
-> If ExcelPilot has 100 industry consultants, how do they communicate using the same business language?
+> If Lytio has 100 industry consultants, how do they communicate using the same business language?
 
 **Answer:** They communicate through shared Business Objects. Every consultant produces and consumes the same object types. The objects constrain what can be said, ensuring every consultant speaks the same language regardless of industry.
 
@@ -622,4 +622,4 @@ New object types should be rare. The existing 11 objects were designed to be com
 
 ---
 
-*This document defines the universal business language of ExcelPilot. All plugins must conform to this model. The objects defined here are the vocabulary through which every AI Consultant communicates. Changes to this document require platform-wide review and a version bump per the Versioning Strategy (Section 11).*
+*This document defines the universal business language of Lytio. All plugins must conform to this model. The objects defined here are the vocabulary through which every AI Consultant communicates. Changes to this document require platform-wide review and a version bump per the Versioning Strategy (Section 11).*

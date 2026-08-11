@@ -1,4 +1,4 @@
-﻿# ExcelPilot Website Style Guide v1.0
+﻿# Lytio Website Style Guide v1.0
 
 > **Status:** Permanent Brand Document  
 > **Version:** 1.0 | 2026-07-31  
@@ -15,44 +15,44 @@
 **Content hierarchy:**
 1. Category badge (optional): Small pill — "AI Business Consultant"
 2. Headline: 4xl-5xl, bold, tight leading. Maximum 10 words.
-3. Subheadline: Base-lg, slate-500, 2-3 lines maximum.
-4. Primary CTA: "Try Demo" — solid slate-900 button
+3. Subheadline: text-body, text-secondary, 2-3 lines maximum.
+4. Primary CTA: "Try Demo" — Button primary (bg-ink)
 5. Secondary CTA: "Start Your Analysis" — outline button
 6. Trust signal (below CTAs): "No registration required for demo."
 
-**Visual:** Clean, typography-driven. Subtle background gradient from slate-50 to white. No hero image — the headline is the hero.
+**Visual:** Clean, typography-driven. Canvas background with layered muted sections. No gradients. No hero image — the headline is the hero.
 
 ### Problem Section
 
-**Layout:** Slate-50/50 background, max-w-5xl, py-20.
+**Layout:** Muted section background (bg-muted), max-w-5xl, py-20.
 
 **Content:**
-- Section label: "The Problem" — text-[11px] uppercase tracking-wider slate-400
+- Section label: "The Problem" — text-caption uppercase tracking-wider text-secondary
 - Headline: 2xl bold
 - Supportive paragraph
 - 4 problem cards in responsive grid
 
-**Card style:** White background, border slate-200, rounded-xl, p-5. Title (sm semibold) + description (xs slate-500).
+**Card style:** bg-surface, border-border, rounded-card, p-5. Title (text-h3) + description (text-caption text-secondary).
 
 ### How It Works Section
 
-**Layout:** White background, max-w-5xl, py-20.
+**Layout:** bg-surface, max-w-5xl, py-20.
 
 **Content:**
 - Section label: "How It Works"
 - Headline: 2xl bold
-- 4-step flow: numbered circles (slate-900, white text) + title + description
+- 4-step flow: numbered circles (bg-ink, white text) + title + description
 - Steps arranged horizontally on desktop, stacked on mobile
 
 ### Differentiation Section
 
-**Layout:** Slate-50/50 background, max-w-5xl, py-20.
+**Layout:** Muted section background (bg-muted), max-w-5xl, py-20.
 
 **Content:**
-- Section label: "What Makes ExcelPilot Different"
+- Section label: "What Makes Lytio Different"
 - Headline: 2xl bold
 - 6 feature cards in 2×3 or 3×2 grid
-- Cards: white, rounded-xl, border, p-5
+- Cards: bg-surface, rounded-card, border-border, p-5
 
 ### Demo CTA Section
 
@@ -61,25 +61,25 @@
 **Content:**
 - Section label: "See It In Action"
 - Headline: 2xl bold
-- Paragraph: sm text, slate-500
-- CTA: "Try Demo" — solid slate-900, px-6 py-3
+- Paragraph: text-body, text-secondary
+- CTA: "Try Demo" — Button primary (bg-ink), px-5 h-11
 
 ### Security Section
 
-**Layout:** Slate-50/50 background, max-w-5xl, py-20.
+**Layout:** Muted section background (bg-muted), max-w-5xl, py-20.
 
 **Content:**
 - Section label: "Security & Privacy"
 - Headline: 2xl bold
-- 3 feature cards (emerald-themed) in horizontal grid
-- Cards: white, rounded-xl, border, p-6, centered text
+- 3 feature cards (success-soft themed) in horizontal grid
+- Cards: bg-surface, rounded-card, border-border, p-6, centered text
 
 ### Footer
 
-**Layout:** White background, border-t slate-200, max-w-5xl, py-8, flex between.
+**Layout:** bg-surface, border-t border-border, max-w-5xl, py-8, flex between.
 
 **Content:**
-- Left: "ExcelPilot — AI Business Consultant" (text-xs slate-400)
+- Left: "Lytio — AI Business Consultant" (text-caption text-secondary)
 - Right: Demo, Sign In, Get Started (button) links
 
 ---
@@ -100,7 +100,7 @@ Template for individual feature pages (e.g., /features/business-health):
 ### Principles
 - Transparent. No "contact us for enterprise pricing" unless genuinely custom.
 - Simple. Maximum 2 tiers: Trial (free, 14 days) and Pro (paid).
-- Feature comparison: Checkmarks (emerald) and dashes (slate-300), not X marks.
+- Feature comparison: Checkmarks (success) and dashes (border), not X marks.
 - No "Most Popular" badge. Let the value speak.
 
 ### Layout
@@ -152,12 +152,12 @@ See current /demo implementation for reference.
 
 ### Primary CTA
 - **Label:** "Try Demo" (landing), "Start Your First Analysis" (post-demo), "Create Analysis" (workspace)
-- **Style:** Rounded-xl, bg-slate-900, text-white, px-6 py-3, shadow-sm
+- **Style:** rounded-control, bg-ink, text-white, px-5 h-11
 - **Placement:** Above the fold, never below
 
 ### Secondary CTA
 - **Label:** "Start Your Analysis" (landing), "Sign In" (demo page)
-- **Style:** Rounded-xl, border slate-200, bg-white, text-slate-700, px-6 py-3
+- **Style:** rounded-control, border-border, bg-surface, text-ink, px-5 h-11
 - **Placement:** Adjacent to primary CTA
 
 ### CTA Hierarchy
@@ -188,10 +188,10 @@ See current /demo implementation for reference.
 
 ### Navigation Rules
 - Maximum 4 items in main nav (excluding logo and CTA button)
-- Active page indicated by text color (slate-900), not background
+- Active page indicated by text color (text-ink), not background
 - No dropdown menus in V1 (single-level navigation)
 - Mobile: hamburger menu with same items
 
 ---
 
-*This Website Style Guide ensures consistency across every public-facing page of the ExcelPilot website.*
+*This Website Style Guide ensures consistency across every public-facing page of the Lytio website.*

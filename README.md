@@ -1,4 +1,4 @@
-﻿# ExcelPilot
+﻿# Lytio
 
 > 插件化 AI Excel 分析平台。第一阶段：销售分析 AI。
 
@@ -6,7 +6,7 @@
 
 ## 项目定位
 
-ExcelPilot 帮助企业用户通过 AI 自动分析 Excel 数据，生成可视化报告与商业洞察。
+Lytio 帮助企业用户通过 AI 自动分析 Excel 数据，生成可视化报告与商业洞察。
 
 **核心差异化：** 每新增一个行业分析方向，仅需新增一个 Plugin，无需改动核心框架。
 
@@ -27,7 +27,7 @@ ExcelPilot 帮助企业用户通过 AI 自动分析 Excel 数据，生成可视�
 ## 目录说明
 
 ```
-excelpilot/
+lytio/
 ├── frontend/           # Next.js 前端应用
 ├── backend/            # FastAPI 后端应用
 ├── plugins/            # 行业分析插件 (未来)

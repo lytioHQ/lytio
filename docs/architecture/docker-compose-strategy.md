@@ -29,7 +29,7 @@ docker/
 ### 组织方式
 
 ```
-excelpilot/
+lytio/
 ├── docker/
 │   ├── compose.yml
 │   └── .env                       ← 开发环境变量（不提交 Git）
@@ -255,7 +255,7 @@ POSTGRES_PORT=5433          ← 不同端口避免冲突
 
 ```bash
 # 1. 克隆项目
-git clone <repo> && cd excelpilot
+git clone <repo> && cd lytio
 
 # 2. 复制环境变量模板
 cp .env.example docker/.env

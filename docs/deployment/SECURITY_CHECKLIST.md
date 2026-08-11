@@ -1,4 +1,4 @@
-# ExcelPilot — Security Checklist
+# Lytio — Security Checklist
 
 > Verified: 2026-07-30  
 > Version: 0.1.0 (Private Beta)

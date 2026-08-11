@@ -1,4 +1,4 @@
-﻿# ExcelPilot - 完整软件架构设计
+﻿# Lytio - 完整软件架构设计
 
 > 版本: v1.0 | 日期: 2026-07-25 | 定位: 可扩展的 Excel AI 分析 SaaS 平台
 
@@ -49,7 +49,7 @@ AI 推理层 (DeepSeek API)
 ### 2.1 顶层 Monorepo
 
 ```
-excelpilot/
+lytio/
 ├── .github/workflows/         # CI/CD
 ├── docker/                    # Docker + Nginx
 ├── frontend/                  # Next.js 前端
@@ -768,7 +768,7 @@ PostgreSQL (单实例)
 ### A.6 MVP 最小目录结构
 
 ```
-excelpilot/
+lytio/
 ├── frontend/              # Next.js
 │   ├── src/
 │   │   ├── app/

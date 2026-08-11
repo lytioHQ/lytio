@@ -1,4 +1,4 @@
-﻿# ExcelPilot Trust Design Guide v1.0
+﻿# Lytio Trust Design Guide v1.0
 
 > **Status:** Permanent Brand Document  
 > **Version:** 1.0 | 2026-07-31  
@@ -9,7 +9,7 @@
 
 ## 0. The Trust Design Mandate
 
-Every interface element in ExcelPilot either builds trust or erodes it. There is no neutral design when trust is the product.
+Every interface element in Lytio either builds trust or erodes it. There is no neutral design when trust is the product.
 
 This document defines **how** trust is expressed — visually, interactively, and textually — across every touchpoint in the product. It is the most important design document we have. When a design decision affects user trust, this document is the authority.
 
@@ -24,7 +24,7 @@ This document defines **how** trust is expressed — visually, interactively, an
 **Remembered:** localStorage — never shown again after dismissal.
 
 **Content:**
-- "Your Data is Protected" (emerald, lock icon)
+- "Your Data is Protected" (success, lock icon)
 - 4 bullet points from AI policy API:
   - Files stored securely, accessed only through authenticated APIs
   - All projects private to their owner
@@ -32,13 +32,13 @@ This document defines **how** trust is expressed — visually, interactively, an
   - Delete projects anytime — all data removed permanently
 - "Got it" dismiss button
 
-**Visual:** Emerald-themed card (emerald-50 background, emerald-200 border, emerald-700 text). Green signals safety and trust. Emerald is exclusively our trust color.
+**Visual:** success-soft themed card (bg-success-soft background, border-success/30 border, text-success). Green signals safety and trust. Success green is exclusively our trust color.
 
 ### 1.2 Ongoing: Security Status Badge
 
 **Where:** Project dashboard header.  
-**What:** Small emerald badge: "🔒 Secure"  
-**Visual:** ounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700
+**What:** Small success badge: "🔒 Secure"
+**Visual:** rounded-full bg-success-soft px-2 py-0.5 text-xs font-medium text-success
 
 Always visible. Never dismissible. A constant, subtle reminder.
 
@@ -46,7 +46,7 @@ Always visible. Never dismissible. A constant, subtle reminder.
 
 **Where:** Settings page.  
 **What:** Privacy section reading from GET /api/config/ai-policy.  
-**Content:** Each policy item displayed with checkmark (emerald), category label, and description.
+**Content:** Each policy item displayed with checkmark (success), category label, and description.
 
 **Key rule:** Privacy policy is read from the API, not hardcoded. If the policy changes, the UI automatically reflects it.
 
@@ -83,7 +83,7 @@ Every Insight, Risk, and Recommendation must answer "Why?" — either through ex
 - Reason: Natural language explanation of the evidence
 - Confidence: High / Medium / Low badge
 
-**Visual:** Slate-50 background, border slate-200, rounded-lg, p-3. Compact, professional, scannable.
+**Visual:** bg-canvas background, border-border, rounded-card, p-3. Compact, professional, scannable.
 
 **When evidence is unavailable:**
 - The "Why this conclusion?" toggle is hidden entirely
@@ -103,9 +103,9 @@ Confidence is never hidden, minimized, or inflated. It is displayed prominently 
 
 | Confidence | Meaning | Color | Visual |
 |-----------|---------|-------|--------|
-| High | Strong, multi-source evidence | Emerald | Green dot + "High" badge |
-| Medium | Direction clear, magnitude uncertain | Amber | Amber dot + "Medium" badge |
-| Low | Speculation based on limited data | Red | Red dot + "Low" badge |
+| High | Strong, multi-source evidence | Success | Success dot + "High" badge |
+| Medium | Direction clear, magnitude uncertain | Warning | Warning dot + "Medium" badge |
+| Low | Speculation based on limited data | Danger | Danger dot + "Low" badge |
 
 ### 3.2 Where Confidence Appears
 
@@ -162,21 +162,21 @@ This is not about hiding AI involvement. It is about not defining ourselves by o
 
 | Concept | Icon | Color | Usage |
 |---------|------|-------|-------|
-| Secure / Encrypted | lock-closed | Emerald-600 | Security badges, privacy notices |
-| Private | shield-check | Emerald-600 | Project ownership indicators |
-| Verified | check-badge | Emerald-600 | Email verification, data integrity |
-| Read-only | eye | Slate-400 | Demo mode indicator |
+| Secure / Encrypted | lock-closed | Success | Security badges, privacy notices |
+| Private | shield-check | Success | Project ownership indicators |
+| Verified | check-badge | Success | Email verification, data integrity |
+| Read-only | eye | Secondary | Demo mode indicator |
 
 ### 5.2 Where Security Indicators Appear
 
-- **Demo page:** "Read-only" badge (slate)
-- **Project dashboard:** "Secure" badge (emerald)
-- **Security notice:** Lock icon (emerald)
-- **Settings → Privacy:** Shield icons (emerald)
+- **Demo page:** "Read-only" badge (secondary)
+- **Project dashboard:** "Secure" badge (success)
+- **Security notice:** Lock icon (success)
+- **Settings → Privacy:** Shield icons (success)
 
 ### 5.3 Rules
 
-- Use emerald for security. Never amber or red (those signal problems).
+- Use success for security. Never warning or danger (those signal problems).
 - Indicators are subtle — small badges, not banners.
 - Indicators are persistent — they remain visible, not just on first visit.
 - Never over-indicate. A page with 8 security badges signals insecurity, not security.
@@ -241,7 +241,7 @@ The Business Timeline serves as an audit trail:
 
 ## 8. Transparency Principles
 
-### 8.1 What Transparency Means at ExcelPilot
+### 8.1 What Transparency Means at Lytio
 
 **Transparency is not "show everything."** It is "show everything the user needs to trust us — and nothing that would confuse or overwhelm them."
 

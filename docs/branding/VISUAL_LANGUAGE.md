@@ -1,4 +1,4 @@
-﻿# ExcelPilot Visual Language v1.0
+﻿# Lytio Visual Language v1.0
 
 > **Status:** Permanent Brand Document  
 > **Version:** 1.0 | 2026-07-31  
@@ -42,7 +42,7 @@
 
 ### Illustration Style
 - **Minimal line art.** Single-weight strokes, limited detail, no shading.
-- **Monochromatic or duotone.** Slate palette only. No full-color illustrations.
+- **Monochromatic or duotone.** Neutral palette (ink, secondary on canvas) only. No full-color illustrations.
 - **Consistent scale and proportion.** All illustrations should feel like part of the same family.
 - **No characters.** Abstract representations of concepts, not cartoon people.
 
@@ -52,27 +52,25 @@
 
 ### What Our Colors Communicate
 
-**Slate (Primary):**
-Calm, professional, timeless, trustworthy. The dominant color of our interface. Slate says: "We are serious. We are stable. We have been here and will be here."
+**Neutral (canvas / surface / ink / secondary):**
+Calm, professional, timeless, trustworthy. The dominant voice of our interface. Neutral says: "We are serious. We are stable. We have been here and will be here."
 
-**Emerald (Positive):**
+**Success (Positive):**
 Growth, improvement, health, success. Used exclusively for positive indicators: improving trends, mitigated risks, strong performance.
 
-**Amber (Attention):**
+**Warning (Attention):**
 Caution, awareness, transition. Used for warnings, medium confidence, trial status. Says: "Pay attention here" without causing alarm.
 
-**Red (Critical):**
+**Danger (Critical):**
 Risk, decline, urgency. Used sparingly for high-severity risks and negative trends. When everything is red, nothing is.
 
-**Blue (Information):**
-Trust, intelligence, action. Used for interactive elements, evidence, recommendations. Blue says: "Here's something you can act on."
+**Accent (Information):**
+Trust, intelligence, action. Used for interactive elements, evidence, recommendations, links. Accent says: "Here's something you can act on."
 
 ### Color Proportion
-- 85% Slate (backgrounds, text, borders, structure)
-- 5% Emerald (positive indicators)
-- 3% Amber (warnings, attention)
-- 3% Red (critical risks, errors)
-- 4% Blue (actions, links, information)
+- 80% Neutral (canvas, surface, muted, border, secondary, ink — structure and text)
+- 15% Soft tint (accent-soft, success-soft, warning-soft, danger-soft — section backgrounds)
+- 5% Strong accent (accent, success, warning, danger — semantic and interactive highlights)
 
 ### Color That Does Not Exist in Our Palette
 - **Purple.** The "AI color." Using purple signals "we are an AI company." We are not.
@@ -93,11 +91,11 @@ A professional consulting firm's output is:
 - Visually restrained (color used sparingly to highlight, not decorate)
 - Executive-ready (page one tells the whole story)
 
-ExcelPilot reports should feel like they could have come from a consulting engagement — not a chat window.
+Lytio reports should feel like they could have come from a consulting engagement — not a chat window.
 
 ### Report Aesthetics
 - **White backgrounds** for report pages. Print-ready.
-- **Minimal color.** Slate text, emerald/amber/red for semantic meaning only.
+- **Minimal color.** Ink/secondary text, success/warning/danger for semantic meaning only.
 - **Clear section hierarchy.** Headline → subhead → body. Consistent throughout.
 - **Generous whitespace.** Information density is lower than a dashboard. This is a reading experience.
 - **Typography-driven.** No charts (yet). Structure and typography create the visual interest.
@@ -113,7 +111,7 @@ ExcelPilot reports should feel like they could have come from a consulting engag
 ## 5. Data Visualization Principles
 
 ### Current State (V1)
-ExcelPilot V1 does not include charts or graphs. Analysis is text-based with structured Business Objects.
+Lytio V1 does not include charts or graphs. Analysis is text-based with structured Business Objects.
 
 ### Future Direction
 When charts are introduced:
@@ -127,7 +125,7 @@ When charts are introduced:
 - Currency: .4M, , ,200 (never )
 - Percentages: 14.2%, -7.3% (always one decimal)
 - Large numbers: 48,320 (comma separator)
-- Trends: +14.2% (green), -7.3% (red), 0% (slate)
+- Trends: +14.2% (success), -7.3% (danger), 0% (secondary)
 - Tabular numbers: Always use tabular-nums for alignment
 
 ---
@@ -135,10 +133,10 @@ When charts are introduced:
 ## 6. Marketing Visual Language
 
 ### Landing Page
-- **Hero:** Clean, typography-focused. Large headline, supportive subtext, clear CTA. Optional: subtle background gradient (slate-50 to white).
+- **Hero:** Clean, typography-focused. Large headline, supportive subtext, clear CTA. Background: canvas with layered muted sections. No gradients.
 - **Problem/Solution sections:** Card grids with icons or simple illustrations.
-- **Demo CTA:** Distinctive section with amber/blue accent to draw attention.
-- **Security/Trust:** Emerald-themed section. Green = safety and trust.
+- **Demo CTA:** Distinctive section with accent/warning highlights to draw attention.
+- **Security/Trust:** success-soft themed section. Success green = safety and trust.
 
 ### Social Media & Ads
 - **Text-forward.** Headlines that communicate value, not curiosity gaps.
@@ -147,4 +145,4 @@ When charts are introduced:
 
 ---
 
-*This Visual Language guide ensures that every visual expression of ExcelPilot — from product UI to marketing materials — is consistent with our brand identity as a professional business consultant platform.*
+*This Visual Language guide ensures that every visual expression of Lytio — from product UI to marketing materials — is consistent with our brand identity as a professional business consultant platform.*

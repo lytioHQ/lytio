@@ -1,4 +1,4 @@
-﻿# ExcelPilot Iconography v1.0
+﻿# Lytio Iconography v1.0
 
 > **Status:** Permanent Brand Document  
 > **Version:** 1.0 | 2026-07-31  
@@ -42,13 +42,13 @@ Heroicons provides two styles:
 - **Filled icons:** Only for active/selected navigation states
 
 ### Color
-- **Default:** 	ext-slate-400 (secondary, non-interactive)
-- **Interactive:** 	ext-slate-600 (hoverable, clickable)
-- **Active:** 	ext-slate-900 (current page, selected item)
-- **Semantic:** Emerald (positive), Amber (warning), Red (critical), Blue (info) — but only when the icon carries semantic meaning
+- **Default:** text-secondary (non-interactive)
+- **Interactive:** text-ink (hoverable, clickable)
+- **Active:** text-ink font-medium (current page, selected item)
+- **Semantic:** success (positive), warning (attention), danger (critical), accent (info) — but only when the icon carries semantic meaning
 
 ### Alignment
-- Icons are always vertically centered with adjacent text using lex items-center
+- Icons are always vertically centered with adjacent text using flex items-center
 - Gap between icon and text: gap-1.5 (6px) for small, gap-2 (8px) for standard
 
 ---
@@ -59,20 +59,20 @@ Heroicons provides two styles:
 | Concept | Icon |
 |---------|------|
 | Dashboard / Home | home or squares-2x2 |
-| Projects / Workspace | older or riefcase |
-| Settings | cog-6-tooth or djustments-horizontal |
+| Projects / Workspace | folder or briefcase |
+| Settings | cog-6-tooth or adjustments-horizontal |
 
 ### Actions
 | Concept | Icon |
 |---------|------|
-| Upload | rrow-up-tray |
+| Upload | arrow-up-tray |
 | Analyze | magnifying-glass or chart-bar |
-| Delete | 	rash |
+| Delete | trash |
 | Edit | pencil |
 | Close / Dismiss | x-mark |
 | Expand / Collapse | chevron-right (rotates on open) |
 | Add / Create | plus |
-| Refresh | rrow-path |
+| Refresh | arrow-path |
 
 ### Status
 | Concept | Icon |
@@ -89,9 +89,9 @@ Heroicons provides two styles:
 |---------|------|
 | Health | heart or chart-bar |
 | Revenue | currency-dollar |
-| Growth | rrow-trending-up |
-| Decline | rrow-trending-down |
-| Risk |  shield-exclamation |
+| Growth | arrow-trending-up |
+| Decline | arrow-trending-down |
+| Risk | shield-exclamation |
 | Recommendation | light-bulb |
 | Evidence | document-magnifying-glass |
 | Timeline | clock |
@@ -122,28 +122,28 @@ Heroicons provides two styles:
 
 Empty states may use slightly larger, more expressive icons:
 - 48px size
-- Slate-300 color (subtle, non-distracting)
+- text-secondary color (subtle, non-distracting)
 - Outline style only
 - Paired with helpful text and a clear CTA
 
 **Example empty states:**
-- No projects: document-plus (48px, slate-300)
-- No analyses: chart-bar (48px, slate-300)
-- No evidence: document-magnifying-glass (48px, slate-300)
+- No projects: document-plus (48px, text-secondary)
+- No analyses: chart-bar (48px, text-secondary)
+- No evidence: document-magnifying-glass (48px, text-secondary)
 
 ---
 
 ## 7. Security & Trust Icons
 
-Security-related icons use emerald color to reinforce the safety/trust association:
+Security-related icons use success color to reinforce the safety/trust association:
 
-- Lock (secure): lock-closed emerald-600
-- Shield (protected): shield-check emerald-600
-- Eye (private): eye emerald-600
-- Check (verified): check-badge emerald-600
+- Lock (secure): lock-closed text-success
+- Shield (protected): shield-check text-success
+- Eye (private): eye text-success
+- Check (verified): check-badge text-success
 
-Never use red or amber for security indicators — those colors signal danger and attention, not safety.
+Never use danger or warning for security indicators — those colors signal risk and attention, not safety.
 
 ---
 
-*This Iconography guide ensures visual consistency across every icon used in the ExcelPilot product and marketing.*
+*This Iconography guide ensures visual consistency across every icon used in the Lytio product and marketing.*

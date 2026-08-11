@@ -1,4 +1,4 @@
-﻿# ExcelPilot Brand Constitution v1.0
+﻿# Lytio Brand Constitution v1.0
 
 > **Status:** Permanent Constitutional Document  
 > **Ratified:** 2026-07-31  
@@ -6,7 +6,7 @@
 > **Classification:** Internal — Highest Authority  
 > **Supersedes:** All previous branding, marketing, and positioning guidance  
 >
-> *This document defines who we are, who we are not, what we promise, and what we will never do. Every decision — product, engineering, design, marketing, sales, hiring, partnership — must be consistent with this constitution. When in doubt, return here. This document is not marketing copy. It is not a pitch deck. It is the permanent definition of the ExcelPilot brand, intended to outlast any individual feature, campaign, or team member.*
+> *This document defines who we are, who we are not, what we promise, and what we will never do. Every decision — product, engineering, design, marketing, sales, hiring, partnership — must be consistent with this constitution. When in doubt, return here. This document is not marketing copy. It is not a pitch deck. It is the permanent definition of the Lytio brand, intended to outlast any individual feature, campaign, or team member.*
 
 ---
 
@@ -35,11 +35,11 @@
 
 **Transform business data into explainable business decisions.**
 
-This is not a tagline. It is not a slogan. It is the singular purpose of ExcelPilot. Every feature, every design decision, every line of code — all must serve this mission or it does not belong in the product.
+This is not a tagline. It is not a slogan. It is the singular purpose of Lytio. Every feature, every design decision, every line of code — all must serve this mission or it does not belong in the product.
 
 We exist because businesses drown in data but starve for decisions. Spreadsheets accumulate. Reports are shelved. Managers sense problems but cannot pinpoint causes. Strategic choices are made on intuition when evidence sits unused on a shared drive.
 
-ExcelPilot closes that gap — not by adding another dashboard, but by becoming the analytical consultant every business deserves: thorough, evidence-driven, clear, and actionable.
+Lytio closes that gap — not by adding another dashboard, but by becoming the analytical consultant every business deserves: thorough, evidence-driven, clear, and actionable.
 
 ### 1.2 The Problem We Solve
 
@@ -49,11 +49,11 @@ The modern enterprise produces more data in a single quarter than previous gener
 
 **The Explanation Gap.** Traditional BI tools answer *what* happened. Revenue is down 8%. Churn increased. Inventory turns dropped. But they rarely answer *why*, *what it means*, or *what to do about it*. AI chatbots improve accessibility but introduce a new problem: they answer questions without explaining reasoning. "Revenue declined because of market conditions" is speculation dressed in confident language. Without evidence — links to specific data, specific rows, specific patterns — the answer is no better than a guess.
 
-ExcelPilot's position: unexplained analysis is not analysis. It is entertainment.
+Lytio's position: unexplained analysis is not analysis. It is entertainment.
 
 **The Action Gap.** Even excellent analysis rarely translates into decisions. Reports are read, discussed briefly, and filed away. Why? Because recommendations without expected outcomes are promises without substance. "Expand into Asia Pacific" is directionally interesting. "Expand into Asia Pacific — estimated .1M revenue within 6 months, reducing North American concentration from 41% to 37%, medium confidence" is a business case. It can be debated, prioritized, and tracked.
 
-ExcelPilot's expected impact estimates are not forecasting. They are decision-enablement. They transform recommendations from interesting suggestions into actionable proposals.
+Lytio's expected impact estimates are not forecasting. They are decision-enablement. They transform recommendations from interesting suggestions into actionable proposals.
 
 ### 1.3 Our Founding Belief
 
@@ -65,11 +65,11 @@ This was impossible before AI. Professional analysis required humans — expensi
 
 But AI alone is insufficient. Raw AI output — unconstrained, unexplained, unverified — is dangerous in business. AI must be wrapped in business knowledge (industry playbooks, business metrics, domain rules), constrained by evidence (every conclusion linked to data), and delivered through a workflow that respects how business decisions are made (structured reports, not chat sessions).
 
-ExcelPilot is that wrapper. We are the layer between raw AI capability and business-grade decision support. We do not celebrate the AI. We celebrate the decision it enables.
+Lytio is that wrapper. We are the layer between raw AI capability and business-grade decision support. We do not celebrate the AI. We celebrate the decision it enables.
 
 ### 1.4 Who This Constitution Is For
 
-Every person who builds, sells, markets, designs, supports, or leads ExcelPilot. It is the reference point for resolving disagreements about product direction, messaging, design, and feature prioritization.
+Every person who builds, sells, markets, designs, supports, or leads Lytio. It is the reference point for resolving disagreements about product direction, messaging, design, and feature prioritization.
 
 New team members should read this document before they read any code, design file, or roadmap. Understanding who we are as a brand must precede understanding how we work as a team.
 
@@ -79,7 +79,7 @@ New team members should read this document before they read any code, design fil
 
 ### 2.1 Long-term Vision
 
-ExcelPilot becomes the **Business Decision Platform** — the operating system for how organizations turn data into decisions.
+Lytio becomes the **Business Decision Platform** — the operating system for how organizations turn data into decisions.
 
 Today we analyze spreadsheets. Tomorrow we connect to CRMs, ERPs, and databases. Next year we maintain organizational memory across quarters and leadership changes. Eventually, we become the system businesses use to *understand themselves*.
 
@@ -97,21 +97,21 @@ A Business Decision Platform has five layers:
 
 **Layer 5: Action System.** Recommendations become decisions. Decisions become actions. Actions produce outcomes. Outcomes feed back into future analyses. Closed loop across sessions, team members, and years.
 
-Today (V1) ExcelPilot operates at layers 1-3. Layers 4-5 represent our multi-year roadmap.
+Today (V1) Lytio operates at layers 1-3. Layers 4-5 represent our multi-year roadmap.
 
 ### 2.3 The Business Operating System Roadmap
 
-**Phase 1 — Sales Consultant (Current: V1.0)**
-Single-industry, single-consultant. Proves the core workflow: Upload → Analyze → Understand → Decide. Core differentiator: evidence-backed business objects, not raw AI output. Target: sales managers, business managers at SMEs (20-500 employees).
+**Phase 1 — Sales Analysis (Current: V1.0)**
+Single-industry, single-plugin. Proves the core workflow: Upload → Analyze → Understand → Decide. Core differentiator: evidence-backed business objects, not raw AI output. Target: sales managers, business managers at SMEs (20-500 employees).
 
 **Phase 2 — Enterprise Memory (Next Major Release)**
 Organizational memory becomes first-class. Analysis history preserved, searchable, comparable. Business Health tracked as time series. Decisions documented and linked to analyses. "What did we know, and when?" becomes answerable. The shift from stateless analysis to stateful intelligence.
 
-**Phase 3 — Multi-Industry Consultants**
-Finance, HR, Operations, Energy, Procurement. Each consultant shares the same platform: Business Objects, Evidence Engine, Analysis Engine, Report Builder. Only the playbook differs. Adding a new consultant requires creating a new plugin directory — no platform changes.
+**Phase 3 — Multi-Industry Plugins**
+Finance, HR, Operations, Energy, Procurement. Each plugin shares the same platform: Business Objects, Evidence Engine, Analysis Engine, Report Builder. Only the playbook differs. Adding a new plugin requires creating a new plugin directory — no platform changes.
 
-**Phase 4 — Consultant Marketplace**
-Third-party domain experts create and publish consultants. Quality standards enforced programmatically. Revenue sharing. ExcelPilot focuses on platform infrastructure: security, evidence, workflow, memory. The platform endgame: ExcelPilot enables consultants rather than building them.
+**Phase 4 — Plugin Marketplace**
+Third-party domain experts create and publish plugins. Quality standards enforced programmatically. Revenue sharing. Lytio focuses on platform infrastructure: security, evidence, workflow, memory. The platform endgame: Lytio enables plugins rather than building them.
 
 **Phase 5 — Autonomous Business Intelligence (Visionary)**
 Platform proactively monitors business health. Surfaces emerging risks before humans notice. Recommends actions based on historical patterns and benchmarks. Humans remain in control; the platform reduces latency between signal and awareness.
@@ -166,7 +166,7 @@ This is our most important "not." We recommend. Humans decide. No exceptions. No
 
 Every Insight, every Risk, every Recommendation must be traceable to evidence. Not "the AI detected a pattern." But: "Revenue in the Northwest region declined 14% QoQ, driven by three products accounting for 82% of the decline. Source: Sheet 'Q2 Sales', rows 45-67, columns B-F."
 
-This is our central differentiator. A ChatGPT response may be directionally correct. But it cannot be defended in a board meeting. When the CEO asks "why do you believe this?", ExcelPilot users have an answer beyond "the AI said so."
+This is our central differentiator. A ChatGPT response may be directionally correct. But it cannot be defended in a board meeting. When the CEO asks "why do you believe this?", Lytio users have an answer beyond "the AI said so."
 
 Our Evidence objects (source_sheet, source_range, source_columns, source_rows, reason) are not metadata — they are the product. They transform analysis from assertion to argument, from opinion to evidence, from interesting to actionable.
 
@@ -180,7 +180,7 @@ Roadmap prioritization asks "what business decision does this enable?" before "w
 
 ### 4.3 User Data Belongs to the User
 
-**Data uploaded to ExcelPilot remains the user's property. Always.**
+**Data uploaded to Lytio remains the user's property. Always.**
 
 - We never train AI models on customer data. No opt-out because there is no opt-in.
 - We never sell, license, share, or derivative-analyze customer data. Revenue comes from subscriptions, not data monetization.
@@ -192,7 +192,7 @@ Roadmap prioritization asks "what business decision does this enable?" before "w
 
 **We provide recommendations. Humans make decisions.**
 
-ExcelPilot will never: execute a business decision autonomously, present recommendations as commands, obscure uncertainty, or remove the human from the decision loop.
+Lytio will never: execute a business decision autonomously, present recommendations as commands, obscure uncertainty, or remove the human from the decision loop.
 
 Why? Because AI is fallible (ethical), because presenting AI as authoritative will eventually cause harm (practical), and because the human-in-the-loop is a brand differentiator — not a limitation (strategic). AI's greatest weakness (unreliability) becomes our greatest strength (humility).
 
@@ -208,7 +208,7 @@ Why? Because AI is fallible (ethical), because presenting AI as authoritative wi
 
 **Warm, not casual.** Approachable but serious. Clean and modern, not playful or gamified. We build tools for professionals doing real work — we respect the seriousness of that work.
 
-**Timeless, not trendy.** We avoid design trends that will date us. We avoid AI hype cycles. In ten years, a user should recognize ExcelPilot — not because we failed to evolve, but because we evolved without losing our identity.
+**Timeless, not trendy.** We avoid design trends that will date us. We avoid AI hype cycles. In ten years, a user should recognize Lytio — not because we failed to evolve, but because we evolved without losing our identity.
 
 ### 5.2 Voice Guidelines
 
@@ -233,7 +233,7 @@ Why? Because AI is fallible (ethical), because presenting AI as authoritative wi
 
 **Structured, not chaotic.** Clear hierarchy. Consistent spacing (8px grid). Predictable patterns. Pattern recognition is faster than learning — we optimize for pattern recognition.
 
-**Data-first, not decoration-first.** Charts serve understanding. Colors encode meaning (green = positive, red = risk, amber = warning). Typography creates hierarchy. Nothing is purely decorative.
+**Data-first, not decoration-first.** Charts serve understanding. Colors encode meaning (success = positive, danger = risk, warning = attention). Typography creates hierarchy. Nothing is purely decorative.
 
 ### 5.4 The Consultant Metaphor
 
@@ -241,19 +241,21 @@ Our visual and interaction patterns are inspired by professional consulting — 
 
 Professional consulting output is: highly structured, evidence-rich, visually restrained, executive-ready. A CEO can read page one and understand the recommendation.
 
-ExcelPilot reports should feel like they could have come from a consulting engagement — not from a chat window. Every design decision should move us closer to this standard.
+Lytio reports should feel like they could have come from a consulting engagement — not from a chat window. Every design decision should move us closer to this standard.
 
 ---
 
 ## 6. Naming Principles
 
-### 6.1 The ExcelPilot Name
+### 6.1 The Lytio Name
 
-**Excel:** Universal format for business data. Signals accessibility: if you use Excel, you can use ExcelPilot.
+**Lytio = Lyt + io.** Lyt is the core root of Analytics (分析) — the semantic DNA of data insight. io is the tech-industry suffix (studio, portfolio, Dynamo) conveying a digital, connected product. The result is a coined word: distinctive, defensible, and impossible to confuse with a generic description.
 
-**Pilot:** One who guides, navigates, assists. Not the captain — the captain makes final decisions. The pilot provides information, suggests courses, warns of hazards. Collaborative, not controlling.
+**中文「理拓」(Lǐ Tuò):** 理 = 理性、条理、剖析; 拓 = 开拓、拓展. Together: "理性剖析，开拓未来" — insight into data, expansion into new business possibilities.
 
-Together: *We help you navigate your business data.*
+Together: *The technological core of data analytics — 用分析能力洞察数据本质，帮助用户开拓新的商业可能。*
+
+**Naming history:** ExcelPilot was an early working name. It survives only as the internal technical name of the analysis engine (ExcelPilot Engine) — never customer-facing. The official product brand is Lytio. See BRAND_NAME_LYTIO.md for the full rationale.
 
 ### 6.2 Naming Conventions
 
@@ -263,9 +265,9 @@ Together: *We help you navigate your business data.*
 
 **Descriptive component names.** "BusinessHealthCard" renders the business health score. "EvidenceCard" renders evidence details. "MetricGrid" renders a grid of metrics. Never "SmartCard," "InsightWidget," "DataThing."
 
-### 6.3 Industry Consultant Naming
+### 6.3 Industry Plugin Naming
 
-Pattern: {Industry} Consultant — Sales Consultant, Finance Consultant, HR Consultant, Operations Consultant, Energy Consultant, Procurement Consultant, Inventory Consultant. Simple, predictable, extensible. No marketing department needed to name new consultants.
+Pattern: {Industry} Analysis — Sales Analysis, Finance Analysis, HR Analysis, Operations Analysis, Energy Analysis, Procurement Analysis, Inventory Analysis. Simple, predictable, extensible. No marketing department needed to name new industry plugins.
 
 ### 6.4 Names We Explicitly Reject
 
@@ -279,23 +281,22 @@ Pattern: {Industry} Consultant — Sales Consultant, Finance Consultant, HR Cons
 
 ## 7. Brand Architecture
 
-### 7.1 Master Brand: ExcelPilot
+### 7.1 Master Brand: Lytio
 
-ExcelPilot is the single master brand. All products, features, and consultants exist under this one name. No sub-brands, no product brands, no feature brands. A single name concentrates all awareness and trust.
+Lytio is the single master brand. All products, features, and plugins exist under this one name. No sub-brands, no product brands, no feature brands. A single name concentrates all awareness and trust.
 
 \\\
-ExcelPilot (Master Brand)
-├── Industry Consultants (products)
-│   ├── Sales Consultant (V1 — live)
-│   ├── Finance Consultant (Future)
-│   └── ... (extensible)
+Lytio (Master Brand)
+├── Excel Analysis (product category)
+│   ├── Sales Analysis (V1 — live)
+│   └── Future industry plugins (Finance, HR, Operations, ...)
 ├── Platform Features
 │   ├── Workspace
 │   ├── Business Health
 │   ├── Executive Report
 │   ├── Business Timeline
 │   └── Evidence + Expected Impact
-├── Technology Layers (internal only)
+├── ExcelPilot Engine (internal analysis engine — technical name only)
 │   ├── Analysis Engine
 │   ├── Evidence Engine
 │   ├── Business Object Model
@@ -306,11 +307,11 @@ ExcelPilot (Master Brand)
     └── File Storage
 \\\
 
-Internal technology names are never exposed to customers. Users see "ExcelPilot analyzing your data..." — never "Initializing Analysis Engine."
+Internal technology names are never exposed to customers. Users see "Lytio analyzing your data..." — never "Initializing ExcelPilot Engine."
 
 ### 7.2 Relationship to Other Brands
 
-ExcelPilot is independent. It is not: "Powered by DeepSeek," "Built on OpenAI," or affiliated with any other entity. The technology stack is never mentioned in customer-facing materials. These are tools we use to deliver our brand promise. They are not the promise itself.
+Lytio is independent. It is not: "Powered by DeepSeek," "Built on OpenAI," or affiliated with any other entity. The technology stack is never mentioned in customer-facing materials. These are tools we use to deliver our brand promise. They are not the promise itself.
 
 ---
 
@@ -354,7 +355,7 @@ We respect their time (every feature must save time or improve a decision), remo
 
 ## 9. Long-term Strategy
 
-### 9.1 Phase 1 — Sales Consultant (Current: V1.0)
+### 9.1 Phase 1 — Sales Analysis (Current: V1.0)
 
 **Objective:** Prove the core workflow with a single industry.
 
@@ -365,7 +366,7 @@ We respect their time (every feature must save time or improve a decision), remo
 - Business Health (0-100 score, trend, drivers) resonates with managers
 - Timeline (preserving analysis history) creates return usage
 
-**Phase 1 constraints** (intentional, force focus): Single consultant (Sales), single data source (Excel upload), single AI provider (swappable via interface), no collaboration, no organizational memory beyond Timeline, no external integrations.
+**Phase 1 constraints** (intentional, force focus): Single plugin (Sales Analysis), single data source (Excel upload), single AI provider (swappable via interface), no collaboration, no organizational memory beyond Timeline, no external integrations.
 
 **Success:** User completes first analysis and returns within 7 days. User shares report with colleague. User upgrades from trial to Pro.
 
@@ -375,17 +376,17 @@ We respect their time (every feature must save time or improve a decision), remo
 
 Analysis history preserved and comparable. Business Health as continuous time series. Decisions tracked: which recommendations were implemented, with what outcomes. "What did we know last quarter, and what changed?" becomes answerable. Organizations learn which types of recommendations produce results.
 
-### 9.3 Phase 3 — Multi-Industry Consultants
+### 9.3 Phase 3 — Multi-Industry Plugins
 
 **Objective:** Expand to adjacent functions while maintaining platform coherence.
 
-Finance, HR, Operations, Energy, Procurement consultants. Each shares the same platform — only the playbook differs. Architecture validated by Phase 1 (one playbook works). Phase 3 proves the architecture supports any playbook. Success: a single customer uses multiple consultants across departments.
+Finance, HR, Operations, Energy, Procurement plugins. Each shares the same platform — only the playbook differs. Architecture validated by Phase 1 (one playbook works). Phase 3 proves the architecture supports any playbook. Success: a single customer uses multiple plugins across departments.
 
-### 9.4 Phase 4 — Consultant Marketplace
+### 9.4 Phase 4 — Plugin Marketplace
 
 **Objective:** Become a platform, not a product.
 
-Third-party domain experts create and publish consultants. Quality standards enforced programmatically (evidence, confidence calibration, output validation). Revenue sharing. ExcelPilot focuses on platform infrastructure. The endgame: no single company can build expert consultants for every industry. A marketplace aligns incentives.
+Third-party domain experts create and publish plugins. Quality standards enforced programmatically (evidence, confidence calibration, output validation). Revenue sharing. Lytio focuses on platform infrastructure. The endgame: no single company can build expert plugins for every industry. A marketplace aligns incentives.
 
 ### 9.5 Phase 5 — Autonomous Business Intelligence (Visionary)
 
@@ -435,7 +436,7 @@ A red line crossed "just this once" is not a red line. It is a suggestion. We do
 
 ### 11.1 Primary Metric: Decision Impact
 
-**"Did ExcelPilot help someone make a better business decision?"**
+**"Did Lytio help someone make a better business decision?"**
 
 Proxy indicators: repeat analysis rate (>40% within 7 days), report sharing (>20% of analyses), trial conversion (>15%).
 
@@ -465,7 +466,7 @@ Proxy indicators: repeat analysis rate (>40% within 7 days), report sharing (>20
 
 > **"Trust is our product. AI is only one of the technologies we use to earn it."**
 
-This statement is the keystone of the ExcelPilot brand. Trust is not a feature we add after building the product. It is not a marketing campaign. It is the product itself — the reason users choose us, stay with us, and recommend us.
+This statement is the keystone of the Lytio brand. Trust is not a feature we add after building the product. It is not a marketing campaign. It is the product itself — the reason users choose us, stay with us, and recommend us.
 
 Users trust us with their data (business data is among the most sensitive information a company possesses). They trust our analysis (verifiable conclusions, not black-box outputs). They trust our recommendations (made in good faith, based on their data, clearly qualified). They trust our permanence (we will be here in five, ten, twenty years).
 
@@ -499,7 +500,7 @@ There is no neutral action. There is no "just this once." Trust is the cumulativ
 
 ### 13.1 Constitutional Authority
 
-This Brand Constitution is the highest authority on all matters of brand, positioning, messaging, design, and product identity at ExcelPilot. It supersedes marketing plans, product requirements, design guidelines, individual preferences, and "industry standards."
+This Brand Constitution is the highest authority on all matters of brand, positioning, messaging, design, and product identity at Lytio. It supersedes marketing plans, product requirements, design guidelines, individual preferences, and "industry standards."
 
 When any other document, plan, or opinion conflicts with this Constitution, the Constitution prevails.
 
@@ -515,7 +516,7 @@ When ambiguous: default to the stricter interpretation. Consult the Trust Princi
 
 ### 13.4 Living Document
 
-This Constitution will be revisited and refined as ExcelPilot grows. What will not change: building trust as our primary product, putting business value before AI capability, maintaining independence, keeping the human in the decision loop, and never using customer data for training.
+This Constitution will be revisited and refined as Lytio grows. What will not change: building trust as our primary product, putting business value before AI capability, maintaining independence, keeping the human in the decision loop, and never using customer data for training.
 
 These are not policies. They are identity.
 
@@ -548,7 +549,7 @@ These are not policies. They are identity.
 
 ---
 
-*This Brand Constitution was created to guide ExcelPilot from a single-industry V1 product to a multi-industry, multi-phase Business Decision Platform. It will be tested by market pressure, competitive dynamics, and the temptation to chase short-term growth at the expense of long-term identity. When those tests come — and they will — return to Section 12. Read the Trust Principle again. Remember that trust is our product. And make the decision that builds it.*
+*This Brand Constitution was created to guide Lytio from a single-industry V1 product to a multi-industry, multi-phase Business Decision Platform. It will be tested by market pressure, competitive dynamics, and the temptation to chase short-term growth at the expense of long-term identity. When those tests come — and they will — return to Section 12. Read the Trust Principle again. Remember that trust is our product. And make the decision that builds it.*
 
 *End of Brand Constitution v1.0 — 2026-07-31*
 
@@ -622,9 +623,9 @@ This section translates the Brand Constitution into actionable guidance for spec
 - Independence: "Your decisions remain yours. We recommend; you decide."
 
 **When handling objections:**
-- "We already have ChatGPT." → "ChatGPT answers questions. ExcelPilot provides evidence-backed business analysis with specific recommendations. Different tools for different needs."
+- "We already have ChatGPT." → "ChatGPT answers questions. Lytio provides evidence-backed business analysis with specific recommendations. Different tools for different needs."
 - "Is our data safe?" → "Your data stays in your account. We never train on it. We never share it. You can delete everything permanently. Here's our AI policy: [link]."
-- "Why not just hire an analyst?" → "An analyst costs -/year and is bottlenecked. ExcelPilot costs a subscription and scales instantly. Many of our users have analysts — they use ExcelPilot to handle routine analysis so their analysts can focus on strategic work."
+- "Why not just hire an analyst?" → "An analyst costs -/year and is bottlenecked. Lytio costs a subscription and scales instantly. Many of our users have analysts — they use Lytio to handle routine analysis so their analysts can focus on strategic work."
 
 ### 14.5 For Customer Support
 
@@ -654,6 +655,6 @@ This section translates the Brand Constitution into actionable guidance for spec
 
 ---
 
-*This Brand Constitution is the foundation on which every other decision at ExcelPilot is built. It is not aspirational — it is operational. Return to it often. Challenge decisions against it. Amend it when necessary, but never weaken it. Our brand is not what we say it is — it is what we consistently do. This document exists to ensure that what we consistently do aligns with who we claim to be.*
+*This Brand Constitution is the foundation on which every other decision at Lytio is built. It is not aspirational — it is operational. Return to it often. Challenge decisions against it. Amend it when necessary, but never weaken it. Our brand is not what we say it is — it is what we consistently do. This document exists to ensure that what we consistently do aligns with who we claim to be.*
 
-*ExcelPilot — Turn Business Data Into Better Decisions.*
+*Lytio — Turn Business Data Into Better Decisions.*

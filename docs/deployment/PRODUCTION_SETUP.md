@@ -1,4 +1,4 @@
-# ExcelPilot — Production Setup Guide
+# Lytio — Production Setup Guide
 
 ## Prerequisites
 

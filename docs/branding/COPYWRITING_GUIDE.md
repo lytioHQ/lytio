@@ -1,4 +1,4 @@
-﻿# ExcelPilot Copywriting Guide v1.0
+﻿# Lytio Copywriting Guide v1.0
 
 > **Status:** Permanent Brand Document  
 > **Version:** 1.0 | 2026-07-31  
@@ -160,7 +160,7 @@ When writing for executive audiences (reports, summaries, dashboards):
 ### Templates
 
 **No projects:**
-"What can ExcelPilot help you analyze?" followed by use-case cards and a prominent "Create Your First Analysis" button.
+"What can Lytio help you analyze?" followed by use-case cards and a prominent "Create Your First Analysis" button.
 
 **No analyses:**
 "No analyses yet. Upload an Excel file to get started — we'll identify risks, opportunities, and recommendations from your data."

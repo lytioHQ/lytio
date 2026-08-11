@@ -1,4 +1,4 @@
-﻿# ExcelPilot Development Environment Architecture V1
+﻿# Lytio Development Environment Architecture V1
 
 > Sprint 0 / Task 0.2.1 — 开发环境架构设计
 > 角色: CTO | 原则: 简单、稳定、单人维护、未来不推翻

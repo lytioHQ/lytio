@@ -1,23 +1,23 @@
-# ExcelPilot Product Constitution v1.0
+# Lytio Product Constitution v1.0
 
 **Status:** Active  
 **Version:** 1.0  
 **Last Updated:** 2026-07-27  
-**Author:** ExcelPilot Product Team  
+**Author:** Lytio Product Team
 **Scope:** Company-wide — all Sprints, all Plugins, all Features
 
 ---
 
 ## 1. Vision
 
-### What is ExcelPilot?
+### What is Lytio?
 
-ExcelPilot is an **AI Business Consultant Platform**.
+Lytio is an **AI Business Consultant Platform**.
 
-ExcelPilot is NOT an AI chat website.  
-ExcelPilot is NOT an Excel analysis tool.
+Lytio is NOT an AI chat website.
+Lytio is NOT an Excel analysis tool.
 
-ExcelPilot transforms business data into business decisions.
+Lytio transforms business data into business decisions.
 
 ### Core Belief
 
@@ -26,7 +26,7 @@ Business data is abundant. Business decisions are scarce.
 Most organizations have spreadsheets full of data.  
 Most organizations lack the time, expertise, or frameworks to extract decisions from that data.
 
-ExcelPilot bridges this gap by embedding industry expertise into AI workflows.
+Lytio bridges this gap by embedding industry expertise into AI workflows.
 
 ### Mission
 
@@ -99,12 +99,12 @@ The product is for **business decision-makers**, not technology explorers.
 | Power BI / Tableau | Visualization, enterprise | No recommendations, no actions, steep learning curve |
 | Excel | Ubiquitous, familiar | Manual analysis, no AI, no guidance |
 
-### ExcelPilot's Differentiation
+### Lytio's Differentiation
 
-ExcelPilot does not compete on AI capability.  
-ExcelPilot competes on **business structure**.
+Lytio does not compete on AI capability.
+Lytio competes on **business structure**.
 
-| Dimension | ChatGPT | Power BI | ExcelPilot |
+| Dimension | ChatGPT | Power BI | Lytio |
 |-----------|---------|----------|------------|
 | Industry Playbooks | None | None | **Core** |
 | Business Workflow | None | Manual | **Guided** |
@@ -114,7 +114,7 @@ ExcelPilot competes on **business structure**.
 
 ### Positioning Statement
 
-> ExcelPilot is the first AI platform that thinks like a business consultant, not like a chatbot.
+> Lytio is the first AI platform that thinks like a business consultant, not like a chatbot.
 
 ---
 
@@ -455,8 +455,8 @@ When evaluating any feature proposal, ask:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-07-27 | ExcelPilot Product Team | Initial constitution |
+| 1.0 | 2026-07-27 | Lytio Product Team | Initial constitution |
 
 ---
 
-*This document is the highest-level specification for ExcelPilot. All Sprints, Epics, Features, and Tasks must be consistent with this Constitution. Any contradiction between a Task and this Constitution must be resolved in favor of this Constitution.*
+*This document is the highest-level specification for Lytio. All Sprints, Epics, Features, and Tasks must be consistent with this Constitution. Any contradiction between a Task and this Constitution must be resolved in favor of this Constitution.*

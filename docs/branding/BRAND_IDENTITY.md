@@ -1,4 +1,4 @@
-﻿# ExcelPilot Brand Identity v1.0
+﻿# Lytio Brand Identity v1.0
 
 > **Status:** Permanent Brand Document  
 > **Version:** 1.0 | 2026-07-31  
@@ -10,13 +10,13 @@
 
 **Transform business data into explainable business decisions.**
 
-ExcelPilot exists because businesses are drowning in data but starving for decisions. We close this gap — not by adding another dashboard, but by becoming the analytical consultant every business deserves.
+Lytio exists because businesses are drowning in data but starving for decisions. We close this gap — not by adding another dashboard, but by becoming the analytical consultant every business deserves.
 
 ---
 
 ## 2. Vision
 
-ExcelPilot becomes the **Business Decision Platform** — the operating system for how organizations turn data into decisions. From single spreadsheets to organizational memory, from one industry to many, from our consultants to a marketplace of expertise.
+Lytio becomes the **Business Decision Platform** — the operating system for how organizations turn data into decisions. From single spreadsheets to organizational memory, from one industry to many, from our consultants to a marketplace of expertise.
 
 See BRAND_CONSTITUTION.md Section 2 for the complete 5-phase roadmap.
 
@@ -24,7 +24,7 @@ See BRAND_CONSTITUTION.md Section 2 for the complete 5-phase roadmap.
 
 ## 3. Brand Promise
 
-ExcelPilot makes four permanent commitments to every user:
+Lytio makes four permanent commitments to every user:
 
 1. **Every conclusion can be explained.** Every insight, risk, and recommendation links to specific data. "Why?" always has an answer.
 
@@ -53,7 +53,7 @@ We serve business managers — people responsible for revenue, costs, teams, and
 
 ### Competitive Frame
 
-| | ExcelPilot | ChatGPT | Power BI | Excel |
+| | Lytio | ChatGPT | Power BI | Excel |
 |---|-----------|---------|----------|-------|
 | Purpose | Business decisions | General Q&A | Data visualization | Data manipulation |
 | Evidence | Links to source data | None | None | Raw data |
@@ -65,7 +65,7 @@ We serve business managers — people responsible for revenue, costs, teams, and
 
 ## 5. Personality
 
-ExcelPilot's brand personality is defined by four traits:
+Lytio's brand personality is defined by four traits:
 
 **Professional, not corporate.**
 We speak like a trusted colleague — knowledgeable, clear, respectful. No corporate jargon. No startup-speak. Test: would a CFO read this and nod?
@@ -77,7 +77,7 @@ We believe in our approach. But we acknowledge uncertainty. "Medium confidence" 
 Approachable but serious. Clean and modern, not playful or gamified. We respect the seriousness of business decisions.
 
 **Timeless, not trendy.**
-We avoid design trends and AI hype cycles. In ten years, a user should recognize ExcelPilot — evolved but unchanged in identity.
+We avoid design trends and AI hype cycles. In ten years, a user should recognize Lytio — evolved but unchanged in identity.
 
 ---
 
