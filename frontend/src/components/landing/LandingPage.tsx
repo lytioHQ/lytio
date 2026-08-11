@@ -65,7 +65,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === HOW IT WORKS === */}
-      <section className="border-b border-border">
+      <section className="border-b border-border bg-muted">
         <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.howLabel")}</p>
@@ -114,7 +114,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === DEMO CTA === */}
-      <section className="border-b border-border">
+      <section className="border-b border-border bg-accent-soft">
         <div className="mx-auto max-w-5xl px-4 py-16 text-center md:px-6 md:py-20">
           <div className="mx-auto max-w-lg">
             <p className={sectionLabel}>{T("landing.ctaLabel")}</p>
@@ -132,7 +132,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === SECURITY === */}
-      <section className="border-b border-border">
+      <section className="border-b border-border bg-muted">
         <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.securityLabel")}</p>

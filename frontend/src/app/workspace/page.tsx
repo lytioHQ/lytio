@@ -80,7 +80,7 @@ export default function WorkspacePage() {
         {/* Upload */}
         {!pipe.validated && (
           <SectionCard title={T("step1.title")} subtitle={T("step1.desc")}>
-            <div className="rounded-card border border-border bg-canvas px-6 py-12 text-center md:px-10">
+            <div className="rounded-card border border-border bg-muted px-6 py-12 text-center md:px-10">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-control bg-surface text-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]" aria-hidden>
                 &#x1F4CA;
               </div>

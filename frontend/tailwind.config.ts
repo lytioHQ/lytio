@@ -15,6 +15,13 @@ const config: Config = {
         success: "#34C759",
         warning: "#FF9500",
         danger: "#FF3B30",
+        muted: "#EDEDF0",
+        "accent-soft": "#EAF2FE",
+        "success-soft": "#EAF7EE",
+        "warning-soft": "#FFF4E3",
+        "danger-soft": "#FDEBEB",
+        "ink-hover": "#3A3A3C",
+        "danger-hover": "#FF453A",
       },
       fontFamily: {
         sans: [

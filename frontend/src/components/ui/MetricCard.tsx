@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Card from "./Card";
+import Card, { type CardVariant } from "./Card";
 
 export type MetricTrend = "positive" | "negative" | "neutral";
 
@@ -8,6 +8,7 @@ export interface MetricCardProps {
   value: ReactNode;
   description?: string;
   trend?: MetricTrend;
+  variant?: CardVariant;
   className?: string;
 }
 
@@ -28,10 +29,11 @@ export default function MetricCard({
   value,
   description,
   trend,
+  variant,
   className = "",
 }: MetricCardProps) {
   return (
-    <Card padding="md" className={className}>
+    <Card padding="md" variant={variant} className={className}>
       <p className="text-caption text-secondary">{label}</p>
       <div className="mt-2 flex items-baseline gap-2">
         <span className="text-[30px] md:text-[32px] font-semibold leading-tight text-ink tabular-nums">

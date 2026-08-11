@@ -6,10 +6,10 @@ export default function BusinessHealthCard({ data, lang }: { data: HealthData; l
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
   const color = data.score >= 80 ? "success" : data.score >= 60 ? "accent" : data.score >= 40 ? "warning" : "danger";
   const colors: Record<string, string> = {
-    success: "border-success/30 bg-success/5 text-success",
-    accent: "border-accent/30 bg-accent/5 text-accent",
-    warning: "border-warning/30 bg-warning/5 text-warning",
-    danger: "border-danger/30 bg-danger/5 text-danger",
+    success: "border-success/30 bg-success-soft text-success",
+    accent: "border-accent/30 bg-accent-soft text-accent",
+    warning: "border-warning/30 bg-warning-soft text-warning",
+    danger: "border-danger/30 bg-danger-soft text-danger",
   };
   return (
     <div className={`rounded-card border ${colors[color]} p-6 md:p-8`}>

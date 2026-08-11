@@ -36,7 +36,7 @@ export default function DemoPage() {
   return (
     <main className="min-h-screen bg-canvas">
       {/* Demo Banner */}
-      <div className="border-b border-warning/20 bg-warning/5 px-4 py-3 text-center md:px-6">
+      <div className="border-b border-warning/20 bg-warning-soft px-4 py-3 text-center md:px-6">
         <p className="text-sm leading-relaxed text-ink">
           &#x1f3ac; {T("demo.banner")}{" "}
           <Link href="/register" className="font-medium text-accent underline-offset-2 hover:underline">
@@ -55,9 +55,9 @@ export default function DemoPage() {
               <span className="text-border">&middot;</span>
               <span className="text-sm text-secondary">{T("demo.projectLang")}</span>
               <span className="text-border">&middot;</span>
-              <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">{T("demo.demoBadge")}</span>
+              <span className="rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success">{T("demo.demoBadge")}</span>
               <span className="text-border">&middot;</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
+              <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success">
                 {T("demo.readOnly")}
               </span>
             </div>
@@ -113,12 +113,12 @@ export default function DemoPage() {
               const score = item.business_health_score;
               const color =
                 score >= 90
-                  ? "border-l-success bg-success/5"
+                  ? "border-l-success bg-success-soft"
                   : score >= 75
-                    ? "border-l-accent bg-accent/5"
+                    ? "border-l-accent bg-accent-soft"
                     : score >= 60
-                      ? "border-l-warning bg-warning/5"
-                      : "border-l-danger bg-danger/5";
+                      ? "border-l-warning bg-warning-soft"
+                      : "border-l-danger bg-danger-soft";
               return (
                 <div key={item.id} className={`rounded-card border border-border border-l-4 ${color} p-4`}>
                   <div className="flex items-center gap-3">
@@ -133,7 +133,7 @@ export default function DemoPage() {
         </div>
 
         {/* CTA Footer */}
-        <Card className="p-8 text-center md:p-12">
+        <Card variant="highlighted" className="p-8 text-center md:p-12">
           <h2 className="text-h2 text-ink">{T("demo.ctaTitle")}</h2>
           <p className="mx-auto mt-2 max-w-[640px] text-body leading-relaxed text-secondary">
             {T("demo.ctaDesc")}

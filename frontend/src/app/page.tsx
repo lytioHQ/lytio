@@ -146,7 +146,7 @@ export default function WorkspacePage() {
             <div className="flex items-center gap-5">
               <LanguageSelector lang={uiLang} onChange={handleUiLangChange} />
               <Link href="/login" className="text-sm text-secondary transition-colors hover:text-ink">{T("home.login")}</Link>
-              <Link href="/register" className="inline-flex h-9 items-center rounded-control bg-ink px-4 text-sm font-medium text-white transition-colors hover:bg-[#3A3A3C]">{T("home.signup")}</Link>
+              <Link href="/register" className="inline-flex h-9 items-center rounded-control bg-ink px-4 text-sm font-medium text-white transition-colors hover:bg-ink-hover">{T("home.signup")}</Link>
             </div>
           </div>
         </header>

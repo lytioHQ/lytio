@@ -21,10 +21,10 @@ const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 interface TimelineItem { id: number; created_at: string | null; business_health_score: number | null; summary: string | null; }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-canvas text-secondary",
-  ready: "bg-accent/10 text-accent",
-  completed: "bg-success/10 text-success",
-  archived: "bg-canvas text-secondary/60",
+  draft: "bg-muted text-secondary",
+  ready: "bg-accent-soft text-accent",
+  completed: "bg-success-soft text-success",
+  archived: "bg-muted text-secondary/60",
 };
 
 const STATUS_KEYS: Record<string, string> = {
@@ -114,7 +114,7 @@ export default function ProjectDashboard() {
               <span className="text-border">&middot;</span>
               <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColor}`}>{T(statusKey)}</span>
               <span className="text-border">&middot;</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
+              <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success">
                 {T("proj.secure")}
               </span>
             </div>
@@ -187,10 +187,10 @@ export default function ProjectDashboard() {
               {timeline.map((item) => {
                 const score = item.business_health_score;
                 const color = score != null
-                  ? score >= 90 ? "border-l-success bg-success/5"
-                  : score >= 75 ? "border-l-accent bg-accent/5"
-                  : score >= 60 ? "border-l-warning bg-warning/5"
-                  : "border-l-danger bg-danger/5"
+                  ? score >= 90 ? "border-l-success bg-success-soft"
+                  : score >= 75 ? "border-l-accent bg-accent-soft"
+                  : score >= 60 ? "border-l-warning bg-warning-soft"
+                  : "border-l-danger bg-danger-soft"
                   : "border-l-border bg-canvas";
                 const dateStr = item.created_at
                   ? new Date(item.created_at).toLocaleDateString(localeForLang(uiLang), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
@@ -216,7 +216,7 @@ export default function ProjectDashboard() {
         <Card>
           <h2 className="text-h3 text-ink">{T("proj.dataset")}</h2>
           {hasFile ? (
-            <div className="mt-4 flex flex-col items-start justify-between gap-4 rounded-control border border-border bg-canvas p-4 sm:flex-row sm:items-center">
+            <div className="mt-4 flex flex-col items-start justify-between gap-4 rounded-control border border-border bg-muted p-4 sm:flex-row sm:items-center">
               <div className="min-w-0">
                 <p className="truncate text-[15px] font-medium text-ink">{project.original_filename}</p>
                 <p className="mt-0.5 text-caption text-secondary">{T("proj.uploadedReady")}</p>

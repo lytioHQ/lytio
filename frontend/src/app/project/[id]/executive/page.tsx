@@ -92,7 +92,7 @@ export default function ExecutiveReportPage() {
               </>
             )}
             {report.is_legacy && (
-              <span className="rounded-full bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">{T("exec.legacy")}</span>
+              <span className="rounded-full bg-warning-soft px-2.5 py-1 text-xs font-medium text-warning">{T("exec.legacy")}</span>
             )}
           </div>
         </div>

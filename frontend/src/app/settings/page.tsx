@@ -94,11 +94,11 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-3xl space-y-8 px-4 py-10 md:px-6">
         {/* Subscription Card */}
         <Card>
-          <SectionTitle title={T("settings.subscription")} description={T("settings.subscriptionDesc")} />
+          <SectionTitle variant="highlighted" title={T("settings.subscription")} description={T("settings.subscriptionDesc")} />
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <span className={`inline-flex w-fit items-center rounded-control px-5 py-2 text-lg font-semibold ${
-              isPro ? "bg-ink text-white" : "bg-warning/10 text-warning"
+              isPro ? "bg-ink text-white" : "bg-warning-soft text-warning"
             }`}>
               {isPro ? T("home.planPro") : T("settings.freeTrial")}
             </span>
@@ -114,7 +114,7 @@ export default function SettingsPage() {
           {/* Features */}
           <div className="mt-6 space-y-3">
             {planData?.features && Object.entries(planData.features).map(([key, enabled]) => (
-              <div key={key} className="flex items-center gap-4 rounded-control border border-border bg-canvas px-4 py-4">
+              <div key={key} className="flex items-center gap-4 rounded-control border border-border bg-muted px-4 py-4">
                 <span className={`text-lg ${enabled ? "text-success" : "text-secondary/40"}`}>
                   {enabled ? "\u2713" : "\u2014"}
                 </span>
@@ -128,7 +128,7 @@ export default function SettingsPage() {
 
           {/* Upgrade */}
           {!isPro && (
-            <div className="mt-8 rounded-control border border-accent/20 bg-accent/5 p-6">
+            <div className="mt-8 rounded-control border border-accent/20 bg-accent-soft p-6">
               <p className="text-[15px] font-semibold text-ink">{T("settings.upgradeTitle")}</p>
               <p className="mt-1 text-sm leading-relaxed text-secondary">{T("settings.upgradeDesc")}</p>
               <Button disabled className="mt-4">{T("settings.comingSoon")}</Button>
@@ -142,7 +142,7 @@ export default function SettingsPage() {
 
           <div className="mt-6 space-y-3">
             {aiPolicy && Object.entries(aiPolicy).filter(([k]) => k !== "version").map(([key, value]) => (
-              <div key={key} className="flex items-start gap-4 rounded-control border border-border bg-canvas px-4 py-4">
+              <div key={key} className="flex items-start gap-4 rounded-control border border-border bg-muted px-4 py-4">
                 <span className="mt-1 text-base text-success">&#x2713;</span>
                 <div className="min-w-0">
                   <p className="text-h3 capitalize text-ink">{POLICY_KEYS[key] ? T(POLICY_KEYS[key]) : key.replace(/_/g, " ")}</p>
