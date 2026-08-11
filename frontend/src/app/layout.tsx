@@ -5,6 +5,20 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Lytio",
   description: "Lytio — AI-powered Excel analysis platform",
+  metadataBase: new URL("https://lytio.co"),
+  openGraph: {
+    title: "Lytio",
+    description: "Lytio — AI-powered Excel analysis platform",
+    url: "https://lytio.co",
+    siteName: "Lytio",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lytio",
+    description: "Lytio — AI-powered Excel analysis platform",
+  },
 };
 
 import { AuthProvider } from "@/lib/AuthContext";
