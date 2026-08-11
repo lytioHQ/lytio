@@ -81,7 +81,7 @@ export default function ExecutiveReportPage() {
       <header className="border-b border-border bg-surface print:border-none">
         <div className="mx-auto max-w-4xl px-4 py-8 md:px-6">
           <Link href={`/project/${id}`} className="text-sm text-secondary transition-colors hover:text-ink">{T("nav.dashboard")}</Link>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-accent">ExcelPilot</p>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-accent">Lytio</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-3xl">{report.title}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <span className="text-sm text-secondary">{report.project_name}</span>

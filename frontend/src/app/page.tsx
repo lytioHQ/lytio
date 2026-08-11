@@ -165,7 +165,7 @@ export default function WorkspacePage() {
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-6 py-5">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-ink">ExcelPilot</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-ink">Lytio</h1>
             <p className="mt-0.5 text-sm text-secondary">{T("home.subtitle")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:gap-5">

@@ -3,8 +3,8 @@ import { cookies } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ExcelPilot",
-  description: "AI-powered Excel analysis platform",
+  title: "Lytio",
+  description: "Lytio — AI-powered Excel analysis platform",
 };
 
 import { AuthProvider } from "@/lib/AuthContext";

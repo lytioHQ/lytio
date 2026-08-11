@@ -40,7 +40,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-16">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-h1 text-ink">ExcelPilot</h1>
+          <h1 className="text-h1 text-ink">Lytio</h1>
           <p className="mt-2 text-base text-secondary">{T("auth.login.title")}</p>
         </div>
         <Card className="p-6 md:p-8">

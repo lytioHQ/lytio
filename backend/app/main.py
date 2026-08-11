@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="ExcelPilot API",
+    title="Lytio API",
     description="AI-powered Excel analysis platform",
     version="0.1.0",
     lifespan=lifespan,
@@ -90,7 +90,7 @@ app.include_router(analysis_runs_router)
 @app.get("/")
 async def root():
     return {
-        "name": "ExcelPilot API",
+        "name": "Lytio API",
         "version": "0.1.0",
         "status": "running",
     }

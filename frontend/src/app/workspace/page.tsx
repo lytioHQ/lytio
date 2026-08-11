@@ -18,10 +18,10 @@ import ContinueAnalysisPanel, { ContinueDirection } from "@/components/ContinueA
 import AnalysisHistoryPanel from "@/components/AnalysisHistoryPanel";
 
 const WORKSPACE_LABELS: Record<string, { title: string; subtitle: string }> = {
-  zh: { title: "ExcelPilot", subtitle: "\u9500\u552e\u987e\u95ee\u5de5\u4f5c\u53f0" },
-  en: { title: "ExcelPilot", subtitle: "Sales Consultant Workspace" },
-  ja: { title: "ExcelPilot", subtitle: "\u58f2\u4e0a\u30b3\u30f3\u30b5\u30eb\u30bf\u30f3\u30c8\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9" },
-  de: { title: "ExcelPilot", subtitle: "Vertriebsberater-Arbeitsbereich" },
+  zh: { title: "Lytio", subtitle: "\u9500\u552e\u987e\u95ee\u5de5\u4f5c\u53f0" },
+  en: { title: "Lytio", subtitle: "Sales Consultant Workspace" },
+  ja: { title: "Lytio", subtitle: "\u58f2\u4e0a\u30b3\u30f3\u30b5\u30eb\u30bf\u30f3\u30c8\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9" },
+  de: { title: "Lytio", subtitle: "Vertriebsberater-Arbeitsbereich" },
 };
 
 export default function WorkspacePage() {
