@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
+from app.core.logging_config import logger
 from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.services import project_service, analysis_run_service, report_builder
@@ -25,13 +26,17 @@ async def get_project(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    logger.info("project_detail_start", extra={"event": "project_detail", "user_id": user.id, "project_id": project_id})
     project = await project_service.get_project(db, project_id, user.id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    logger.info("project_detail_loaded", extra={"event": "project_detail", "user_id": user.id, "project_id": project_id})
     await project_service.touch_project(db, project_id, user.id)
+    logger.info("project_detail_touched", extra={"event": "project_detail", "user_id": user.id, "project_id": project_id})
     # touch_project's bulk UPDATE expires the in-memory instance; refresh it so
     # response serialization never triggers an async lazy-load (500 in prod).
     await db.refresh(project)
+    logger.info("project_detail_refreshed", extra={"event": "project_detail", "user_id": user.id, "project_id": project_id})
     return project
 
 
