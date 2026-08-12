@@ -143,6 +143,13 @@ export default function DemoPage() {
               {T("demo.ctaStart")}
             </Link>
           </div>
+          <div aria-hidden className="mx-auto mt-8 h-px max-w-md bg-border" />
+          <h3 className="mt-8 text-h3 text-ink">{T("demo.ownSpreadsheetTitle")}</h3>
+          <div className="mt-5 flex justify-center">
+            <Link href="/register" className={`${buttonBaseClasses} ${buttonVariantClasses.secondary} px-8`}>
+              {T("demo.startWithFile")}
+            </Link>
+          </div>
         </Card>
       </div>
     </main>

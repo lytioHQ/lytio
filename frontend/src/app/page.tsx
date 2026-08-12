@@ -198,11 +198,40 @@ export default function WorkspacePage() {
 
         {/* Projects */}
         {projects.length === 0 ? (
-          <div className="rounded-card border border-dashed border-border bg-surface p-16 text-center">
-            <p className="text-base font-medium text-ink">{T("home.emptyTitle")}</p>
-            <p className="mt-2 text-sm text-secondary">{T("home.emptyDesc")}</p>
-            <div className="mt-8 flex justify-center">
-              <Button onClick={openNewAnalysisModal}>{T("home.newAnalysis")}</Button>
+          <div className="overflow-hidden rounded-card border border-border bg-surface">
+            <div className="px-6 py-12 text-center md:px-12 md:py-16">
+              <span aria-hidden className="mx-auto flex h-14 w-14 items-center justify-center rounded-control bg-accent-soft text-2xl">
+                &#x1F4CA;
+              </span>
+              <h2 className="mt-5 text-h2 text-ink">{T("activation.title")}</h2>
+              <p className="mx-auto mt-2 max-w-[560px] text-body leading-relaxed text-secondary">
+                {T("activation.subtitle")}
+              </p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Button onClick={openNewAnalysisModal} className="w-full px-8 sm:w-auto">
+                  {T("activation.upload")}
+                </Button>
+                <Button variant="secondary" onClick={() => router.push("/demo")} className="w-full px-8 sm:w-auto">
+                  {T("activation.demo")}
+                </Button>
+              </div>
+              <p className="mt-5 text-sm text-secondary">
+                {T("activation.fileSupport")} · {T("activation.privacy")}
+              </p>
+            </div>
+            <div className="border-t border-border bg-muted px-6 py-6">
+              <div className="mx-auto grid max-w-2xl gap-3 sm:grid-cols-3">
+                {[
+                  T("activation.value1"),
+                  T("activation.value2"),
+                  T("activation.value3"),
+                ].map((v, i) => (
+                  <div key={i} className="flex items-center justify-center gap-2 text-sm text-ink">
+                    <span aria-hidden className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-semibold text-success">✓</span>
+                    {v}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : (

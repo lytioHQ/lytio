@@ -104,6 +104,12 @@ export default function RegisterPage() {
             {T("auth.register.signIn")}
           </Link>
         </p>
+        <p className="mt-4 text-center text-sm text-secondary">
+          {T("auth.register.exploreFirst")}{" "}
+          <Link href="/demo" className="font-medium text-accent hover:underline">
+            {T("auth.tryDemo")}
+          </Link>
+        </p>
       </div>
     </main>
   );
