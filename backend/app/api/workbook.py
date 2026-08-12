@@ -1,13 +1,27 @@
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from openpyxl import load_workbook
 from pydantic import BaseModel
+
+from app.api.deps import get_current_user
+from app.core.logging_config import logger
+from app.models.user import User
 
 router = APIRouter(prefix="/api/workbook", tags=["workbook"])
 
 UPLOAD_DIR = Path("storage/uploads")
+
+
+def _resolve_upload(user_id: int, saved_filename: str) -> Path:
+    """Resolve a user-scoped upload path and log the lookup result."""
+    file_path = UPLOAD_DIR / str(user_id) / saved_filename
+    logger.info(
+        "workbook_file_lookup",
+        extra={"event": "workbook", "user_id": user_id, "filename": saved_filename, "exists": file_path.exists()},
+    )
+    return file_path
 
 
 # ── Shared ──────────────────────────────────────────────
@@ -76,8 +90,8 @@ def _validate_file(file_path: Path) -> None:
 # ── Routes ──────────────────────────────────────────────
 
 @router.post("/inspect", response_model=InspectResponse)
-def inspect_workbook(req: InspectRequest):
-    file_path = UPLOAD_DIR / req.saved_filename
+def inspect_workbook(req: InspectRequest, user: User = Depends(get_current_user)):
+    file_path = _resolve_upload(user.id, req.saved_filename)
     _validate_file(file_path)
 
     try:
@@ -141,8 +155,8 @@ def inspect_workbook(req: InspectRequest):
 
 
 @router.post("/extract", response_model=ExtractResponse)
-def extract_workbook(req: InspectRequest):
-    file_path = UPLOAD_DIR / req.saved_filename
+def extract_workbook(req: InspectRequest, user: User = Depends(get_current_user)):
+    file_path = _resolve_upload(user.id, req.saved_filename)
     _validate_file(file_path)
 
     try:
@@ -231,8 +245,8 @@ def _detect_type(values: list[Any]) -> str:
 
 
 @router.post("/semantic", response_model=SemanticResponse)
-def semantic_dataset(req: InspectRequest):
-    file_path = UPLOAD_DIR / req.saved_filename
+def semantic_dataset(req: InspectRequest, user: User = Depends(get_current_user)):
+    file_path = _resolve_upload(user.id, req.saved_filename)
     _validate_file(file_path)
 
     try:
