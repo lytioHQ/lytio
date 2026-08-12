@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import RecommendationCards from "@/components/RecommendationCards";
 import { Button } from "@/components/ui";
+import { TOKEN_KEY } from "@/lib/apiFetch";
 import { UILanguage, ReportLanguage, getReportLang } from "@/lib/i18n";
 
 interface Message {
@@ -52,9 +53,12 @@ export default function ChatPanel({
 
     try {
       const effectiveReportLang = getReportLang(lang, reportLang);
+      const token = typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = "Bearer " + token;
       const r = await fetch(apiUrl + "/api/analysis/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           plugin,
           report_language: effectiveReportLang,

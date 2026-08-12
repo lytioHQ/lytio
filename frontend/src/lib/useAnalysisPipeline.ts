@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { TOKEN_KEY } from "@/lib/apiFetch";
 import { UILanguage, ReportLanguage, SUPPORTED_REPORT_LANGS, getReportLang, resolveInitialUiLang, persistUiLang } from "@/lib/i18n";
 
 interface UploadResult { original_filename: string; saved_filename: string; file_size: number; status: string; }
@@ -23,6 +24,11 @@ export type PipelineStage =
   | "generating"
   | "done";
 
+export interface PipelineOptions {
+  projectId?: number | null;
+  onComplete?: (result: AnalysisResult) => void;
+}
+
 function loadSetting<T>(key: string, fallback: T, validate: (v: string) => T | null): T {
   if (typeof window === "undefined") return fallback;
   try {
@@ -36,7 +42,14 @@ function saveSetting(key: string, value: string) {
   try { localStorage.setItem(key, value); } catch { /* ignore */ }
 }
 
-export function useAnalysisPipeline() {
+function authHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = window.localStorage.getItem(TOKEN_KEY);
+  return token ? { Authorization: "Bearer " + token } : {};
+}
+
+export function useAnalysisPipeline(options?: PipelineOptions) {
+  const { projectId, onComplete } = options || {};
   const [status, setStatus] = useState<"loading" | "running" | "offline">("loading");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -45,6 +58,7 @@ export function useAnalysisPipeline() {
   const [analyzing, setAnalyzing] = useState(false);
   const [stage, setStage] = useState<PipelineStage>("idle");
   const [failed, setFailed] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [validated, setValidated] = useState<{ sheet: string; rows: number; cols: number } | null>(null);
@@ -79,6 +93,7 @@ export function useAnalysisPipeline() {
     setExtractData(null); setSemanticData(null);
     setStage("idle");
     setFailed(false);
+    setSaved(false);
   }
 
   async function handleUpload() {
@@ -87,7 +102,7 @@ export function useAnalysisPipeline() {
     setStage("uploading");
     const fd = new FormData(); fd.append("file", file);
     try {
-      const r = await fetch(apiUrl + "/api/upload", { method: "POST", body: fd });
+      const r = await fetch(apiUrl + "/api/upload", { method: "POST", headers: authHeaders(), body: fd });
       const j = await r.json();
       if (!r.ok) { setError(j.detail || "Upload failed"); setFailed(true); return; }
       setUploadResult(j); setFile(null);
@@ -102,14 +117,14 @@ export function useAnalysisPipeline() {
     try {
       setStage("parsing");
       const r2 = await fetch(apiUrl + "/api/workbook/extract", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ saved_filename: filename }),
       });
       const j2 = await r2.json(); if (!r2.ok) throw new Error(j2.detail); setExtractData(j2);
 
       setStage("detecting");
       const r3 = await fetch(apiUrl + "/api/workbook/semantic", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ saved_filename: filename }),
       });
       const j3 = await r3.json(); if (!r3.ok) throw new Error(j3.detail); setSemanticData(j3);
@@ -123,6 +138,14 @@ export function useAnalysisPipeline() {
     } finally { setProcessing(false); }
   }
 
+  /** Start the pipeline from a server-side file (used by the project analysis page). */
+  async function runSavedFile(filename: string) {
+    reset();
+    setUploadResult({ original_filename: "", saved_filename: filename, file_size: 0, status: "uploaded" });
+    setStage("uploading");
+    await runPipeline(filename);
+  }
+
   async function handleAnalyze() {
     if (!uploadResult || !semanticData || !extractData) return;
     const sheet = semanticData.tables[0];
@@ -134,12 +157,13 @@ export function useAnalysisPipeline() {
     setStage("thinking");
     try {
       const r = await fetch(apiUrl + "/api/analysis/sales", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           saved_filename: uploadResult.saved_filename, sheet_name: sheet.sheet,
           headers: xs.headers, column_types: columnTypes,
           rows: xs.rows.map((row: DataRow) => row.values),
           plugin: "sales", report_language: effectiveReportLang, ui_language: uiLang,
+          project_id: projectId ?? undefined,
         }),
       });
       const j = await r.json();
@@ -158,6 +182,35 @@ export function useAnalysisPipeline() {
         headers: xs.headers, columnTypes,
         rows: xs.rows.map((row: DataRow) => row.values), sheetName: sheet.sheet,
       });
+
+      if (projectId) {
+        // Persist the first analysis result as an AnalysisRun so the project
+        // detail page, timeline and executive report can render it.
+        const structuredResult = j.result && typeof j.result === "object" && Object.keys(j.result).length > 0
+          ? j.result
+          : {
+              insights: (j.highlights || []).map((h: string) => ({ title: h, description: h })),
+              risks: (j.warnings || []).map((w: string) => ({ title: w, description: w })),
+              recommendations: (j.recommendations || []).map((item: string) => ({ title: item, description: item })),
+              executive_summary: { content: j.summary || "" },
+            };
+        const saveRes = await fetch(apiUrl + "/api/projects/" + projectId + "/result", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({
+            summary: j.summary || "",
+            result_json: JSON.stringify(structuredResult),
+            is_legacy: j.is_legacy || false,
+          }),
+        });
+        if (!saveRes.ok) {
+          const saveErr = await saveRes.json().catch(() => null);
+          setFailed(true);
+          throw new Error(saveErr?.detail || "Failed to save analysis result");
+        }
+        setSaved(true);
+        onComplete?.(j);
+      }
       setStage("done");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Analysis failed");
@@ -175,6 +228,7 @@ export function useAnalysisPipeline() {
     reportLang, setReportLang: handleReportLangChange,
     apiUrl, ready,
     resultData, isLegacy, handleUpload, handleAnalyze,
+    runSavedFile, saved,
     stage, failed,
   };
 }
