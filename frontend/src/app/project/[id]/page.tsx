@@ -52,6 +52,7 @@ export default function ProjectDashboard() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [loadError, setLoadError] = useState(false);
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
 
   useEffect(() => { if (!authLoading && !user) router.push("/login"); }, [authLoading, user, router]);
@@ -59,9 +60,13 @@ export default function ProjectDashboard() {
   useEffect(() => {
     if (!token || !id) return;
     apiFetch(API + "/api/projects/" + id, { headers: { Authorization: "Bearer " + token } })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((p) => { if (p) setProject(p); else router.push("/"); })
-      .catch(() => router.push("/"))
+      .then(async (r) => {
+        if (r.status === 404) { router.push("/"); return; }
+        if (!r.ok) throw new Error("Project fetch failed");
+        const p = await r.json();
+        setProject(p);
+      })
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
     apiFetch(API + "/api/projects/" + id + "/timeline", { headers: { Authorization: "Bearer " + token } })
       .then(r => r.json())
@@ -90,6 +95,20 @@ export default function ProjectDashboard() {
 
   if (authLoading || loading) {
     return <main className="flex min-h-screen items-center justify-center bg-canvas"><p className="text-sm text-secondary">{T("home.loading")}</p></main>;
+  }
+  if (loadError) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-canvas px-4">
+        <div className="w-full max-w-md rounded-card border border-border bg-surface p-8 text-center">
+          <p className="text-base font-medium text-ink">{T("proj.loadError")}</p>
+          <p className="mt-2 text-sm leading-relaxed text-secondary">{T("proj.loadErrorDesc")}</p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Button variant="secondary" onClick={() => router.push("/")}>{T("nav.backWorkspace")}</Button>
+            <Button onClick={() => window.location.reload()}>{T("proj.retry")}</Button>
+          </div>
+        </div>
+      </main>
+    );
   }
   if (!project) return null;
 

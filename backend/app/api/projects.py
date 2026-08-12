@@ -29,6 +29,9 @@ async def get_project(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     await project_service.touch_project(db, project_id, user.id)
+    # touch_project's bulk UPDATE expires the in-memory instance; refresh it so
+    # response serialization never triggers an async lazy-load (500 in prod).
+    await db.refresh(project)
     return project
 
 

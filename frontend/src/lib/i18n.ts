@@ -85,6 +85,9 @@ const zh: TranslationDict = {
   "proj.uploading": "上传中...",
   "proj.replaceDataset": "替换数据集",
   "proj.noDataset": "尚未上传数据集。",
+  "proj.loadError": "项目加载失败",
+  "proj.loadErrorDesc": "服务暂时不可用，请稍后重试。",
+  "proj.retry": "重试",
 
   "projAnalysis.title": "分析工作台",
 
@@ -556,6 +559,9 @@ const en: TranslationDict = {
   "proj.uploading": "Uploading...",
   "proj.replaceDataset": "Replace Dataset",
   "proj.noDataset": "No dataset uploaded yet.",
+  "proj.loadError": "Couldn't load this project",
+  "proj.loadErrorDesc": "The service is temporarily unavailable. Please try again.",
+  "proj.retry": "Retry",
 
   "projAnalysis.title": "Analysis workspace",
 
@@ -1027,6 +1033,9 @@ const ja: TranslationDict = {
   "proj.uploading": "アップロード中...",
   "proj.replaceDataset": "データセットを置換",
   "proj.noDataset": "まだデータセットがありません。",
+  "proj.loadError": "プロジェクトを読み込めませんでした",
+  "proj.loadErrorDesc": "サービスが一時的に利用できません。しばらくしてからもう一度お試しください。",
+  "proj.retry": "再試行",
 
   "projAnalysis.title": "分析ワークスペース",
 
@@ -1498,6 +1507,9 @@ const de: TranslationDict = {
   "proj.uploading": "Wird hochgeladen...",
   "proj.replaceDataset": "Datensatz ersetzen",
   "proj.noDataset": "Noch kein Datensatz hochgeladen.",
+  "proj.loadError": "Projekt konnte nicht geladen werden",
+  "proj.loadErrorDesc": "Der Dienst ist vorübergehend nicht verfügbar. Bitte versuchen Sie es erneut.",
+  "proj.retry": "Erneut versuchen",
 
   "projAnalysis.title": "Analyse-Arbeitsbereich",
 
