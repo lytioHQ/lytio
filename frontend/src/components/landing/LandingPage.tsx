@@ -115,7 +115,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === PROBLEM === */}
-      <section className="border-b border-border">
+      <section className="border-b border-border bg-muted">
         <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.problemLabel")}</p>
@@ -144,7 +144,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === HOW IT WORKS === */}
-      <section className="border-b border-border bg-muted">
+      <section className="border-b border-border">
         <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.howLabel")}</p>
@@ -173,7 +173,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === PRODUCT DIFFERENTIATION === */}
-      <section className="border-b border-border">
+      <section className="border-b border-border bg-accent-soft">
         <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.diffLabel")}</p>
@@ -202,7 +202,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === PRODUCT SHOWCASE (real output) === */}
-      <section className="border-b border-border bg-muted">
+      <section className="border-b border-border bg-accent-soft">
         <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.showcaseLabel")}</p>
