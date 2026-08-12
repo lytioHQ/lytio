@@ -19,7 +19,7 @@ def _resolve_upload(user_id: int, saved_filename: str) -> Path:
     file_path = UPLOAD_DIR / str(user_id) / saved_filename
     logger.info(
         "workbook_file_lookup",
-        extra={"event": "workbook", "user_id": user_id, "filename": saved_filename, "exists": file_path.exists()},
+        extra={"event": "workbook", "user_id": user_id, "saved_filename": saved_filename, "exists": file_path.exists()},
     )
     return file_path
 
