@@ -13,12 +13,16 @@ export default function BusinessHealthCard({ data, lang }: { data: HealthData; l
   };
   return (
     <div className={`rounded-card border ${colors[color]} p-6 md:p-8`}>
-      <p className="text-caption font-medium text-secondary">{T("landing.diff.businessHealth")}</p>
-      <div className="mt-3 flex items-baseline gap-3">
-        <span className="text-5xl font-semibold leading-none tabular-nums">{data.score}</span>
-        <span className="text-base font-medium">{data.level}</span>
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+        <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-[6px] border-current bg-white/60">
+          <span className="text-4xl font-semibold leading-none tabular-nums">{data.score}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-caption font-medium text-secondary">{T("landing.diff.businessHealth")}</p>
+          <p className="mt-1 text-h3 font-semibold">{data.level}</p>
+          <p className="mt-2 max-w-[680px] text-body leading-relaxed text-ink/80">{data.summary}</p>
+        </div>
       </div>
-      <p className="mt-3 max-w-[680px] text-body leading-relaxed text-ink/80">{data.summary}</p>
     </div>
   );
 }

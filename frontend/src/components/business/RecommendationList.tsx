@@ -11,6 +11,7 @@ interface RecData {
 }
 
 const PRI_COLORS: Record<string, string> = { high: "bg-danger", medium: "bg-warning", low: "bg-secondary" };
+const PRI_ACCENT: Record<string, string> = { high: "border-l-danger", medium: "border-l-warning", low: "border-l-secondary" };
 
 export default function RecommendationList({ recs, lang }: { recs: RecData[]; lang: UILanguage }) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
@@ -20,7 +21,7 @@ export default function RecommendationList({ recs, lang }: { recs: RecData[]; la
       <p className="mb-4 text-h3 text-ink">{T("biz.recsTitle", { n: recs.length })}</p>
       <div className="space-y-3">
         {recs.map((item, i) => (
-          <div key={i} className="rounded-card border border-border bg-surface p-5">
+          <div key={i} className={`rounded-card border border-border border-l-4 bg-surface p-5 ${PRI_ACCENT[item.priority] || "border-l-ink"}`}>
             <div className="flex gap-4">
               <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-control ${PRI_COLORS[item.priority] || "bg-ink"} text-xs font-bold text-white`}>{i + 1}</span>
               <div className="flex-1">
