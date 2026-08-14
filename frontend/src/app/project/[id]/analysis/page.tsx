@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/lib/AuthContext";
 import { t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 import { useAnalysisPipeline, type PipelineStage } from "@/lib/useAnalysisPipeline";
+import { isAnalysisDirection, type AnalysisDirection } from "@/lib/analysisDirections";
 import { Button, Card, SectionTitle } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 
@@ -52,11 +53,14 @@ function stepStatus(stage: PipelineStage, index: number, complete: boolean): "do
 export default function AnalysisPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { uiLang } = useUiLang();
   const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
 
   const projectId = Number(id);
+  const rawDirection = searchParams.get("direction");
+  const direction: AnalysisDirection | null = rawDirection && isAnalysisDirection(rawDirection) ? rawDirection : null;
   const [project, setProject] = useState<ProjectData | null>(null);
   const [projectLoading, setProjectLoading] = useState(true);
   const [projectError, setProjectError] = useState(false);
@@ -67,6 +71,7 @@ export default function AnalysisPage() {
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
   const pipe = useAnalysisPipeline({
     projectId: Number.isFinite(projectId) && projectId > 0 ? projectId : null,
+    analysisDirection: direction,
     onComplete: () => setSaved(true),
   });
 
@@ -91,7 +96,7 @@ export default function AnalysisPage() {
   useEffect(() => {
     if (startedRef.current) return;
     if (projectError || !project) return;
-    if (project.status === "completed") return;
+    if (project.status === "completed" && !direction) return;
     if (!project.saved_filename) return;
     startedRef.current = true;
     pipe.runSavedFile(project.saved_filename);
@@ -151,7 +156,7 @@ export default function AnalysisPage() {
     );
   }
 
-  if (project && project.status === "completed") {
+  if (project && project.status === "completed" && !direction) {
     return (
       <main className="min-h-screen bg-canvas">
         <div className="mx-auto max-w-2xl px-4 py-16 md:py-24">
@@ -213,7 +218,7 @@ export default function AnalysisPage() {
       <div className="mx-auto max-w-2xl px-4 py-12 md:py-16">
         <SectionTitle
           title={project ? project.title : T("projAnalysis.title")}
-          description={project?.original_filename || T("projAnalysis.title")}
+          description={direction ? T(`analysis.dir.${direction}`) : project?.original_filename || T("projAnalysis.title")}
         />
         <Card className="p-6 md:p-8">
           <div className="space-y-5">

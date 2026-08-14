@@ -2,7 +2,7 @@
 
 from app.plugins.sales.detector import DetectionResult, detect
 from app.plugins.sales.parser import SalesAnalysisResult, parse
-from app.plugins.sales.prompt_builder import build as build_prompt
+from app.plugins.sales.prompt_builder import analysis_type_for, build as build_prompt
 from app.schemas.analysis import AnalysisRequest, AnalysisResponse
 from app.services.analysis_engine import AnalysisEngine
 
@@ -18,7 +18,7 @@ class SalesPlugin:
 
     def build_prompt(self, *, sheet_name: str, headers: list[str],
                      column_types: dict[str, str], rows: list[list],
-                     language: str = "zh") -> str:
+                     language: str = "zh", analysis_direction: str | None = None) -> str:
         """Generate a sales-specific analysis prompt."""
         return build(
             sheet_name=sheet_name,
@@ -26,12 +26,14 @@ class SalesPlugin:
             column_types=column_types,
             rows=rows,
             language=language,
+            analysis_direction=analysis_direction,
         )
 
     async def analyze(self, engine: AnalysisEngine, *,
                       workbook_name: str, sheet_name: str,
                       headers: list[str], column_types: dict[str, str],
-                      rows: list[list], language: str = "zh") -> SalesAnalysisResult:
+                      rows: list[list], language: str = "zh",
+                      analysis_direction: str | None = None) -> SalesAnalysisResult:
         """Full pipeline: detect → build request → analyze → parse.
 
         Args:
@@ -56,6 +58,7 @@ class SalesPlugin:
             column_types=column_types,
             rows=rows,
             language=language,
+            analysis_direction=analysis_direction,
         )
 
         request = AnalysisEngine.build_request(
@@ -64,7 +67,7 @@ class SalesPlugin:
             headers=headers,
             column_types=column_types,
             rows=rows,
-            analysis_type="sales_overview",
+            analysis_type=analysis_type_for(analysis_direction),
             plugin_name="sales",
             language=language,
             parameters={"detection_confidence": detection.confidence, "system_prompt": prompt},

@@ -17,6 +17,51 @@ LANG_INSTRUCTIONS = {
     "de": "Respond in German (Deutsch).",
 }
 
+# Analysis directions are the "what should I focus on" lens the consultant
+# applies to the same structured dataset. The output JSON contract is shared;
+# the direction only reshapes which insights/risks/recommendations are surfaced.
+ANALYSIS_DIRECTIONS: dict[str, str] = {
+    "growth_opportunity": (
+        "Focus on growth opportunities. Identify high-growth products, regions, and "
+        "segments; quantify expansion potential and recommend where to invest next. "
+        "Prioritize insights and recommendations that answer: where can we grow?"
+    ),
+    "risk_detection": (
+        "Focus on risk detection. Surface declining trends, concentration risk, anomalies, "
+        "and early warning signals. Prioritize risks by severity and probability, and "
+        "recommend concrete mitigations."
+    ),
+    "profit_optimization": (
+        "Focus on profit optimization. Analyze cost structure, margins, and profitability "
+        "drivers; identify margin leaks and the highest-leverage improvements to profitability."
+    ),
+    "customer_analysis": (
+        "Focus on customer analysis. Assess customer concentration, churn risk, high-value "
+        "accounts, and purchase behavior; recommend actions to protect and grow customer value."
+    ),
+    "product_analysis": (
+        "Focus on product analysis. Break down performance by product and category; separate "
+        "star products from laggards and recommend portfolio adjustments."
+    ),
+}
+
+# "overview" is the implicit first-pass Health Scan: same structured output,
+# but without a specific deep-analysis focus.
+OVERVIEW_DIRECTION = "overview"
+ANALYSIS_DIRECTION_KEYS: frozenset[str] = frozenset({OVERVIEW_DIRECTION, *ANALYSIS_DIRECTIONS.keys()})
+
+
+def analysis_type_for(analysis_direction: str | None) -> str:
+    """Map a direction to the analysis run type.
+
+    overview (or no direction) -> health_scan; any deep direction -> deep_analysis.
+    """
+    return "health_scan" if (analysis_direction is None or analysis_direction == OVERVIEW_DIRECTION) else "deep_analysis"
+
+
+def is_valid_analysis_direction(value: str | None) -> bool:
+    return value is None or value in ANALYSIS_DIRECTION_KEYS
+
 
 def build(
     *,
@@ -25,6 +70,7 @@ def build(
     column_types: dict[str, str],
     rows: list[list],
     language: str = "zh",
+    analysis_direction: str | None = None,
     version: str = DEFAULT_VERSION,
 ) -> str:
     """Generate a sales analysis prompt from a versioned template.
@@ -35,6 +81,7 @@ def build(
         column_types: Column name -> detected type mapping.
         rows: Data rows as list of lists.
         language: "zh", "en", "ja", or "de".
+        analysis_direction: Optional focus lens (see ANALYSIS_DIRECTIONS). None = overview.
         version: Template version to load (e.g. "v1").
 
     Returns:
@@ -58,7 +105,7 @@ def build(
     lang_instr = LANG_INSTRUCTIONS.get(language, LANG_INSTRUCTIONS["en"])
     today_str = date.today().isoformat()
 
-    return (
+    prompt = (
         template
         .replace("{{sheet_name}}", sheet_name)
         .replace("{{column_count}}", str(len(headers)))
@@ -68,3 +115,13 @@ def build(
         .replace("{{language_instruction}}", lang_instr)
         .replace("{{today}}", today_str)
     )
+
+    # Inject the direction focus before the JSON rules so the structure stays intact.
+    if analysis_direction and analysis_direction in ANALYSIS_DIRECTIONS:
+        direction_section = (
+            "\n\n## Analysis Direction\n"
+            + ANALYSIS_DIRECTIONS[analysis_direction]
+        )
+        prompt = prompt.replace("## Rules", direction_section + "\n\n## Rules", 1)
+
+    return prompt

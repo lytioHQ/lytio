@@ -10,6 +10,7 @@ from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.plugins.sales import SalesPlugin
+from app.plugins.sales.prompt_builder import ANALYSIS_DIRECTIONS, analysis_type_for, is_valid_analysis_direction
 from app.plugins.sales.recommendations import get_recommendations
 from app.providers.deepseek import DeepSeekProvider
 from app.services.analysis_engine import engine
@@ -35,6 +36,7 @@ class AnalysisPayload(BaseModel):
     report_language: str = "zh"
     ui_language: str = "zh"
     project_id: int | None = None
+    analysis_direction: str | None = None
 
 
 class ChatMessage(BaseModel):
@@ -88,6 +90,13 @@ async def analyze_sales(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    if not is_valid_analysis_direction(payload.analysis_direction):
+        allowed = ", ".join(sorted([*ANALYSIS_DIRECTIONS, "overview"]))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown analysis_direction '{payload.analysis_direction}'. Must be one of: {allowed}, or omitted for a full overview.",
+        )
+
     try:
         result = await sales_plugin.analyze(
             engine,
@@ -97,6 +106,7 @@ async def analyze_sales(
             column_types=payload.column_types,
             rows=payload.rows,
             language=payload.report_language,
+            analysis_direction=payload.analysis_direction,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -109,6 +119,9 @@ async def analyze_sales(
 
     metadata = result.metadata
     metadata["multi_language"] = _detect_multi_language(payload.headers)
+    effective_direction = payload.analysis_direction or "overview"
+    metadata["analysis_direction"] = effective_direction
+    metadata["analysis_type"] = analysis_type_for(payload.analysis_direction)
 
     response = {
         "plugin": payload.plugin,

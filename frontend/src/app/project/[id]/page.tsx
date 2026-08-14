@@ -9,6 +9,7 @@ import { localeForLang, t, UILanguage } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 import { Button, Card, MetricCard } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
+import { ANALYSIS_DIRECTIONS, ANALYSIS_DIRECTION_ICONS } from "@/lib/analysisDirections";
 
 interface ProjectData {
   id: number; title: string; industry: string; language: string;
@@ -246,6 +247,25 @@ export default function ProjectDashboard() {
                   ))}
                 </ul>
               </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Analysis Direction */}
+        {hasFile && (
+          <Card>
+            <h2 className="text-h3 text-ink">{T("analysis.selectDirection")}</h2>
+            <p className="mt-1 text-sm text-secondary">{T("analysis.selectDirectionDesc")}</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {ANALYSIS_DIRECTIONS.map((d) => (
+                <Link key={d} href={`/project/${id}/analysis?direction=${d}`} className="block h-full">
+                  <div className="flex h-full flex-col gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:border-accent/40 hover:bg-canvas">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-control bg-canvas text-sm font-bold text-secondary">{ANALYSIS_DIRECTION_ICONS[d]}</span>
+                    <span className="text-sm font-semibold leading-snug text-ink">{T(`analysis.dir.${d}`)}</span>
+                    <span className="text-caption leading-relaxed text-secondary">{T(`analysis.dir.${d}.desc`)}</span>
+                  </div>
+                </Link>
+              ))}
             </div>
           </Card>
         )}

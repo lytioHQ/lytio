@@ -26,6 +26,7 @@ export type PipelineStage =
 
 export interface PipelineOptions {
   projectId?: number | null;
+  analysisDirection?: string | null;
   onComplete?: (result: AnalysisResult) => void;
 }
 
@@ -49,7 +50,7 @@ function authHeaders(): Record<string, string> {
 }
 
 export function useAnalysisPipeline(options?: PipelineOptions) {
-  const { projectId, onComplete } = options || {};
+  const { projectId, analysisDirection, onComplete } = options || {};
   const [status, setStatus] = useState<"loading" | "running" | "offline">("loading");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -164,6 +165,7 @@ export function useAnalysisPipeline(options?: PipelineOptions) {
           rows: xs.rows.map((row: DataRow) => row.values),
           plugin: "sales", report_language: effectiveReportLang, ui_language: uiLang,
           project_id: projectId ?? undefined,
+          analysis_direction: analysisDirection || "overview",
         }),
       });
       const j = await r.json();
@@ -186,7 +188,7 @@ export function useAnalysisPipeline(options?: PipelineOptions) {
       if (projectId) {
         // Persist the first analysis result as an AnalysisRun so the project
         // detail page, timeline and executive report can render it.
-        const structuredResult = j.result && typeof j.result === "object" && Object.keys(j.result).length > 0
+        let structuredResult = j.result && typeof j.result === "object" && Object.keys(j.result).length > 0
           ? j.result
           : {
               insights: (j.highlights || []).map((h: string) => ({ title: h, description: h })),
@@ -194,6 +196,12 @@ export function useAnalysisPipeline(options?: PipelineOptions) {
               recommendations: (j.recommendations || []).map((item: string) => ({ title: item, description: item })),
               executive_summary: { content: j.summary || "" },
             };
+        const effectiveDirection = analysisDirection || "overview";
+        structuredResult = {
+          ...structuredResult,
+          analysis_direction: effectiveDirection,
+          analysis_type: analysisDirection ? "deep_analysis" : "health_scan",
+        };
         const saveRes = await fetch(apiUrl + "/api/projects/" + projectId + "/result", {
           method: "PATCH",
           headers: { "Content-Type": "application/json", ...authHeaders() },
