@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from app.schemas.business_objects import (
     AnalysisResult,
     BusinessHealth,
+    Evidence,
     ExecutiveSummary,
     ExpectedImpact,
     Insight,
@@ -36,28 +37,60 @@ class SalesAnalysisResult:
     is_legacy: bool = False
 
 
+def _strip_code_fences(raw: str) -> str:
+    """Remove markdown code fences around a JSON block, if present."""
+    candidate = raw.strip()
+    if candidate.startswith("```"):
+        lines = candidate.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        candidate = "\n".join(lines).strip()
+    return candidate
+
+
+def _parse_evidence(raw) -> Evidence | None:
+    """Parse an Evidence object from AI JSON (may be absent or malformed)."""
+    if not isinstance(raw, dict):
+        return None
+    return Evidence(
+        source_sheet=str(raw.get("source_sheet", "")),
+        source_range=str(raw.get("source_range", "")),
+        source_columns=[str(c) for c in (raw.get("source_columns") or [])],
+        source_rows=str(raw.get("source_rows", "")),
+        reason=str(raw.get("reason", "")),
+        confidence=str(raw.get("confidence", "")),
+    )
+
+
 def parse(response_summary: str, response_highlights: list[str],
           response_warnings: list[str], response_recommendations: list[str],
           metadata: dict) -> SalesAnalysisResult:
     """Parse AI response. Try V2 JSON first, fall back to legacy."""
     raw = response_summary.strip() if response_summary else ""
+    candidates = [raw]
+    stripped = _strip_code_fences(raw)
+    if stripped != raw:
+        candidates.insert(0, stripped)
 
     # Try to parse as V2 AnalysisResult JSON
-    if raw.startswith("{"):
-        try:
-            data = json.loads(raw)
-            result = _parse_v2(data)
-            return SalesAnalysisResult(
-                result=result,
-                summary=result.executive_summary.content if result.executive_summary else "",
-                highlights=[i.title for i in result.insights],
-                warnings=[r.title for r in result.risks],
-                recommendations=[r.title for r in result.recommendations],
-                metadata=metadata,
-                is_legacy=False,
-            )
-        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-            logger.warning("V2 JSON parse failed, falling back to legacy: %s", e)
+    for candidate in candidates:
+        if candidate.startswith("{"):
+            try:
+                data = json.loads(candidate)
+                result = _parse_v2(data)
+                return SalesAnalysisResult(
+                    result=result,
+                    summary=result.executive_summary.content if result.executive_summary else "",
+                    highlights=[i.title for i in result.insights],
+                    warnings=[r.title for r in result.risks],
+                    recommendations=[r.title for r in result.recommendations],
+                    metadata=metadata,
+                    is_legacy=False,
+                )
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+                logger.warning("V2 JSON parse failed, falling back to legacy: %s", e)
 
     # Legacy format: plain text or old JSON
     return SalesAnalysisResult(
@@ -97,6 +130,7 @@ def _parse_v2(data: dict) -> AnalysisResult:
                 title=str(i.get("title", "")),
                 description=str(i.get("description", "")),
                 confidence=str(i.get("confidence", "medium")),
+                evidence=_parse_evidence(i.get("evidence")),
             ))
 
     risks = []
@@ -106,6 +140,7 @@ def _parse_v2(data: dict) -> AnalysisResult:
                 title=str(r.get("title", "")),
                 description=str(r.get("description", "")),
                 severity=str(r.get("severity", "medium")),
+                evidence=_parse_evidence(r.get("evidence")),
             ))
 
     recs = []
@@ -124,6 +159,7 @@ def _parse_v2(data: dict) -> AnalysisResult:
                 title=str(r.get("title", "")),
                 description=str(r.get("description", "")),
                 priority=str(r.get("priority", "medium")),
+                evidence=_parse_evidence(r.get("evidence")),
                 expected_impact=expected_impact,
             ))
 

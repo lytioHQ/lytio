@@ -91,6 +91,7 @@ export default function AnalysisPage() {
   useEffect(() => {
     if (startedRef.current) return;
     if (projectError || !project) return;
+    if (project.status === "completed") return;
     if (!project.saved_filename) return;
     startedRef.current = true;
     pipe.runSavedFile(project.saved_filename);
@@ -150,6 +151,25 @@ export default function AnalysisPage() {
     );
   }
 
+  if (project && project.status === "completed") {
+    return (
+      <main className="min-h-screen bg-canvas">
+        <div className="mx-auto max-w-2xl px-4 py-16 md:py-24">
+          <Card className="p-10 text-center">
+            <span aria-hidden className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-soft text-3xl text-success">{"\u2713"}</span>
+            <h1 className="mt-6 text-h1 text-ink">{T("projAnalysis.alreadyComplete")}</h1>
+            <p className="mx-auto mt-2 max-w-[480px] text-body leading-relaxed text-secondary">{T("projAnalysis.alreadyCompleteDesc")}</p>
+            <div className="mt-8 flex justify-center">
+              <Link href={`/project/${id}/executive`} className={`${PRIMARY_LINK} px-8`}>
+                {T("projAnalysis.viewFullReport")}
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </main>
+    );
+  }
+
   if (failed) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-canvas px-4">
@@ -177,8 +197,8 @@ export default function AnalysisPage() {
             <h1 className="mt-6 text-h1 text-ink">{T("projAnalysis.complete")}</h1>
             <p className="mx-auto mt-2 max-w-[480px] text-body leading-relaxed text-secondary">{T("projAnalysis.completeDesc")}</p>
             <div className="mt-8 flex justify-center">
-              <Link href={`/project/${id}`} className={`${PRIMARY_LINK} px-8`}>
-                {T("projAnalysis.viewReport")}
+              <Link href={`/project/${id}/executive`} className={`${PRIMARY_LINK} px-8`}>
+                {T("projAnalysis.viewFullReport")}
               </Link>
             </div>
           </Card>
@@ -218,6 +238,7 @@ export default function AnalysisPage() {
               );
             })}
           </div>
+          <p className="mt-5 text-sm text-secondary">{T("projAnalysis.takesTime")}</p>
           {pipe.error && (
             <p className="mt-5 rounded-control border border-danger/20 bg-danger/5 px-3 py-2 text-sm text-danger">{pipe.error}</p>
           )}

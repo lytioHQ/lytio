@@ -49,7 +49,7 @@ class DeepSeekProvider(BaseAIProvider):
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": 0.3,
-            "max_tokens": 4096,
+            "max_tokens": 16384,
         }
 
         raw_response: dict[str, Any] = {}
@@ -96,7 +96,15 @@ class DeepSeekProvider(BaseAIProvider):
     # ── private ──────────────────────────────────────────
 
     def _build_system_prompt(self, request: AnalysisRequest) -> str:
-        """Minimal system prompt. No industry knowledge. No business logic."""
+        """Use the plugin-supplied system prompt when provided, else a minimal generic one.
+
+        The provider stays industry-agnostic: it simply honors an injected
+        business prompt (e.g. the Sales V2 prompt) carried on the request.
+        """
+        if isinstance(request.parameters, dict):
+            injected = request.parameters.get("system_prompt")
+            if injected and isinstance(injected, str) and injected.strip():
+                return injected
         lang = "Chinese" if request.language == "zh" else "English"
         return (
             f"You are a professional data analyst. "
@@ -124,9 +132,11 @@ class DeepSeekProvider(BaseAIProvider):
 
         params = ""
         if request.parameters:
-            params = "\nAdditional requirements:\n" + "\n".join(
-                f"  - {k}: {v}" for k, v in request.parameters.items()
-            )
+            extra = {k: v for k, v in request.parameters.items() if k != "system_prompt"}
+            if extra:
+                params = "\nAdditional requirements:\n" + "\n".join(
+                    f"  - {k}: {v}" for k, v in extra.items()
+                )
 
         return (
             f"Workbook: {request.workbook_name}\n"
@@ -159,16 +169,28 @@ class DeepSeekProvider(BaseAIProvider):
             "completion_tokens": usage.get("completion_tokens", 0),
         }
 
+        if not content or not content.strip():
+            return AnalysisResponse(
+                summary="Analysis failed: the model returned an empty response (output limit reached).",
+                metadata={"provider": self.name, "error": "empty response", "latency_ms": latency_ms},
+            )
+
         # Try to parse as JSON
         try:
             data = json.loads(content)
-            return AnalysisResponse(
-                summary=data.get("summary", content),
-                highlights=data.get("highlights", []),
-                warnings=data.get("warnings", []),
-                recommendations=data.get("recommendations", []),
-                metadata=metadata,
-            )
+            if isinstance(data, dict) and "summary" in data:
+                # Legacy provider-level shape: extract flat fields.
+                return AnalysisResponse(
+                    summary=data.get("summary", content),
+                    highlights=data.get("highlights", []),
+                    warnings=data.get("warnings", []),
+                    recommendations=data.get("recommendations", []),
+                    metadata=metadata,
+                )
+            if isinstance(data, (dict, list)):
+                # Structured Business-Objects result: pass the raw JSON through
+                # so the plugin parser can build a typed AnalysisResult.
+                return AnalysisResponse(summary=content, metadata=metadata)
         except (json.JSONDecodeError, TypeError):
             pass
 

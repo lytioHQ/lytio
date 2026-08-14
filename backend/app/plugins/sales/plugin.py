@@ -1,8 +1,8 @@
-﻿"""Sales Analysis Plugin — orchestrates detection → prompt → analysis → parsing."""
+"""Sales Analysis Plugin — orchestrates detection → prompt → analysis → parsing."""
 
 from app.plugins.sales.detector import DetectionResult, detect
 from app.plugins.sales.parser import SalesAnalysisResult, parse
-from app.plugins.sales.prompt_builder import build
+from app.plugins.sales.prompt_builder import build as build_prompt
 from app.schemas.analysis import AnalysisRequest, AnalysisResponse
 from app.services.analysis_engine import AnalysisEngine
 
@@ -50,6 +50,14 @@ class SalesPlugin:
         if not detection.supported:
             raise ValueError(detection.reason)
 
+        prompt = build_prompt(
+            sheet_name=sheet_name,
+            headers=headers,
+            column_types=column_types,
+            rows=rows,
+            language=language,
+        )
+
         request = AnalysisEngine.build_request(
             workbook_name=workbook_name,
             sheet_name=sheet_name,
@@ -59,7 +67,7 @@ class SalesPlugin:
             analysis_type="sales_overview",
             plugin_name="sales",
             language=language,
-            parameters={"detection_confidence": detection.confidence},
+            parameters={"detection_confidence": detection.confidence, "system_prompt": prompt},
         )
 
         response = await engine.analyze(request)

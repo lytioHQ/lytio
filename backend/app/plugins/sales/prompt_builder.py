@@ -7,7 +7,7 @@ No networking. No API calls. Pure text generation + variable substitution.
 from datetime import date
 from pathlib import Path
 
-PROMPT_DIR = Path(__file__).parent.parent.parent / "prompts" / "sales"
+PROMPT_DIR = Path(__file__).parent.parent.parent.parent / "prompts" / "sales"
 DEFAULT_VERSION = "v1"
 
 LANG_INSTRUCTIONS = {

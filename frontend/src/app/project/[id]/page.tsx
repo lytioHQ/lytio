@@ -16,6 +16,15 @@ interface ProjectData {
   status: string; created_at: string | null; updated_at: string | null; latest_summary: string | null;
 }
 
+interface ReportPreview {
+  business_health: { score: number; level: string; summary: string } | null;
+  executive_summary: { content: string } | null;
+  key_metrics: { name: string; value: string; trend: string }[];
+  top_insights: { title: string; description: string; confidence: string }[];
+  top_risks: { title: string; description: string; severity: string }[];
+  top_recommendations: { title: string; description: string; priority: string }[];
+}
+
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 interface TimelineItem { id: number; created_at: string | null; business_health_score: number | null; summary: string | null; }
@@ -34,8 +43,7 @@ const STATUS_KEYS: Record<string, string> = {
   archived: "proj.status.archived",
 };
 
-const PRIMARY_LINK = "${buttonBaseClasses} ${buttonVariantClasses.primary}";
-const SECONDARY_LINK = "${buttonBaseClasses} ${buttonVariantClasses.secondary}";
+const PRIMARY_LINK = `${buttonBaseClasses} ${buttonVariantClasses.primary}`;
 
 function formatDate(d: string | null, lang: UILanguage): string {
   if (!d) return "-";
@@ -49,6 +57,7 @@ export default function ProjectDashboard() {
   const { uiLang } = useUiLang();
   const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const [project, setProject] = useState<ProjectData | null>(null);
+  const [report, setReport] = useState<ReportPreview | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
@@ -73,6 +82,15 @@ export default function ProjectDashboard() {
       .then((data: TimelineItem[]) => setTimeline(data || []))
       .catch(() => {});
   }, [token, id, router]);
+
+  // Pull the latest executive report so the dashboard renders real conclusions.
+  useEffect(() => {
+    if (!token || !id) return;
+    apiFetch(API + "/api/projects/" + id + "/executive", { headers: { Authorization: "Bearer " + token } })
+      .then(async (r) => { if (!r.ok) return null; return r.json(); })
+      .then((data: ReportPreview | null) => setReport(data))
+      .catch(() => setReport(null));
+  }, [token, id]);
 
   async function handleReplaceFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -115,6 +133,10 @@ export default function ProjectDashboard() {
   const statusKey = STATUS_KEYS[project.status] || STATUS_KEYS.draft;
   const statusColor = STATUS_COLORS[project.status] || STATUS_COLORS.draft;
   const hasFile = !!project.original_filename;
+  const completed = project.status === "completed";
+  const insightCount = report?.top_insights?.length ?? 0;
+  const riskCount = report?.top_risks?.length ?? 0;
+  const recCount = report?.top_recommendations?.length ?? 0;
 
   return (
     <main className="min-h-screen bg-canvas">
@@ -139,14 +161,15 @@ export default function ProjectDashboard() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-3">
-            {project.status === "completed" && (
-              <Link href={`/project/${id}/executive`} className={SECONDARY_LINK}>
-                {T("proj.executiveReport")}
+            {completed ? (
+              <Link href={`/project/${id}/executive`} className={PRIMARY_LINK}>
+                {T("proj.viewFullReport")}
+              </Link>
+            ) : (
+              <Link href={`/project/${id}/analysis`} className={PRIMARY_LINK}>
+                {T("proj.startAnalysisExcel")}
               </Link>
             )}
-            <Link href={`/project/${id}/analysis`} className={PRIMARY_LINK}>
-              {hasFile ? T("proj.continueAnalysis") : T("proj.startAnalysis")}
-            </Link>
           </div>
         </div>
       </header>
@@ -154,11 +177,78 @@ export default function ProjectDashboard() {
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-10 md:px-8">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <MetricCard label={T("landing.diff.businessHealth")} value={project.status === "completed" ? "\u2713" : hasFile ? "--" : "\u2014"} description={project.status === "completed" ? T("proj.healthReady") : hasFile ? T("proj.healthRun") : T("proj.healthNoData")} />
-          <MetricCard label={T("report.kpi.findings")} value={project.status === "completed" ? "\u2713" : "\u2014"} description={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
-          <MetricCard label={T("report.kpi.risks")} value={project.status === "completed" ? "\u2713" : "\u2014"} description={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
-          <MetricCard label={T("report.kpi.suggestions")} value={project.status === "completed" ? "\u2713" : "\u2014"} description={project.status === "completed" ? T("proj.available") : T("proj.pending")} />
+          <MetricCard
+            label={T("landing.diff.businessHealth")}
+            value={report?.business_health ? report.business_health.score : "\u2014"}
+            description={report?.business_health ? report.business_health.level : hasFile ? T("proj.pending") : T("proj.healthNoData")}
+          />
+          <MetricCard
+            label={T("report.kpi.findings")}
+            value={insightCount > 0 ? String(insightCount) : "\u2014"}
+            description={insightCount > 0 ? T("proj.insightCount", { n: insightCount }) : T("proj.pending")}
+          />
+          <MetricCard
+            label={T("report.kpi.risks")}
+            value={riskCount > 0 ? String(riskCount) : "\u2014"}
+            description={riskCount > 0 ? T("proj.riskCount", { n: riskCount }) : T("proj.pending")}
+          />
+          <MetricCard
+            label={T("report.kpi.suggestions")}
+            value={recCount > 0 ? String(recCount) : "\u2014"}
+            description={recCount > 0 ? T("proj.suggestionCount", { n: recCount }) : T("proj.pending")}
+          />
         </div>
+
+        {/* Key Conclusions (real data) */}
+        {report && (insightCount > 0 || riskCount > 0 || recCount > 0) && (
+          <Card>
+            <h2 className="text-h3 text-ink">{T("proj.conclusions")}</h2>
+            <div className="mt-4 grid gap-6 md:grid-cols-3">
+              <div>
+                <p className="text-caption font-medium text-secondary">{T("report.kpi.findings")}</p>
+                <ul className="mt-3 space-y-4">
+                  {report.top_insights.slice(0, 3).map((item, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent">{i + 1}</span>
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-medium leading-snug text-ink">{item.title}</p>
+                        <p className="mt-0.5 line-clamp-2 text-sm leading-relaxed text-secondary">{item.description}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-caption font-medium text-secondary">{T("report.kpi.risks")}</p>
+                <ul className="mt-3 space-y-4">
+                  {report.top_risks.slice(0, 3).map((item, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warning-soft text-xs font-semibold text-warning">{i + 1}</span>
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-medium leading-snug text-ink">{item.title}</p>
+                        <p className="mt-0.5 line-clamp-2 text-sm leading-relaxed text-secondary">{item.description}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-caption font-medium text-secondary">{T("proj.opportunities")}</p>
+                <ul className="mt-3 space-y-4">
+                  {report.top_recommendations.slice(0, 3).map((item, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-semibold text-success">{i + 1}</span>
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-medium leading-snug text-ink">{item.title}</p>
+                        <p className="mt-0.5 line-clamp-2 text-sm leading-relaxed text-secondary">{item.description}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Latest Report */}
         <Card>
@@ -166,31 +256,64 @@ export default function ProjectDashboard() {
             <div className="min-w-0">
               <h2 className="text-h3 text-ink">{T("proj.latestAnalysis")}</h2>
               <p className="mt-1.5 max-w-[640px] text-sm leading-relaxed text-secondary">
-                {project.status === "completed" && project.latest_summary ? project.latest_summary.slice(0, 200) + "..." : hasFile ? T("proj.noAnalysisYet") : T("proj.uploadFirst")}
+                {report?.executive_summary?.content
+                  ? report.executive_summary.content.slice(0, 200) + "..."
+                  : project.latest_summary
+                    ? project.latest_summary.slice(0, 200) + "..."
+                    : hasFile ? T("proj.noAnalysisYet") : T("proj.uploadFirst")}
               </p>
-              <p className="mt-1 text-caption text-secondary">{hasFile ? T("proj.clickContinue") : T("proj.useStart")}</p>
+              <p className="mt-1 text-caption text-secondary">
+                {completed ? T("proj.reportReady") : hasFile ? T("proj.uploadedReady") : T("proj.uploadFirst")}
+              </p>
             </div>
-            <Link href={`/project/${id}/analysis`} className={`${PRIMARY_LINK} shrink-0`}>
-              {hasFile ? T("proj.continueAnalysis") : T("proj.startAnalysis")} →
-            </Link>
+            {completed ? (
+              <Link href={`/project/${id}/executive`} className={`${PRIMARY_LINK} shrink-0`}>
+                {T("proj.viewFullReport")}
+              </Link>
+            ) : (
+              <Link href={`/project/${id}/analysis`} className={`${PRIMARY_LINK} shrink-0`}>
+                {T("proj.startAnalysisExcel")}
+              </Link>
+            )}
           </div>
         </Card>
 
         {/* Next Actions */}
         <Card>
           <h2 className="text-h3 text-ink">{T("proj.nextSteps")}</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
-            {[
-              { title: T("proj.step.upload"), desc: T("proj.step.uploadDesc") },
-              { title: T("proj.step.run"), desc: T("proj.step.runDesc") },
-              { title: T("proj.step.review"), desc: T("proj.step.reviewDesc") },
-            ].map((item, i) => (
-              <Card key={i} variant="subtle" className="p-5">
-                <p className="text-[15px] font-medium text-ink">{item.title}</p>
-                <p className="mt-1 text-sm leading-relaxed text-secondary">{item.desc}</p>
+          {completed ? (
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              <Link href={`/project/${id}/executive`} className="block h-full">
+                <Card variant="interactive" className="h-full p-5">
+                  <p className="text-[15px] font-medium text-ink">{T("proj.nextActionViewReport")}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-secondary">{T("proj.nextActionViewReportDesc")}</p>
+                </Card>
+              </Link>
+              <Card variant="subtle" className="p-5">
+                <p className="text-[15px] font-medium text-ink">{T("proj.nextActionExecute")}</p>
+                <p className="mt-1 text-sm leading-relaxed text-secondary">{T("proj.nextActionExecuteDesc")}</p>
               </Card>
-            ))}
-          </div>
+              <Card variant="subtle" className="p-5">
+                <p className="text-[15px] font-medium text-ink">{T("proj.nextActionVerify")}</p>
+                <p className="mt-1 text-sm leading-relaxed text-secondary">{T("proj.nextActionVerifyDesc")}</p>
+              </Card>
+            </div>
+          ) : (
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              <Card variant="subtle" className="p-5">
+                <p className="text-[15px] font-medium text-ink">{T("proj.step.upload")}</p>
+                <p className="mt-1 text-sm leading-relaxed text-secondary">{T("proj.step.uploadDesc")}</p>
+              </Card>
+              <Card variant="subtle" className="p-5">
+                <p className="text-[15px] font-medium text-ink">{T("proj.startAnalysisExcel")}</p>
+                <p className="mt-1 text-sm leading-relaxed text-secondary">{T("proj.step.runDesc")}</p>
+              </Card>
+              <Card variant="subtle" className="p-5">
+                <p className="text-[15px] font-medium text-ink">{T("proj.step.review")}</p>
+                <p className="mt-1 text-sm leading-relaxed text-secondary">{T("proj.step.reviewDesc")}</p>
+              </Card>
+            </div>
+          )}
         </Card>
 
         {/* Business Timeline */}
