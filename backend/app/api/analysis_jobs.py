@@ -1,0 +1,128 @@
+import json
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user
+from app.core.database import get_db
+from app.models.user import User
+from app.plugins.sales.prompt_builder import (
+    ANALYSIS_DIRECTIONS,
+    analysis_type_for,
+    is_valid_analysis_direction,
+)
+from app.services import analysis_job_service, project_service
+from app.services.analysis_job_runner import schedule_job
+
+router = APIRouter(prefix="/api/projects", tags=["analysis_jobs"])
+
+
+class AnalysisJobCreate(BaseModel):
+    analysis_direction: str = "overview"
+    idempotency_key: str | None = None
+
+
+class AnalysisJobResponse(BaseModel):
+    job_id: int
+    status: str
+    analysis_type: str
+    analysis_direction: str
+    error_code: str | None = None
+    error_message: str | None = None
+    result_run_id: int | None = None
+
+
+def _to_response(job) -> AnalysisJobResponse:
+    return AnalysisJobResponse(
+        job_id=job.id,
+        status=job.status,
+        analysis_type=job.analysis_type,
+        analysis_direction=job.analysis_direction,
+        error_code=job.error_code,
+        error_message=job.error_message,
+        result_run_id=job.result_run_id,
+    )
+
+
+@router.post("/{project_id}/analysis", response_model=AnalysisJobResponse, status_code=202)
+async def create_analysis_job(
+    project_id: int,
+    payload: AnalysisJobCreate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    direction = payload.analysis_direction or "overview"
+    if not is_valid_analysis_direction(direction):
+        allowed = ", ".join(sorted([*ANALYSIS_DIRECTIONS, "overview"]))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown analysis_direction '{direction}'. Must be one of: {allowed}.",
+        )
+
+    project = await project_service.get_project(db, project_id, user.id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    idempotency_key = payload.idempotency_key or f"{project_id}:{direction}:{uuid.uuid4().hex}"
+
+    existing = await analysis_job_service.get_job_by_idempotency(db, idempotency_key)
+    if existing is not None:
+        if existing.project_id == project_id and existing.user_id == user.id:
+            return _to_response(existing)
+        raise HTTPException(status_code=409, detail="Analysis job conflict")
+
+    active = await analysis_job_service.get_active_job(db, project_id, direction)
+    if active:
+        return _to_response(active)
+
+    completed = await analysis_job_service.get_completed_job(db, project_id, direction)
+    if completed:
+        raise HTTPException(
+            status_code=409,
+            detail="This analysis has already been completed for this project.",
+        )
+
+    request_json = json.dumps(
+        {"analysis_direction": direction, "report_language": project.language or "zh"},
+        ensure_ascii=False,
+    )
+    job = await analysis_job_service.insert_job(
+        db,
+        user_id=user.id,
+        project_id=project_id,
+        idempotency_key=idempotency_key,
+        analysis_type=analysis_type_for(direction),
+        analysis_direction=direction,
+        request_json=request_json,
+    )
+
+    if job is None:
+        raced = (
+            await analysis_job_service.get_job_by_idempotency(db, idempotency_key)
+            or await analysis_job_service.get_active_job(db, project_id, direction)
+            or await analysis_job_service.get_completed_job(db, project_id, direction)
+        )
+        if raced is not None and raced.project_id == project_id and raced.user_id == user.id:
+            return _to_response(raced)
+        raise HTTPException(status_code=409, detail="Analysis job conflict")
+
+    schedule_job(job.id)
+    return _to_response(job)
+
+
+@router.get("/{project_id}/analysis/{job_id}", response_model=AnalysisJobResponse)
+async def get_analysis_job(
+    project_id: int,
+    job_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    project = await project_service.get_project(db, project_id, user.id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    job = await analysis_job_service.get_job(db, project_id, user.id, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Analysis job not found")
+    return _to_response(job)

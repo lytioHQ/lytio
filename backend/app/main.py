@@ -3,10 +3,11 @@ load_dotenv(override=True)
 
 import os
 from contextlib import asynccontextmanager
-from app.core.database import init_db, engine
+from app.core.database import async_session, init_db, engine
 import app.models.project  # noqa: F401
 import app.models.analysis_run  # noqa: F401  ensure table creation
 import app.models.audit_log  # noqa: F401  ensure table creation
+import app.models.analysis_job  # noqa: F401  ensure table creation
 from app.core.logging_config import logger
 
 from fastapi import FastAPI, Request
@@ -19,6 +20,7 @@ from app.api.workbook import router as workbook_router
 from app.api.auth import router as auth_router
 from app.api.projects import router as projects_router
 from app.api.analysis_runs import router as analysis_runs_router
+from app.api.analysis_jobs import router as analysis_jobs_router
 
 
 @asynccontextmanager
@@ -26,6 +28,9 @@ async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
     logger.info("lytio.startup", extra={"event": "startup"})
     await init_db()
+    async with async_session() as db:
+        from app.services import analysis_job_service
+        await analysis_job_service.reconcile_stale_jobs(db)
     yield
     logger.info("lytio.shutdown", extra={"event": "shutdown"})
 
@@ -85,6 +90,7 @@ app.include_router(workbook_router)
 app.include_router(auth_router)
 app.include_router(projects_router)
 app.include_router(analysis_runs_router)
+app.include_router(analysis_jobs_router)
 
 
 @app.get("/")

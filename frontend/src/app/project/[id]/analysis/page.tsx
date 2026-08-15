@@ -7,8 +7,8 @@ import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/lib/AuthContext";
 import { t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
-import { useAnalysisPipeline, type PipelineStage } from "@/lib/useAnalysisPipeline";
 import { isAnalysisDirection, type AnalysisDirection } from "@/lib/analysisDirections";
+import { useAnalysisJob, type AnalysisJob, type AnalysisJobHookError } from "@/lib/useAnalysisJob";
 import { Button, Card, SectionTitle } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 
@@ -23,31 +23,34 @@ interface ProjectData {
   status: string;
 }
 
-const STAGE_ORDER: Record<PipelineStage, number> = {
-  idle: 0,
-  uploading: 1,
-  parsing: 1,
-  detecting: 2,
-  ready: 2,
-  thinking: 3,
-  generating: 4,
-  done: 5,
-};
-
-const STEPS = [
-  "projAnalysis.preparing",
-  "projAnalysis.understanding",
-  "projAnalysis.generating",
-  "projAnalysis.recommendations",
+const STAGES = [
+  "analysis.stage.preparing",
+  "analysis.stage.health",
+  "analysis.stage.findings",
+  "analysis.stage.risks",
+  "analysis.stage.recommendations",
 ] as const;
 
-function stepStatus(stage: PipelineStage, index: number, complete: boolean): "done" | "active" | "pending" {
-  if (complete) return "done";
-  const order = STAGE_ORDER[stage] ?? 0;
-  const threshold = index + 1;
-  if (order > threshold) return "done";
-  if (order === threshold) return "active";
-  return "pending";
+function jobErrorKey(job: AnalysisJob | null): string | null {
+  if (!job || job.status !== "failed") return null;
+  switch (job.error_code) {
+    case "provider_timeout":
+      return "analysis.error.provider_timeout";
+    case "interrupted":
+      return "analysis.error.interrupted";
+    case "invalid_data":
+      return "analysis.error.invalid_data";
+    case "missing_file":
+      return "analysis.error.missing_file";
+    default:
+      return "analysis.error.unknown";
+  }
+}
+
+function hookErrorKey(error: AnalysisJobHookError | null): string | null {
+  if (error === "conflict") return "analysis.error.alreadyDone";
+  if (error === "network") return "analysis.error.poll";
+  return null;
 }
 
 export default function AnalysisPage() {
@@ -61,19 +64,22 @@ export default function AnalysisPage() {
   const projectId = Number(id);
   const rawDirection = searchParams.get("direction");
   const direction: AnalysisDirection | null = rawDirection && isAnalysisDirection(rawDirection) ? rawDirection : null;
+  const analysisDirection = direction ?? "overview";
+  const jobIdParam = searchParams.get("job_id");
+  const initialJobId = jobIdParam && Number.isFinite(Number(jobIdParam)) ? Number(jobIdParam) : null;
+
   const [project, setProject] = useState<ProjectData | null>(null);
   const [projectLoading, setProjectLoading] = useState(true);
   const [projectError, setProjectError] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const startedRef = useRef(false);
-  const analyzeTriggeredRef = useRef(false);
+  const createdRef = useRef(false);
+  const syncedJobIdRef = useRef<string | null>(null);
 
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
-  const pipe = useAnalysisPipeline({
-    projectId: Number.isFinite(projectId) && projectId > 0 ? projectId : null,
-    analysisDirection: direction,
-    onComplete: () => setSaved(true),
-  });
+  const jobFlow = useAnalysisJob(
+    Number.isFinite(projectId) && projectId > 0 ? projectId : null,
+    analysisDirection,
+    initialJobId,
+  );
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -83,7 +89,10 @@ export default function AnalysisPage() {
     if (!token || !id) return;
     apiFetch(API + "/api/projects/" + id, { headers: { Authorization: "Bearer " + token } })
       .then(async (r) => {
-        if (r.status === 404) { router.push("/"); return; }
+        if (r.status === 404) {
+          router.push("/");
+          return;
+        }
         if (!r.ok) throw new Error("Project fetch failed");
         const p: ProjectData = await r.json();
         setProject(p);
@@ -92,35 +101,47 @@ export default function AnalysisPage() {
       .finally(() => setProjectLoading(false));
   }, [token, id, router]);
 
-  // Auto-start the pipeline once the project is loaded and has a linked file.
+  // Create one job after the project is loaded, unless we are resuming a job id.
   useEffect(() => {
-    if (startedRef.current) return;
+    if (createdRef.current) return;
     if (projectError || !project) return;
-    if (project.status === "completed" && !direction) return;
+    if (jobIdParam) return;
     if (!project.saved_filename) return;
-    startedRef.current = true;
-    pipe.runSavedFile(project.saved_filename);
+    if (direction === null && project.status === "completed") return;
+    createdRef.current = true;
+    void jobFlow.create();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project, projectError]);
+  }, [project, projectError, jobIdParam, direction]);
 
-  // Auto-trigger analysis once extraction + semantic detection are ready.
+  // Persist the job id in the URL so refresh resumes the same job.
   useEffect(() => {
-    if (!startedRef.current || analyzeTriggeredRef.current) return;
-    if (pipe.ready && !pipe.analysis && !pipe.analyzing) {
-      analyzeTriggeredRef.current = true;
-      pipe.handleAnalyze();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pipe.ready, pipe.analysis, pipe.analyzing]);
+    const jobId = jobFlow.job?.job_id;
+    if (!jobId) return;
+    const key = String(jobId);
+    if (syncedJobIdRef.current === key) return;
+    syncedJobIdRef.current = key;
+    const params = new URLSearchParams();
+    if (direction) params.set("direction", direction);
+    params.set("job_id", key);
+    router.replace(`/project/${id}/analysis?${params.toString()}`, { scroll: false });
+  }, [jobFlow.job, direction, id, router]);
 
-  const complete = saved && !!pipe.analysis;
-  const failed = pipe.failed || (!!pipe.error && !pipe.analysis);
+  const job = jobFlow.job;
+  const jobStatus = job?.status;
+  const failedJob = jobStatus === "failed";
+  const completedJob = jobStatus === "completed";
+  const hookError = jobFlow.error;
+  const errorKey = failedJob ? jobErrorKey(job) : hookErrorKey(hookError);
 
-  function retry() {
+  function retryStatus() {
     window.location.reload();
   }
 
-  if (authLoading || projectLoading) {
+  function retry() {
+    void jobFlow.create(`${projectId}:${analysisDirection}:${Date.now()}`);
+  }
+
+  if (authLoading || projectLoading || jobFlow.loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-canvas px-4">
         <p className="text-sm text-secondary">{T("projAnalysis.loading")}</p>
@@ -135,7 +156,7 @@ export default function AnalysisPage() {
           <p className="text-lg font-semibold text-ink">{T("projAnalysis.loadError")}</p>
           <div className="mt-6 flex justify-center gap-3">
             <Button variant="secondary" onClick={() => router.push("/project/" + id)}>{T("projAnalysis.backProject")}</Button>
-            <Button onClick={retry}>{T("proj.retry")}</Button>
+            <Button onClick={retryStatus}>{T("proj.retry")}</Button>
           </div>
         </Card>
       </main>
@@ -156,7 +177,8 @@ export default function AnalysisPage() {
     );
   }
 
-  if (project && project.status === "completed" && !direction) {
+  // Completed Health Scan guard when no explicit job id is being resumed.
+  if (project && project.status === "completed" && direction === null && !jobIdParam) {
     return (
       <main className="min-h-screen bg-canvas">
         <div className="mx-auto max-w-2xl px-4 py-16 md:py-24">
@@ -175,15 +197,27 @@ export default function AnalysisPage() {
     );
   }
 
-  if (failed) {
+  if (hookError === "network" && !job) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-canvas px-4">
+        <Card className="w-full max-w-md p-8 text-center">
+          <p className="text-lg font-semibold text-danger">{T("analysis.error.poll")}</p>
+          <p className="mt-2 text-sm leading-relaxed text-secondary">{T("projAnalysis.failedDesc")}</p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Button variant="secondary" onClick={() => router.push("/project/" + id)}>{T("projAnalysis.backProject")}</Button>
+            <Button onClick={retryStatus}>{T("proj.retry")}</Button>
+          </div>
+        </Card>
+      </main>
+    );
+  }
+
+  if (failedJob || hookError === "create") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-canvas px-4">
         <Card className="w-full max-w-md p-8 text-center">
           <p className="text-lg font-semibold text-danger">{T("projAnalysis.failed")}</p>
-          <p className="mt-2 text-sm leading-relaxed text-secondary">{T("projAnalysis.failedDesc")}</p>
-          {pipe.error && (
-            <p className="mt-3 rounded-control border border-danger/20 bg-danger/5 px-3 py-2 text-sm text-danger">{pipe.error}</p>
-          )}
+          <p className="mt-2 text-sm leading-relaxed text-secondary">{T(errorKey || "analysis.error.unknown")}</p>
           <div className="mt-6 flex justify-center gap-3">
             <Button variant="secondary" onClick={() => router.push("/project/" + id)}>{T("projAnalysis.backProject")}</Button>
             <Button onClick={retry}>{T("projAnalysis.retry")}</Button>
@@ -193,7 +227,26 @@ export default function AnalysisPage() {
     );
   }
 
-  if (complete) {
+  if (hookError === "conflict") {
+    return (
+      <main className="min-h-screen bg-canvas">
+        <div className="mx-auto max-w-2xl px-4 py-16 md:py-24">
+          <Card className="p-10 text-center">
+            <span aria-hidden className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-soft text-3xl text-success">{"\u2713"}</span>
+            <h1 className="mt-6 text-h1 text-ink">{T("analysis.error.alreadyDone")}</h1>
+            <div className="mt-8 flex justify-center gap-3">
+              <Button variant="secondary" onClick={() => router.push("/project/" + id)}>{T("projAnalysis.backProject")}</Button>
+              <Link href={`/project/${id}/executive`} className={`${PRIMARY_LINK} px-8`}>
+                {T("projAnalysis.viewFullReport")}
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </main>
+    );
+  }
+
+  if (completedJob) {
     return (
       <main className="min-h-screen bg-canvas">
         <div className="mx-auto max-w-2xl px-4 py-16 md:py-24">
@@ -212,7 +265,7 @@ export default function AnalysisPage() {
     );
   }
 
-  const stage = pipe.stage;
+  const showQueued = jobStatus === "queued" || (jobFlow.creating && !job);
   return (
     <main className="min-h-screen bg-canvas">
       <div className="mx-auto max-w-2xl px-4 py-12 md:py-16">
@@ -221,32 +274,22 @@ export default function AnalysisPage() {
           description={direction ? T(`analysis.dir.${direction}`) : project?.original_filename || T("projAnalysis.title")}
         />
         <Card className="p-6 md:p-8">
-          <div className="space-y-5">
-            {STEPS.map((stepKey, i) => {
-              const st = stepStatus(stage, i, complete);
-              return (
-                <div key={stepKey} className="flex items-center gap-4">
-                  <span
-                    aria-hidden
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                      st === "done" ? "bg-success-soft text-success"
-                      : st === "active" ? "bg-accent-soft text-accent"
-                      : "bg-muted text-secondary"
-                    }`}
-                  >
-                    {st === "done" ? "\u2713" : st === "active" ? (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />
-                    ) : i + 1}
-                  </span>
-                  <p className={`text-[15px] ${st === "pending" ? "text-secondary" : "text-ink"}`}>{T(stepKey)}</p>
-                </div>
-              );
-            })}
+          <div className="flex items-center gap-4">
+            <span aria-hidden className="h-8 w-8 shrink-0 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />
+            <div>
+              <p className="text-base font-semibold text-ink">{showQueued ? T("analysis.job.queued") : T("analysis.job.running")}</p>
+              <p className="mt-1 text-sm text-secondary">{T("analysis.job.analyzing")}</p>
+            </div>
           </div>
-          <p className="mt-5 text-sm text-secondary">{T("projAnalysis.takesTime")}</p>
-          {pipe.error && (
-            <p className="mt-5 rounded-control border border-danger/20 bg-danger/5 px-3 py-2 text-sm text-danger">{pipe.error}</p>
-          )}
+          <div className="mt-6 space-y-3 border-t border-border pt-6">
+            {STAGES.map((stepKey, i) => (
+              <div key={stepKey} className="flex items-center gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-secondary">{i + 1}</span>
+                <p className="text-[15px] text-secondary">{T(stepKey)}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-secondary">{T("projAnalysis.takesTime")}</p>
         </Card>
       </div>
     </main>

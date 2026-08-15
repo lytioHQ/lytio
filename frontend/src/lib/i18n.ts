@@ -536,6 +536,22 @@ const zh: TranslationDict = {
   "demo.startWithFile": "用你的 Excel 文件开始",
   "report.legacyFormat": "\u6b64\u62a5\u544a\u4f7f\u7528\u65e7\u7248\u683c\u5f0f\u3002\u91cd\u65b0\u8fd0\u884c\u5206\u6790\u4ee5\u83b7\u53d6\u7ed3\u6784\u5316\u6570\u636e\u3002",
   "report.pluginAnalysis": "{plugin} \u5206\u6790",
+  // ── M2.9 P0.1 (async analysis job) ────────────────────────
+  "analysis.stage.preparing": "\u6b63\u5728\u51c6\u5907\u6570\u636e",
+  "analysis.stage.health": "\u6b63\u5728\u5206\u6790\u4e1a\u52a1\u5065\u5eb7",
+  "analysis.stage.findings": "\u6b63\u5728\u8bc6\u522b\u5173\u952e\u53d1\u73b0",
+  "analysis.stage.risks": "\u6b63\u5728\u8bc4\u4f30\u98ce\u9669",
+  "analysis.stage.recommendations": "\u6b63\u5728\u751f\u6210\u5efa\u8bae",
+  "analysis.job.queued": "\u6b63\u5728\u6392\u961f",
+  "analysis.job.running": "\u6b63\u5728\u5206\u6790",
+  "analysis.job.analyzing": "AI \u6b63\u5728\u5206\u6790\u4f60\u7684\u6570\u636e\uff0c\u901a\u5e38\u9700\u8981\u51e0\u5341\u79d2\u3002",
+  "analysis.error.provider_timeout": "AI \u5206\u6790\u8d85\u65f6\uff0c\u8bf7\u91cd\u8bd5\u3002",
+  "analysis.error.interrupted": "\u5206\u6790\u88ab\u4e2d\u65ad\uff0c\u8bf7\u91cd\u65b0\u5f00\u59cb\u3002",
+  "analysis.error.unknown": "\u5206\u6790\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002",
+  "analysis.error.invalid_data": "\u8fd9\u4efd\u6570\u636e\u6682\u4e0d\u652f\u6301\u5206\u6790\uff0c\u8bf7\u68c0\u67e5\u6570\u636e\u683c\u5f0f\u3002",
+  "analysis.error.missing_file": "\u627e\u4e0d\u5230\u4e0a\u4f20\u7684\u6587\u4ef6\uff0c\u8bf7\u91cd\u65b0\u4e0a\u4f20\u3002",
+  "analysis.error.alreadyDone": "\u8be5\u5206\u6790\u5df2\u5b8c\u6210\uff0c\u8bf7\u67e5\u770b\u62a5\u544a\u3002",
+  "analysis.error.poll": "\u65e0\u6cd5\u83b7\u53d6\u5206\u6790\u72b6\u6001\uff0c\u8bf7\u91cd\u8bd5\u3002",
 
 
 };
@@ -1055,6 +1071,22 @@ const en: TranslationDict = {
   "demo.startWithFile": "Start with your Excel file",
   "report.legacyFormat": "This report uses the legacy format. Re-run analysis for structured data.",
   "report.pluginAnalysis": "{plugin} Analysis",
+  // ── M2.9 P0.1 (async analysis job) ────────────────────────
+  "analysis.stage.preparing": "Preparing your data…",
+  "analysis.stage.health": "Analyzing business health…",
+  "analysis.stage.findings": "Identifying key findings…",
+  "analysis.stage.risks": "Evaluating risks…",
+  "analysis.stage.recommendations": "Creating recommendations…",
+  "analysis.job.queued": "Waiting in queue",
+  "analysis.job.running": "Analyzing",
+  "analysis.job.analyzing": "AI is analyzing your data. This usually takes tens of seconds.",
+  "analysis.error.provider_timeout": "AI analysis timed out. Please try again.",
+  "analysis.error.interrupted": "The analysis was interrupted. Please start again.",
+  "analysis.error.unknown": "Analysis failed. Please try again.",
+  "analysis.error.invalid_data": "This data cannot be analyzed yet. Please check the file format.",
+  "analysis.error.missing_file": "The uploaded file could not be found. Please upload it again.",
+  "analysis.error.alreadyDone": "This analysis is already complete. View the report.",
+  "analysis.error.poll": "Couldn't get the analysis status. Please try again.",
 
 
 };
@@ -1574,6 +1606,22 @@ const ja: TranslationDict = {
   "demo.startWithFile": "Excel ファイルで始める",
   "report.legacyFormat": "\u3053\u306e\u30ec\u30dd\u30fc\u30c8\u306f\u65e7\u5f62\u5f0f\u3067\u3059\u3002\u69cb\u9020\u5316\u30c7\u30fc\u30bf\u3092\u5f97\u308b\u306b\u306f\u518d\u5206\u6790\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
   "report.pluginAnalysis": "{plugin} \u5206\u6790",
+  // ── M2.9 P0.1 (async analysis job) ────────────────────────
+  "analysis.stage.preparing": "データを準備中…",
+  "analysis.stage.health": "ビジネスの健全性を分析中…",
+  "analysis.stage.findings": "重要な発見を特定中…",
+  "analysis.stage.risks": "リスクを評価中…",
+  "analysis.stage.recommendations": "推奨アクションを作成中…",
+  "analysis.job.queued": "キューで待機中",
+  "analysis.job.running": "分析中",
+  "analysis.job.analyzing": "AIがデータを分析しています。通常数十秒かかります。",
+  "analysis.error.provider_timeout": "AI分析がタイムアウトしました。もう一度お試しください。",
+  "analysis.error.interrupted": "分析が中断されました。もう一度開始してください。",
+  "analysis.error.unknown": "分析に失敗しました。もう一度お試しください。",
+  "analysis.error.invalid_data": "このデータはまだ分析できません。ファイル形式をご確認ください。",
+  "analysis.error.missing_file": "アップロードされたファイルが見つかりません。再度アップロードしてください。",
+  "analysis.error.alreadyDone": "この分析は完了しています。レポートをご覧ください。",
+  "analysis.error.poll": "分析ステータスを取得できませんでした。もう一度お試しください。",
 
 
 };
@@ -2093,6 +2141,22 @@ const de: TranslationDict = {
   "demo.startWithFile": "Mit Ihrer Excel-Datei starten",
   "report.legacyFormat": "Dieser Bericht verwendet das alte Format. F\u00fchre die Analyse erneut aus, um strukturierte Daten zu erhalten.",
   "report.pluginAnalysis": "{plugin} Analyse",
+  // ── M2.9 P0.1 (async analysis job) ────────────────────────
+  "analysis.stage.preparing": "Daten werden vorbereitet…",
+  "analysis.stage.health": "Geschäftszustand wird analysiert…",
+  "analysis.stage.findings": "Wichtige Erkenntnisse werden identifiziert…",
+  "analysis.stage.risks": "Risiken werden bewertet…",
+  "analysis.stage.recommendations": "Empfehlungen werden erstellt…",
+  "analysis.job.queued": "In der Warteschlange",
+  "analysis.job.running": "Analyse läuft",
+  "analysis.job.analyzing": "Die KI analysiert Ihre Daten. Dies dauert in der Regel einige zehn Sekunden.",
+  "analysis.error.provider_timeout": "Die KI-Analyse hat das Zeitlimit überschritten. Bitte erneut versuchen.",
+  "analysis.error.interrupted": "Die Analyse wurde unterbrochen. Bitte erneut starten.",
+  "analysis.error.unknown": "Analyse fehlgeschlagen. Bitte erneut versuchen.",
+  "analysis.error.invalid_data": "Diese Daten können noch nicht analysiert werden. Bitte prüfen Sie das Dateiformat.",
+  "analysis.error.missing_file": "Die hochgeladene Datei wurde nicht gefunden. Bitte erneut hochladen.",
+  "analysis.error.alreadyDone": "Diese Analyse ist bereits abgeschlossen. Bericht ansehen.",
+  "analysis.error.poll": "Der Analysestatus konnte nicht abgerufen werden. Bitte erneut versuchen.",
 
 
 };

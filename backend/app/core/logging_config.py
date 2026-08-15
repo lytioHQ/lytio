@@ -19,6 +19,17 @@ class StructuredFormatter(logging.Formatter):
             "user_id": getattr(record, "user_id", None),
             "project_id": getattr(record, "project_id", None),
         }
+        for key in (
+            "job_id",
+            "analysis_type",
+            "analysis_direction",
+            "elapsed_ms",
+            "error_code",
+            "reconciled_count",
+        ):
+            value = getattr(record, key, None)
+            if value is not None:
+                payload[key] = value
         if record.exc_info and record.exc_info[1]:
             payload["error"] = str(record.exc_info[1])
         return json.dumps(payload, ensure_ascii=False)
