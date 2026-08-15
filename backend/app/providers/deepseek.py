@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 from typing import Any
@@ -7,6 +8,8 @@ import httpx
 
 from app.providers.base import BaseAIProvider
 from app.schemas.analysis import AnalysisRequest, AnalysisResponse
+
+logger = logging.getLogger(__name__)
 
 
 class DeepSeekProvider(BaseAIProvider):
@@ -23,7 +26,7 @@ class DeepSeekProvider(BaseAIProvider):
         base_url: str | None = None,
         model: str | None = None,
         timeout: float = 60.0,
-        max_retries: int = 2,
+        max_retries: int = 0,
     ):
         self._api_key = api_key or os.getenv("DEEPSEEK_API_KEY", "")
         self._base_url = (base_url or os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")).rstrip("/")
@@ -57,6 +60,7 @@ class DeepSeekProvider(BaseAIProvider):
         started_at = time.monotonic()
 
         for attempt in range(self._max_retries + 1):
+            attempt_started_at = time.monotonic()
             try:
                 async with httpx.AsyncClient(timeout=self._timeout) as client:
                     resp = await client.post(
@@ -69,20 +73,62 @@ class DeepSeekProvider(BaseAIProvider):
                     )
                     resp.raise_for_status()
                     raw_response = resp.json()
+                    elapsed_ms = int((time.monotonic() - attempt_started_at) * 1000)
+                    logger.info(
+                        "deepseek_attempt_success",
+                        extra={
+                            "event": "deepseek_attempt",
+                            "attempt": attempt,
+                            "elapsed_ms": elapsed_ms,
+                            "status": "success",
+                        },
+                    )
                     break
             except httpx.TimeoutException:
-                last_error = "Request timed out"
+                elapsed_ms = int((time.monotonic() - attempt_started_at) * 1000)
+                logger.warning(
+                    "deepseek_attempt_timeout",
+                    extra={
+                        "event": "deepseek_attempt",
+                        "attempt": attempt,
+                        "elapsed_ms": elapsed_ms,
+                        "status": "timeout",
+                    },
+                )
+                raise TimeoutError(f"DeepSeek provider request timed out after {self._timeout:.0f}s")
             except httpx.HTTPStatusError as e:
-                if e.response.status_code == 401:
+                elapsed_ms = int((time.monotonic() - attempt_started_at) * 1000)
+                status_code = e.response.status_code
+                logger.warning(
+                    "deepseek_attempt_http_error",
+                    extra={
+                        "event": "deepseek_attempt",
+                        "attempt": attempt,
+                        "elapsed_ms": elapsed_ms,
+                        "status": "http_error",
+                        "http_status": status_code,
+                    },
+                )
+                if status_code == 401:
                     last_error = "Authentication failed — check DEEPSEEK_API_KEY"
                     break  # don't retry auth errors
-                last_error = f"API error {e.response.status_code}: {e.response.text[:200]}"
+                last_error = f"API error {status_code}"
             except Exception as e:
-                last_error = str(e)
+                elapsed_ms = int((time.monotonic() - attempt_started_at) * 1000)
+                logger.warning(
+                    "deepseek_attempt_exception",
+                    extra={
+                        "event": "deepseek_attempt",
+                        "attempt": attempt,
+                        "elapsed_ms": elapsed_ms,
+                        "status": "exception",
+                        "exception_type": type(e).__name__,
+                    },
+                )
+                last_error = type(e).__name__
 
             if attempt < self._max_retries:
                 await _sleep(2 ** attempt)
-
         latency_ms = int((time.monotonic() - started_at) * 1000)
 
         if not raw_response:
