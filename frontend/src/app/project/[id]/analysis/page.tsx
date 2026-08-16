@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -266,6 +266,12 @@ export default function AnalysisPage() {
   }
 
   const showQueued = jobStatus === "queued" || (jobFlow.creating && !job);
+  const aiSteps = [
+    T("analysis.job.metricsDetect"),
+    T("analysis.job.healthEval"),
+    T("analysis.job.findings"),
+    T("analysis.job.recommendationsGen"),
+  ];
   return (
     <main className="min-h-screen bg-canvas">
       <div className="mx-auto max-w-2xl px-4 py-12 md:py-16">
@@ -277,19 +283,25 @@ export default function AnalysisPage() {
           <div className="flex items-center gap-4">
             <span aria-hidden className="h-8 w-8 shrink-0 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />
             <div>
-              <p className="text-base font-semibold text-ink">{showQueued ? T("analysis.job.queued") : T("analysis.job.running")}</p>
+              <p className="text-base font-semibold text-ink">{showQueued ? T("analysis.job.queued") : T("analysis.job.analyzingTitle")}</p>
               <p className="mt-1 text-sm text-secondary">{T("analysis.job.analyzing")}</p>
             </div>
           </div>
           <div className="mt-6 space-y-3 border-t border-border pt-6">
-            {STAGES.map((stepKey, i) => (
-              <div key={stepKey} className="flex items-center gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-secondary">{i + 1}</span>
-                <p className="text-[15px] text-secondary">{T(stepKey)}</p>
+            <div className="flex items-center gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success-soft text-sm font-semibold text-success">{"\u2713"}</span>
+              <p className="text-[15px] text-ink">{T("analysis.job.fileRead")}</p>
+            </div>
+            {aiSteps.map((step, i) => (
+              <div key={step} className="flex items-center gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-secondary">
+                  {i === 0 ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-accent/30 border-t-accent" /> : "○"}
+                </span>
+                <p className={i === 0 ? "text-[15px] font-medium text-ink" : "text-[15px] text-secondary"}>{step}</p>
               </div>
             ))}
           </div>
-          <p className="mt-6 text-sm text-secondary">{T("projAnalysis.takesTime")}</p>
+          <p className="mt-6 text-sm text-secondary">{T("analysis.job.takesTime")}</p>
         </Card>
       </div>
     </main>

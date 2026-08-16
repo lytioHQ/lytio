@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -30,6 +30,15 @@ interface ExecutiveReportData {
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
+function ScreenHeading({ index, title }: { index: string; title: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent">{index}</span>
+      <h2 className="text-h3 text-ink">{title}</h2>
+    </div>
+  );
+}
+
 export default function ExecutiveReportPage() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
@@ -37,6 +46,7 @@ export default function ExecutiveReportPage() {
   const { uiLang } = useUiLang();
   const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const [report, setReport] = useState<ExecutiveReportData | null>(null);
+  const [dataVersion, setDataVersion] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
@@ -50,6 +60,12 @@ export default function ExecutiveReportPage() {
       .then((data) => setReport(data))
       .catch(() => setError(T("exec.loadError")))
       .finally(() => setLoading(false));
+
+    // Fetch the project so the report header can show the data version (file name).
+    apiFetch(API + "/api/projects/" + id, { headers: { Authorization: "Bearer " + token } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((p) => setDataVersion(p?.original_filename || null))
+      .catch(() => setDataVersion(null));
   }, [token, id]);
 
   if (authLoading || loading) {
@@ -77,59 +93,75 @@ export default function ExecutiveReportPage() {
 
   return (
     <main className="min-h-screen bg-canvas print:bg-white">
-      {/* Header */}
-      <header className="border-b border-border bg-surface print:border-none">
-        <div className="mx-auto max-w-4xl px-4 py-8 md:px-6">
-          <Link href={`/project/${id}`} className="text-sm text-secondary transition-colors hover:text-ink">{T("nav.dashboard")}</Link>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-accent">Lytio</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-3xl">{report.title}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <span className="text-sm text-secondary">{report.project_name}</span>
-            {generatedDate && (
-              <>
-                <span className="text-border">&middot;</span>
-                <span className="text-sm text-secondary">{T("exec.generated", { date: generatedDate })}</span>
-              </>
-            )}
-            {report.is_legacy && (
-              <span className="rounded-full bg-warning-soft px-2.5 py-1 text-xs font-medium text-warning">{T("exec.legacy")}</span>
-            )}
+      {/* Sticky report navigation */}
+      <header className="sticky top-0 z-10 border-b border-border bg-surface/95 backdrop-blur print:static print:border-none">
+        <div className="mx-auto max-w-4xl px-4 py-3 md:px-6">
+          <div className="flex items-center justify-between gap-4">
+            <Link href={`/project/${id}`} className="inline-flex items-center gap-2 text-sm font-medium text-secondary transition-colors hover:text-ink">
+              <span aria-hidden>{"\u2190"}</span>{T("nav.backDashboard")}
+            </Link>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Lytio Business Report</p>
+          </div>
+          <div className="mt-3">
+            <h1 className="text-xl font-semibold tracking-tight text-ink md:text-2xl">{report.title}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-secondary">
+              <span>{report.project_name}</span>
+              {generatedDate && (
+                <>
+                  <span className="text-border">&middot;</span>
+                  <span>{T("exec.generated", { date: generatedDate })}</span>
+                </>
+              )}
+              {dataVersion && (
+                <>
+                  <span className="text-border">&middot;</span>
+                  <span>{T("exec.dataVersion")}: {dataVersion}</span>
+                </>
+              )}
+              {report.is_legacy && (
+                <span className="rounded-full bg-warning-soft px-2.5 py-1 text-xs font-medium text-warning">{T("exec.legacy")}</span>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Report Body */}
+      {/* Report body organized by the Three Screen Rule */}
       <article className="mx-auto max-w-4xl px-4 py-10 md:px-6">
-        <div className="space-y-8">
-          {/* Business Health */}
-          {report.business_health && <BusinessHealthCard data={report.business_health} lang={uiLang} />}
+        <div className="space-y-12">
+          <section aria-label={T("exec.screen1")}>
+            <ScreenHeading index="1" title={T("exec.screen1")} />
+            <div className="mt-6 space-y-8">
+              {report.business_health && <BusinessHealthCard data={report.business_health} lang={uiLang} />}
+              {report.business_health && (
+                <BusinessValue
+                  currentHealth={report.business_health.score}
+                  currentHealthLevel={report.business_health.level}
+                  recommendations={report.top_recommendations}
+                  risks={report.top_risks}
+                  hasImpact={report.top_recommendations.some((r) => r.expected_impact)}
+                  lang={uiLang}
+                />
+              )}
+              {report.executive_summary && <ExecutiveSummaryCard content={report.executive_summary.content} lang={uiLang} />}
+            </div>
+          </section>
 
-          {/* Business Value */}
-          {report.business_health && (
-            <BusinessValue
-              currentHealth={report.business_health.score}
-              currentHealthLevel={report.business_health.level}
-              recommendations={report.top_recommendations}
-              risks={report.top_risks}
-              hasImpact={report.top_recommendations.some((r) => r.expected_impact)}
-              lang={uiLang}
-            />
-          )}
+          <section aria-label={T("exec.screen2")}>
+            <ScreenHeading index="2" title={T("exec.screen2")} />
+            <div className="mt-6 space-y-8">
+              <MetricGrid metrics={report.key_metrics} lang={uiLang} />
+              <InsightList insights={report.top_insights} lang={uiLang} />
+              <RiskList risks={report.top_risks} lang={uiLang} />
+            </div>
+          </section>
 
-          {/* Executive Summary */}
-          {report.executive_summary && <ExecutiveSummaryCard content={report.executive_summary.content} lang={uiLang} />}
-
-          {/* Key Metrics */}
-          <MetricGrid metrics={report.key_metrics} lang={uiLang} />
-
-          {/* Key Insights */}
-          <InsightList insights={report.top_insights} lang={uiLang} />
-
-          {/* Risks */}
-          <RiskList risks={report.top_risks} lang={uiLang} />
-
-          {/* Recommendations */}
-          <RecommendationList recs={report.top_recommendations} lang={uiLang} />
+          <section aria-label={T("exec.screen3")}>
+            <ScreenHeading index="3" title={T("exec.screen3")} />
+            <div className="mt-6 space-y-8">
+              <RecommendationList recs={report.top_recommendations} lang={uiLang} />
+            </div>
+          </section>
         </div>
 
         {/* Footer */}

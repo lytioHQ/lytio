@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -313,10 +313,12 @@ export default function ProjectDashboard() {
                 <p className="text-[15px] font-medium text-ink">{T("proj.nextActionExecute")}</p>
                 <p className="mt-1 text-sm leading-relaxed text-secondary">{T("proj.nextActionExecuteDesc")}</p>
               </Card>
-              <Card variant="subtle" className="p-5">
-                <p className="text-[15px] font-medium text-ink">{T("proj.nextActionVerify")}</p>
-                <p className="mt-1 text-sm leading-relaxed text-secondary">{T("proj.nextActionVerifyDesc")}</p>
-              </Card>
+              <Link href={`/project/${id}/verify`} className="block h-full">
+                <Card variant="interactive" className="h-full p-5">
+                  <p className="text-[15px] font-medium text-ink">{T("proj.nextActionVerify")}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-secondary">{T("proj.nextActionVerifyDesc")}</p>
+                </Card>
+              </Link>
             </div>
           ) : (
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -378,15 +380,24 @@ export default function ProjectDashboard() {
         <Card>
           <h2 className="text-h3 text-ink">{T("proj.dataset")}</h2>
           {hasFile ? (
-            <div className="mt-4 flex flex-col items-start justify-between gap-4 rounded-control border border-border bg-muted p-4 sm:flex-row sm:items-center">
-              <div className="min-w-0">
-                <p className="truncate text-[15px] font-medium text-ink">{project.original_filename}</p>
-                <p className="mt-0.5 text-caption text-secondary">{T("proj.uploadedReady")}</p>
+            <div className="mt-4 rounded-control border border-border bg-muted p-4">
+              <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                <div className="min-w-0">
+                  <p className="truncate text-[15px] font-medium text-ink">{project.original_filename}</p>
+                  <p className="mt-0.5 text-caption text-secondary">{completed ? T("proj.datasetHint") : T("proj.uploadedReady")}</p>
+                </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  {completed && (
+                    <Link href={`/project/${id}/verify`} className="inline-flex h-9 items-center justify-center rounded-control bg-ink px-4 text-sm font-medium text-white transition-colors hover:bg-ink-hover">
+                      {T("proj.verifyOptimization")}
+                    </Link>
+                  )}
+                  <label className="inline-flex h-9 cursor-pointer items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-canvas">
+                    {uploading ? T("proj.uploading") : T("proj.reuploadData")}
+                    <input type="file" accept=".xlsx,.xls" onChange={handleReplaceFile} className="hidden" disabled={uploading} />
+                  </label>
+                </div>
               </div>
-              <label className="inline-flex h-9 shrink-0 cursor-pointer items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-canvas">
-                {uploading ? T("proj.uploading") : T("proj.replaceDataset")}
-                <input type="file" accept=".xlsx,.xls" onChange={handleReplaceFile} className="hidden" disabled={uploading} />
-              </label>
             </div>
           ) : (
             <div className="mt-4 rounded-card border border-dashed border-border bg-canvas p-10 text-center">
