@@ -7,6 +7,14 @@ from app.models.analysis_run import AnalysisRun
 async def create_run(
     db: AsyncSession, project_id: int, summary: str,
     result_json: str, is_legacy: bool = False,
+    *,
+    analysis_type: str = "health_scan",
+    analysis_direction: str = "overview",
+    parent_run_id: int | None = None,
+    dataset_version: str | None = None,
+    purpose: str | None = None,
+    comparison_result: str | None = None,
+    status: str = "completed",
 ) -> AnalysisRun:
     health_score = None
     if result_json and not is_legacy:
@@ -24,6 +32,13 @@ async def create_run(
         summary=summary[:5000] if summary else None,
         result_json=result_json[:30000] if result_json else None,
         is_legacy=is_legacy,
+        analysis_type=analysis_type,
+        analysis_direction=analysis_direction,
+        parent_run_id=parent_run_id,
+        dataset_version=dataset_version,
+        purpose=purpose,
+        comparison_result=comparison_result[:30000] if comparison_result else None,
+        status=status,
     )
     db.add(run)
     await db.commit()

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -28,7 +28,7 @@ interface ReportPreview {
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-interface TimelineItem { id: number; created_at: string | null; business_health_score: number | null; summary: string | null; }
+interface TimelineItem { id: number; created_at: string | null; business_health_score: number | null; summary: string | null; analysis_type: string | null; analysis_direction: string | null; parent_run_id: number | null; dataset_version: string | null; purpose: string | null; }
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-secondary",
@@ -138,6 +138,7 @@ export default function ProjectDashboard() {
   const insightCount = report?.top_insights?.length ?? 0;
   const riskCount = report?.top_risks?.length ?? 0;
   const recCount = report?.top_recommendations?.length ?? 0;
+  const latestVerification = timeline.find((item) => item.analysis_type === "verification") ?? null;
 
   return (
     <main className="min-h-screen bg-canvas">
@@ -298,6 +299,26 @@ export default function ProjectDashboard() {
           </div>
         </Card>
 
+        {/* Latest Verification */}
+        {latestVerification && (
+          <Card variant="highlighted">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-h3 text-ink">{T("proj.latestVerification")}</h2>
+                <p className="mt-1.5 max-w-[640px] text-sm leading-relaxed text-secondary">
+                  {latestVerification.summary || T("proj.latestVerificationDesc")}
+                </p>
+                <p className="mt-1 text-caption text-secondary">
+                  {latestVerification.dataset_version ? `${latestVerification.dataset_version}` : ""}
+                </p>
+              </div>
+              <Link href={`/project/${id}/verification/${latestVerification.id}`} className={`${PRIMARY_LINK} shrink-0`}>
+                {T("proj.viewVerification")}
+              </Link>
+            </div>
+          </Card>
+        )}
+
         {/* Next Actions */}
         <Card>
           <h2 className="text-h3 text-ink">{T("proj.nextSteps")}</h2>
@@ -359,14 +380,27 @@ export default function ProjectDashboard() {
                 const dateStr = item.created_at
                   ? new Date(item.created_at).toLocaleDateString(localeForLang(uiLang), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                   : "";
+                const isVerification = item.analysis_type === "verification";
+                const typeLabel = isVerification
+                  ? T("proj.timeline.verification")
+                  : item.analysis_type === "health_scan"
+                    ? T("proj.timeline.healthScan")
+                    : T(`analysis.dir.${item.analysis_direction ?? "growth_opportunity"}`);
+                const reportHref = isVerification
+                  ? `/project/${id}/verification/${item.id}`
+                  : `/project/${id}/report/${item.id}`;
                 return (
                   <div key={item.id} className={`rounded-card border border-border border-l-4 ${color} p-4`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {score != null && <span className="text-lg font-semibold text-ink tabular-nums">{score}</span>}
+                        <div>
+                          <span className="text-caption font-medium text-secondary">{typeLabel}</span>
+                          {item.dataset_version && <span className="ml-2 text-caption text-secondary">{item.dataset_version}</span>}
+                        </div>
                         <span className="text-caption text-secondary">{dateStr}</span>
                       </div>
-                      <Link href={`/project/${id}/report/${item.id}`} className="text-sm font-medium text-accent hover:underline">{T("proj.viewReport")}</Link>
+                      <Link href={reportHref} className="text-sm font-medium text-accent hover:underline">{isVerification ? T("proj.viewVerification") : T("proj.viewReport")}</Link>
                     </div>
                     {item.summary && <p className="mt-2 text-sm leading-relaxed text-secondary line-clamp-2">{item.summary}</p>}
                   </div>

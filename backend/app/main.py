@@ -1,4 +1,4 @@
-﻿from dotenv import load_dotenv
+from dotenv import load_dotenv
 load_dotenv(override=True)
 
 import os
@@ -21,6 +21,7 @@ from app.api.auth import router as auth_router
 from app.api.projects import router as projects_router
 from app.api.analysis_runs import router as analysis_runs_router
 from app.api.analysis_jobs import router as analysis_jobs_router
+from app.api.verification import router as verification_router
 
 
 @asynccontextmanager
@@ -91,6 +92,7 @@ app.include_router(auth_router)
 app.include_router(projects_router)
 app.include_router(analysis_runs_router)
 app.include_router(analysis_jobs_router)
+app.include_router(verification_router)
 
 
 @app.get("/")

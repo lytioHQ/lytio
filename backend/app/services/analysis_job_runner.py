@@ -3,6 +3,13 @@
 The runner uses its own AsyncSession (never the request session) and its own
 DeepSeek provider with a longer timeout, so the legacy synchronous
 ``POST /api/analysis/sales`` endpoint keeps its original behavior.
+
+Verification jobs reuse the same runner. A verification job:
+- extracts the *new* dataset from the filename recorded in ``request_json``
+  (NOT the project's baseline ``saved_filename``)
+- compares it against the parent AnalysisRun
+- persists a new Verification AnalysisRun without touching
+  ``project.latest_result_json``.
 """
 
 import asyncio
@@ -19,6 +26,7 @@ from app.plugins.sales.prompt_builder import analysis_type_for
 from app.providers.deepseek import DeepSeekProvider
 from app.services import analysis_job_service, analysis_run_service, project_service
 from app.services.analysis_engine import AnalysisEngine
+from app.services import verification_parser, verification_service
 from app.services.workbook_service import WorkbookAccessError, extract_canonical_dataset
 
 RUNNER_PROVIDER_TIMEOUT = float(os.getenv("ANALYSIS_JOB_PROVIDER_TIMEOUT", "180"))
@@ -115,6 +123,15 @@ async def _execute_job(job_id: int, started_at: float) -> None:
                 int((time.monotonic() - started_at) * 1000),
             )
             return
+
+        await analysis_job_service.mark_running(db, job)
+
+        if job.analysis_type == "verification":
+            # The new dataset filename lives in request_json, never in
+            # project.saved_filename (which must keep pointing at baseline).
+            await _run_verification(job_id, started_at)
+            return
+
         if not project.saved_filename:
             await analysis_job_service.mark_failed(
                 db, job, "missing_file", "No Excel file is linked to this project.",
@@ -122,7 +139,6 @@ async def _execute_job(job_id: int, started_at: float) -> None:
             )
             return
 
-        await analysis_job_service.mark_running(db, job)
         saved_filename = project.saved_filename
         user_id = job.user_id
         direction = job.analysis_direction
@@ -168,11 +184,17 @@ async def _execute_job(job_id: int, started_at: float) -> None:
         if not job or job.status != "running":
             return
         try:
+            dataset_version = await verification_service.current_analysis_dataset_version(
+                db, job.project_id
+            )
             await project_service.save_analysis_result(
                 db, job.project_id, job.user_id, summary, result_json
             )
             run = await analysis_run_service.create_run(
-                db, job.project_id, summary, result_json, is_legacy=result.is_legacy
+                db, job.project_id, summary, result_json, is_legacy=result.is_legacy,
+                analysis_type=analysis_type,
+                analysis_direction=direction,
+                dataset_version=dataset_version,
             )
             elapsed_ms = int((time.monotonic() - started_at) * 1000)
             await analysis_job_service.mark_completed(db, job, run.id, elapsed_ms)
@@ -186,5 +208,130 @@ async def _execute_job(job_id: int, started_at: float) -> None:
 
     logger.info(
         "analysis_job_finished",
+        extra={"event": "analysis_job", "job_id": job_id, "elapsed_ms": int((time.monotonic() - started_at) * 1000)},
+    )
+
+
+async def _run_verification(job_id: int, started_at: float) -> None:
+    """Execute a verification job end-to-end without overwriting baseline."""
+    # Read all inputs inside one short-lived session, then release the DB
+    # connection before the long-running AI call.
+    async with async_session() as db:
+        job = await db.get(AnalysisJob, job_id)
+        if not job or job.status != "running":
+            return
+
+        project = await db.get(Project, job.project_id)
+        if not project or project.owner_id != job.user_id:
+            await analysis_job_service.mark_failed(
+                db, job, "invalid_project", "Project not found",
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+
+        request_data: dict = {}
+        try:
+            request_data = json.loads(job.request_json or "{}")
+        except json.JSONDecodeError:
+            pass
+
+        saved_filename = str(request_data.get("saved_filename") or "")
+        purpose = str(request_data.get("purpose") or "")
+        parent_run_id = request_data.get("parent_run_id")
+        report_language = project.language or "zh"
+
+        if not saved_filename:
+            await analysis_job_service.mark_failed(
+                db, job, "invalid_verification_request", "New dataset filename is missing.",
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+        if not purpose or not verification_service.is_valid_purpose(purpose):
+            await analysis_job_service.mark_failed(
+                db, job, "invalid_verification_request", "Unknown verification purpose.",
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+
+        parent = await verification_service.resolve_parent_run(db, job.project_id, parent_run_id)
+        if parent is None:
+            await analysis_job_service.mark_failed(
+                db, job, "invalid_parent",
+                "No completed analysis with recommendations is available to verify.",
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+
+        parent_context = verification_service.extract_parent_context(parent)
+        dataset_version = await verification_service.next_dataset_version(db, job.project_id)
+        prompt = verification_service.build_verification_prompt(parent_context, purpose, report_language)
+
+        # Capture scalar values so the closed ORM objects are never lazy-loaded.
+        user_id = job.user_id
+        parent_id = parent.id
+
+    try:
+        dataset = extract_canonical_dataset(user_id, saved_filename)
+    except WorkbookAccessError as exc:
+        await _fail(job_id, exc.code, str(exc), started_at)
+        return
+
+    engine = AnalysisEngine()
+    engine.set_provider(DeepSeekProvider(timeout=RUNNER_PROVIDER_TIMEOUT, max_retries=0))
+
+    try:
+        request = AnalysisEngine.build_request(
+            workbook_name=dataset["workbook_name"],
+            sheet_name=dataset["sheet_name"],
+            headers=dataset["headers"],
+            column_types=dataset["column_types"],
+            rows=dataset["rows"],
+            analysis_type="verification",
+            plugin_name="sales",
+            language=report_language,
+            parameters={"system_prompt": prompt},
+        )
+        response = await engine.analyze(request)
+    except TimeoutError as exc:
+        await _fail(job_id, "provider_timeout", str(exc), started_at)
+        return
+    except ValueError as exc:
+        await _fail(job_id, "invalid_data", str(exc), started_at)
+        return
+    except Exception as exc:
+        await _fail(job_id, "unknown", f"{type(exc).__name__}: {exc}", started_at)
+        return
+
+    comparison = verification_parser.parse_comparison(response.summary)
+    comparison_json = comparison.model_dump_json()
+    summary = comparison.comparison_summary or "Verification completed."
+
+    async with async_session() as db:
+        job = await db.get(AnalysisJob, job_id)
+        if not job or job.status != "running":
+            return
+        try:
+            run = await analysis_run_service.create_run(
+                db, job.project_id, summary, comparison_json, is_legacy=False,
+                analysis_type="verification",
+                analysis_direction="verification",
+                parent_run_id=parent_id,
+                dataset_version=dataset_version,
+                purpose=purpose,
+                comparison_result=comparison_json,
+                status="completed",
+            )
+            elapsed_ms = int((time.monotonic() - started_at) * 1000)
+            await analysis_job_service.mark_completed(db, job, run.id, elapsed_ms)
+        except Exception as exc:
+            await analysis_job_service.mark_failed(
+                db, job, "unknown",
+                f"Failed to persist verification result: {type(exc).__name__}: {exc}",
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+
+    logger.info(
+        "verification_job_finished",
         extra={"event": "analysis_job", "job_id": job_id, "elapsed_ms": int((time.monotonic() - started_at) * 1000)},
     )

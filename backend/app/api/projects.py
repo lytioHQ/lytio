@@ -139,6 +139,11 @@ class TimelineItem(BaseModel):
     created_at: str | None = None
     business_health_score: int | None = None
     summary: str | None = None
+    analysis_type: str | None = None
+    analysis_direction: str | None = None
+    parent_run_id: int | None = None
+    dataset_version: str | None = None
+    purpose: str | None = None
 
 
 @router.get("/{project_id}/timeline", response_model=list[TimelineItem])
@@ -157,6 +162,11 @@ async def get_timeline(
             created_at=str(r.created_at) if r.created_at else None,
             business_health_score=r.business_health_score,
             summary=r.summary[:300] if r.summary else None,
+            analysis_type=r.analysis_type,
+            analysis_direction=r.analysis_direction,
+            parent_run_id=r.parent_run_id,
+            dataset_version=r.dataset_version,
+            purpose=r.purpose,
         )
         for r in runs
     ]

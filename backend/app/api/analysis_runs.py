@@ -30,4 +30,11 @@ async def get_run(
         "summary": run.summary,
         "result_json": run.result_json,
         "is_legacy": run.is_legacy,
+        "analysis_type": run.analysis_type,
+        "analysis_direction": run.analysis_direction,
+        "parent_run_id": run.parent_run_id,
+        "dataset_version": run.dataset_version,
+        "purpose": run.purpose,
+        "comparison_result": run.comparison_result,
+        "status": run.status,
     }
