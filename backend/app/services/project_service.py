@@ -30,6 +30,8 @@ async def create_project(db: AsyncSession, user_id: int, data: ProjectCreate) ->
     )
     db.add(project)
     await db.commit()
+    await db.refresh(project)
+    return project
 
 
 async def save_schema_mapping(
