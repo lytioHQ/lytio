@@ -9,6 +9,7 @@ import BusinessValue from "@/components/business/BusinessValue";
 import BusinessHealthCard from "@/components/business/BusinessHealthCard";
 import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
 import MetricGrid from "@/components/business/MetricGrid";
+import { MetricCard } from "@/components/ui";
 import InsightList from "@/components/business/InsightList";
 import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
@@ -30,7 +31,35 @@ interface ExecutiveReportData {
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
+interface ComputedMetricData {
+  metric_name: string;
+  value: number | string | { min: string; max: string } | null;
+  formula: string;
+  source_columns: string[];
+  availability: string;
+  confidence: string;
+  assumptions: string[];
+  note: string;
+}
+
+const DISPLAY_METRICS = ["total_sales", "order_count", "average_order_value", "customer_count", "customer_concentration"] as const;
+
+function formatMetricValue(
+  m: ComputedMetricData,
+  T: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  if (m.availability !== "available" || m.value == null) return "—";
+  if (m.metric_name === "customer_concentration") {
+    return `${T("metric.top1")} ${(Number(m.value) * 100).toFixed(1)}%`;
+  }
+  if (m.metric_name === "total_sales" || m.metric_name === "average_order_value") {
+    return Number(m.value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+  return String(m.value);
+}
+
 function ScreenHeading({ index, title }: { index: string; title: string }) {
+
   return (
     <div className="flex items-center gap-3">
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent">{index}</span>
@@ -46,6 +75,7 @@ export default function ExecutiveReportPage() {
   const { uiLang } = useUiLang();
   const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const [report, setReport] = useState<ExecutiveReportData | null>(null);
+  const [metrics, setMetrics] = useState<ComputedMetricData[] | null>(null);
   const [dataVersion, setDataVersion] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -66,6 +96,12 @@ export default function ExecutiveReportPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((p) => setDataVersion(p?.original_filename || null))
       .catch(() => setDataVersion(null));
+
+    // M2.12.1: system-computed metrics (code, not AI). Read-only display.
+    apiFetch(API + "/api/projects/" + id + "/metrics", { headers: { Authorization: "Bearer " + token } })
+      .then(async (r) => { if (!r.ok) return null; const d = await r.json(); return d.computed_metrics ?? null; })
+      .then((m: ComputedMetricData[] | null) => setMetrics(m))
+      .catch(() => setMetrics(null));
   }, [token, id]);
 
   if (authLoading || loading) {
@@ -150,6 +186,34 @@ export default function ExecutiveReportPage() {
           <section aria-label={T("exec.screen2")}>
             <ScreenHeading index="2" title={T("exec.screen2")} />
             <div className="mt-6 space-y-8">
+              {metrics && metrics.length > 0 && (
+                <div>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 className="text-base font-semibold text-ink">{T("metric.title")}</h3>
+                    <p className="text-caption text-secondary">{T("metric.subtitle")}</p>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-5">
+                    {DISPLAY_METRICS.map((name) => {
+                      const m = metrics.find((item) => item.metric_name === name);
+                      if (!m) return null;
+                      const available = m.availability === "available" && m.value != null;
+                      const estimated = name === "order_count" && (m.assumptions ?? []).length > 0;
+                      const value = available ? formatMetricValue(m, T) : "—";
+                      const description = available
+                        ? (estimated ? T("metric.estimated") : T("metric.subtitle"))
+                        : T("metric.unavailable");
+                      return (
+                        <MetricCard
+                          key={name}
+                          label={T(`metric.name.${name}`)}
+                          value={value}
+                          description={description}
+                        />
+                      );
+                    })}
+                </div>
+              </div>
+              )}
               <MetricGrid metrics={report.key_metrics} lang={uiLang} />
               <InsightList insights={report.top_insights} lang={uiLang} />
               <RiskList risks={report.top_risks} lang={uiLang} />

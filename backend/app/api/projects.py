@@ -11,6 +11,7 @@ from app.services import project_service, analysis_run_service, report_builder
 from app.schemas.schema_mapping import SchemaMappingSaveRequest
 from app.services.schema_mapper import build_saved_mapping, detect_schema
 from app.services.workbook_service import extract_canonical_dataset
+from app.services.metric_engine import compute_metrics
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -259,4 +260,33 @@ async def save_project_schema_mapping(
         raise HTTPException(status_code=404, detail="Project not found")
     return {
         "project_id": saved.id, "persisted": True, "schema_mapping": saved.schema_mapping,
+    }
+
+
+@router.get("/{project_id}/metrics")
+async def get_project_metrics(
+    project_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Return code-computed sales metrics for the project's current dataset."
+    Read-only; never writes to the database."""
+    project = await project_service.get_project(db, project_id, user.id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if not project.saved_filename:
+        raise HTTPException(status_code=400, detail="No Excel file is linked to this project.")
+    try:
+        dataset = extract_canonical_dataset(user.id, project.saved_filename)
+        mapping = project.schema_mapping or detect_schema(
+            dataset["headers"], dataset["column_types"]
+        ).to_dict()
+        computed = compute_metrics(dataset, mapping)
+    except Exception:
+        raise HTTPException(
+            status_code=500, detail="Failed to compute metrics. Please try again."
+        )
+    return {
+        "project_id": project.id,
+        "computed_metrics": computed,
     }

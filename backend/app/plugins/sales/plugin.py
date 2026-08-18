@@ -18,7 +18,8 @@ class SalesPlugin:
 
     def build_prompt(self, *, sheet_name: str, headers: list[str],
                      column_types: dict[str, str], rows: list[list],
-                     language: str = "zh", analysis_direction: str | None = None) -> str:
+                     language: str = "zh", analysis_direction: str | None = None,
+                     computed_metrics: list[dict] | None = None) -> str:
         """Generate a sales-specific analysis prompt."""
         return build(
             sheet_name=sheet_name,
@@ -27,13 +28,15 @@ class SalesPlugin:
             rows=rows,
             language=language,
             analysis_direction=analysis_direction,
+            computed_metrics=computed_metrics,
         )
 
     async def analyze(self, engine: AnalysisEngine, *,
                       workbook_name: str, sheet_name: str,
                       headers: list[str], column_types: dict[str, str],
                       rows: list[list], language: str = "zh",
-                      analysis_direction: str | None = None) -> SalesAnalysisResult:
+                      analysis_direction: str | None = None,
+                      computed_metrics: list[dict] | None = None) -> SalesAnalysisResult:
         """Full pipeline: detect → build request → analyze → parse.
 
         Args:
@@ -41,6 +44,7 @@ class SalesPlugin:
             workbook_name, sheet_name, headers, column_types, rows:
                 Dataset from the canonical extraction pipeline.
             language: Response language.
+            computed_metrics: System-calculated metrics injected into the prompt.
 
         Returns:
             Structured sales analysis result.
@@ -59,6 +63,7 @@ class SalesPlugin:
             rows=rows,
             language=language,
             analysis_direction=analysis_direction,
+            computed_metrics=computed_metrics,
         )
 
         request = AnalysisEngine.build_request(

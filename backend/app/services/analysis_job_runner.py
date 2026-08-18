@@ -28,6 +28,8 @@ from app.services import analysis_job_service, analysis_run_service, project_ser
 from app.services.analysis_engine import AnalysisEngine
 from app.services import verification_parser, verification_service
 from app.services.workbook_service import WorkbookAccessError, extract_canonical_dataset
+from app.services.metric_engine import compute_metrics
+from app.services.schema_mapper import detect_schema
 
 RUNNER_PROVIDER_TIMEOUT = float(os.getenv("ANALYSIS_JOB_PROVIDER_TIMEOUT", "180"))
 
@@ -41,7 +43,9 @@ def schedule_job(job_id: int) -> None:
     task.add_done_callback(_tasks.discard)
 
 
-def _build_result_json(result, analysis_type: str, analysis_direction: str) -> str:
+def _build_result_json(
+    result, analysis_type: str, analysis_direction: str, computed_metrics: list[dict] | None = None,
+) -> str:
     if result.result is not None:
         data = result.result.model_dump()
     else:
@@ -53,6 +57,8 @@ def _build_result_json(result, analysis_type: str, analysis_direction: str) -> s
         }
     data["analysis_direction"] = analysis_direction
     data["analysis_type"] = analysis_type
+    if computed_metrics:
+        data["computed_metrics"] = computed_metrics
     return json.dumps(data, ensure_ascii=False)
 
 
@@ -143,6 +149,7 @@ async def _execute_job(job_id: int, started_at: float) -> None:
         user_id = job.user_id
         direction = job.analysis_direction
         report_language = project.language or "zh"
+        schema_mapping = project.schema_mapping
 
     try:
         dataset = extract_canonical_dataset(user_id, saved_filename)
@@ -154,6 +161,15 @@ async def _execute_job(job_id: int, started_at: float) -> None:
     engine.set_provider(DeepSeekProvider(timeout=RUNNER_PROVIDER_TIMEOUT, max_retries=0))
     plugin = SalesPlugin()
 
+    # M2.12.1: compute canonical metrics from code. Never blocks analysis on
+    # detection/computation failures - degrade to no computed context.
+    computed_metrics: list[dict] | None = None
+    try:
+        mapping = schema_mapping or detect_schema(dataset["headers"], dataset["column_types"]).to_dict()
+        computed_metrics = compute_metrics(dataset, mapping)
+    except Exception:
+        computed_metrics = None
+
     try:
         result = await plugin.analyze(
             engine,
@@ -164,6 +180,7 @@ async def _execute_job(job_id: int, started_at: float) -> None:
             rows=dataset["rows"],
             language=report_language,
             analysis_direction=direction,
+            computed_metrics=computed_metrics,
         )
     except TimeoutError as exc:
         await _fail(job_id, "provider_timeout", str(exc), started_at)
@@ -176,7 +193,7 @@ async def _execute_job(job_id: int, started_at: float) -> None:
         return
 
     analysis_type = analysis_type_for(direction)
-    result_json = _build_result_json(result, analysis_type, direction)
+    result_json = _build_result_json(result, analysis_type, direction, computed_metrics=computed_metrics)
     summary = result.summary or ""
 
     async with async_session() as db:

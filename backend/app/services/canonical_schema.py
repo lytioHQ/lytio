@@ -76,6 +76,15 @@ CANONICAL_FIELDS: list[CanonicalField] = [
         synonyms=("数量", "成交数量", "销量", "件数", "quantity", "qty", "count"),
     ),
     CanonicalField(
+        key="order_id",
+        value_type="text",
+        display_name_zh="订单号",
+        display_name_en="Order ID",
+        display_name_ja="注文番号",
+        display_name_de="Bestellnr.",
+        synonyms=("订单号", "订单编号", "订单id", "order_no", "order_id", "order"),
+    ),
+    CanonicalField(
         key="product_name",
         value_type="text",
         display_name_zh="产品",

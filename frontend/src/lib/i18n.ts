@@ -686,6 +686,16 @@ const zh: TranslationDict = {
   "schema.field.discount_rate": "折扣率",
   "schema.field.profit_amount": "利润",
   "schema.field.unavailable": "未提供",
+  "metric.title": "系统计算指标",
+  "metric.subtitle": "由代码从数据中计算，AI 仅用于解释与建议。",
+  "metric.name.total_sales": "总销售额",
+  "metric.name.order_count": "订单量",
+  "metric.name.average_order_value": "平均客单价",
+  "metric.name.customer_count": "客户数",
+  "metric.name.customer_concentration": "客户集中度",
+  "metric.unavailable": "无法计算",
+  "metric.estimated": "估算",
+  "metric.top1": "Top1",
 };
 
 const en: TranslationDict = {
@@ -1353,6 +1363,16 @@ const en: TranslationDict = {
   "schema.field.discount_rate": "Discount Rate",
   "schema.field.profit_amount": "Profit",
   "schema.field.unavailable": "Not provided",
+  "metric.title": "System-Calculated Metrics",
+  "metric.subtitle": "Computed from your data by code. AI explains, never recalculates.",
+  "metric.name.total_sales": "Total Sales",
+  "metric.name.order_count": "Orders",
+  "metric.name.average_order_value": "Avg Order Value",
+  "metric.name.customer_count": "Customers",
+  "metric.name.customer_concentration": "Concentration Risk",
+  "metric.unavailable": "unavailable",
+  "metric.estimated": "est.",
+  "metric.top1": "Top1",
 };
 
 const ja: TranslationDict = {
@@ -2020,6 +2040,16 @@ const ja: TranslationDict = {
   "schema.field.discount_rate": "割引率",
   "schema.field.profit_amount": "利益",
   "schema.field.unavailable": "提供なし",
+  "metric.title": "システム計算指標",
+  "metric.subtitle": "データからコードで計算。AIは説明のみ行います。",
+  "metric.name.total_sales": "総売上",
+  "metric.name.order_count": "注文数",
+  "metric.name.average_order_value": "平均注文単価",
+  "metric.name.customer_count": "顧客数",
+  "metric.name.customer_concentration": "顧客集中度",
+  "metric.unavailable": "計算不可",
+  "metric.estimated": "推定",
+  "metric.top1": "Top1",
 };
 
 const de: TranslationDict = {
@@ -2687,6 +2717,16 @@ const de: TranslationDict = {
   "schema.field.discount_rate": "Rabattsatz",
   "schema.field.profit_amount": "Gewinn",
   "schema.field.unavailable": "Nicht vorhanden",
+  "metric.title": "Systemberechnete Kennzahlen",
+  "metric.subtitle": "Aus Ihren Daten per Code berechnet. Die KI erklärt, berechnet nicht neu.",
+  "metric.name.total_sales": "Gesamtumsatz",
+  "metric.name.order_count": "Bestellungen",
+  "metric.name.average_order_value": "Ø Bestellwert",
+  "metric.name.customer_count": "Kunden",
+  "metric.name.customer_concentration": "Kundenkonzentration",
+  "metric.unavailable": "nicht verfügbar",
+  "metric.estimated": "geschätzt",
+  "metric.top1": "Top1",
 };
 
 const dictionaries: Record<UILanguage, TranslationDict> = { zh, en, ja, de };

@@ -6,6 +6,7 @@ No networking. No API calls. Pure text generation + variable substitution.
 
 from datetime import date
 from pathlib import Path
+import json
 
 PROMPT_DIR = Path(__file__).parent.parent.parent.parent / "prompts" / "sales"
 DEFAULT_VERSION = "v1"
@@ -72,6 +73,7 @@ def build(
     language: str = "zh",
     analysis_direction: str | None = None,
     version: str = DEFAULT_VERSION,
+    computed_metrics: list[dict] | None = None,
 ) -> str:
     """Generate a sales analysis prompt from a versioned template.
 
@@ -123,5 +125,17 @@ def build(
             + ANALYSIS_DIRECTIONS[analysis_direction]
         )
         prompt = prompt.replace("## Rules", direction_section + "\n\n## Rules", 1)
+
+    # Inject system-computed metrics before the JSON rules. The AI must explain
+    # these numbers but never recompute or modify them.
+    if computed_metrics:
+        metrics_section = (
+            "\n\n## Computed Metrics (system calculated)\n"
+            "The following metrics were computed by the system from the dataset. "
+            "AI must reference these numbers directly and must NOT recompute or modify any value. "
+            "A metric with availability 'unavailable' means the required field is missing - do not fabricate it.\n"
+            + json.dumps(computed_metrics, ensure_ascii=False)
+        )
+        prompt = prompt.replace("## Rules", metrics_section + "\n\n## Rules", 1)
 
     return prompt
