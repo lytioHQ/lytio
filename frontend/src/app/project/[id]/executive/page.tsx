@@ -7,6 +7,7 @@ import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/lib/AuthContext";
 import BusinessValue from "@/components/business/BusinessValue";
 import BusinessHealthCard from "@/components/business/BusinessHealthCard";
+import HealthScoreBreakdown, { HealthScoreData } from "@/components/business/HealthScoreBreakdown";
 import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
 import MetricGrid from "@/components/business/MetricGrid";
 import { MetricCard } from "@/components/ui";
@@ -76,6 +77,7 @@ export default function ExecutiveReportPage() {
   const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const [report, setReport] = useState<ExecutiveReportData | null>(null);
   const [metrics, setMetrics] = useState<ComputedMetricData[] | null>(null);
+  const [healthScore, setHealthScore] = useState<HealthScoreData | null>(null);
   const [dataVersion, setDataVersion] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -102,6 +104,12 @@ export default function ExecutiveReportPage() {
       .then(async (r) => { if (!r.ok) return null; const d = await r.json(); return d.computed_metrics ?? null; })
       .then((m: ComputedMetricData[] | null) => setMetrics(m))
       .catch(() => setMetrics(null));
+
+    // M2.12.2: system-computed health score (code, not AI). Read-only display.
+    apiFetch(API + "/api/projects/" + id + "/metrics", { headers: { Authorization: "Bearer " + token } })
+      .then(async (r) => { if (!r.ok) return null; const d = await r.json(); return d.health_score ?? null; })
+      .then((hs: HealthScoreData | null) => setHealthScore(hs))
+      .catch(() => setHealthScore(null));
   }, [token, id]);
 
   if (authLoading || loading) {
@@ -214,6 +222,7 @@ export default function ExecutiveReportPage() {
                 </div>
               </div>
               )}
+              <HealthScoreBreakdown data={healthScore} lang={uiLang} />
               <MetricGrid metrics={report.key_metrics} lang={uiLang} />
               <InsightList insights={report.top_insights} lang={uiLang} />
               <RiskList risks={report.top_risks} lang={uiLang} />

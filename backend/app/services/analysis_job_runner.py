@@ -29,6 +29,7 @@ from app.services.analysis_engine import AnalysisEngine
 from app.services import verification_parser, verification_service
 from app.services.workbook_service import WorkbookAccessError, extract_canonical_dataset
 from app.services.metric_engine import compute_metrics
+from app.services.health_score import compute_health_score
 from app.services.schema_mapper import detect_schema
 
 RUNNER_PROVIDER_TIMEOUT = float(os.getenv("ANALYSIS_JOB_PROVIDER_TIMEOUT", "180"))
@@ -45,6 +46,7 @@ def schedule_job(job_id: int) -> None:
 
 def _build_result_json(
     result, analysis_type: str, analysis_direction: str, computed_metrics: list[dict] | None = None,
+    health_score: dict | None = None,
 ) -> str:
     if result.result is not None:
         data = result.result.model_dump()
@@ -59,6 +61,8 @@ def _build_result_json(
     data["analysis_type"] = analysis_type
     if computed_metrics:
         data["computed_metrics"] = computed_metrics
+    if health_score:
+        data["health_score"] = health_score
     return json.dumps(data, ensure_ascii=False)
 
 
@@ -164,11 +168,19 @@ async def _execute_job(job_id: int, started_at: float) -> None:
     # M2.12.1: compute canonical metrics from code. Never blocks analysis on
     # detection/computation failures - degrade to no computed context.
     computed_metrics: list[dict] | None = None
+    health_score: dict | None = None
     try:
         mapping = schema_mapping or detect_schema(dataset["headers"], dataset["column_types"]).to_dict()
         computed_metrics = compute_metrics(dataset, mapping)
     except Exception:
         computed_metrics = None
+    if computed_metrics:
+        # M2.12.2: code-computed health score. Never blocks analysis; degrade
+        # to no score if anything fails.
+        try:
+            health_score = compute_health_score(dataset, mapping, computed_metrics)
+        except Exception:
+            health_score = None
 
     try:
         result = await plugin.analyze(
@@ -181,6 +193,7 @@ async def _execute_job(job_id: int, started_at: float) -> None:
             language=report_language,
             analysis_direction=direction,
             computed_metrics=computed_metrics,
+            health_score=health_score,
         )
     except TimeoutError as exc:
         await _fail(job_id, "provider_timeout", str(exc), started_at)
@@ -194,6 +207,9 @@ async def _execute_job(job_id: int, started_at: float) -> None:
 
     analysis_type = analysis_type_for(direction)
     result_json = _build_result_json(result, analysis_type, direction, computed_metrics=computed_metrics)
+    result_json = _build_result_json(
+        result, analysis_type, direction, computed_metrics=computed_metrics, health_score=health_score
+    )
     summary = result.summary or ""
 
     async with async_session() as db:

@@ -74,6 +74,7 @@ def build(
     analysis_direction: str | None = None,
     version: str = DEFAULT_VERSION,
     computed_metrics: list[dict] | None = None,
+    health_score: dict | None = None,
 ) -> str:
     """Generate a sales analysis prompt from a versioned template.
 
@@ -85,6 +86,7 @@ def build(
         language: "zh", "en", "ja", or "de".
         analysis_direction: Optional focus lens (see ANALYSIS_DIRECTIONS). None = overview.
         version: Template version to load (e.g. "v1").
+        health_score: System-calculated health score injected into the prompt.
 
     Returns:
         Rendered prompt string with all variables substituted.
@@ -137,5 +139,18 @@ def build(
             + json.dumps(computed_metrics, ensure_ascii=False)
         )
         prompt = prompt.replace("## Rules", metrics_section + "\n\n## Rules", 1)
+
+    # Inject the system-computed health score before the JSON rules. The AI
+    # explains the score; it must never compute or alter it.
+    if health_score:
+        health_section = (
+            "\n\n## Business Health Score (system calculated)\n"
+            "The following health score was computed by the system from the dataset. "
+            "AI must explain why each dimension is high or low and how to improve it, "
+            "but must NOT modify or recompute any value. "
+            "A dimension with availability 'unavailable' means the required field is missing - do not fabricate it.\n"
+            + json.dumps(health_score, ensure_ascii=False)
+        )
+        prompt = prompt.replace("## Rules", health_section + "\n\n## Rules", 1)
 
     return prompt

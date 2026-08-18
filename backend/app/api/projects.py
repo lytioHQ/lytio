@@ -12,6 +12,7 @@ from app.schemas.schema_mapping import SchemaMappingSaveRequest
 from app.services.schema_mapper import build_saved_mapping, detect_schema
 from app.services.workbook_service import extract_canonical_dataset
 from app.services.metric_engine import compute_metrics
+from app.services.health_score import compute_health_score
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -286,7 +287,15 @@ async def get_project_metrics(
         raise HTTPException(
             status_code=500, detail="Failed to compute metrics. Please try again."
         )
+    # M2.12.2: code-computed health score (read-only). Never fails the request;
+    # degrade to null when the engine cannot produce a score.
+    health_score = None
+    try:
+        health_score = compute_health_score(dataset, mapping, computed)
+    except Exception:
+        health_score = None
     return {
         "project_id": project.id,
         "computed_metrics": computed,
+        "health_score": health_score,
     }

@@ -19,7 +19,8 @@ class SalesPlugin:
     def build_prompt(self, *, sheet_name: str, headers: list[str],
                      column_types: dict[str, str], rows: list[list],
                      language: str = "zh", analysis_direction: str | None = None,
-                     computed_metrics: list[dict] | None = None) -> str:
+                     computed_metrics: list[dict] | None = None,
+                     health_score: dict | None = None) -> str:
         """Generate a sales-specific analysis prompt."""
         return build(
             sheet_name=sheet_name,
@@ -29,6 +30,7 @@ class SalesPlugin:
             language=language,
             analysis_direction=analysis_direction,
             computed_metrics=computed_metrics,
+            health_score=health_score,
         )
 
     async def analyze(self, engine: AnalysisEngine, *,
@@ -36,7 +38,8 @@ class SalesPlugin:
                       headers: list[str], column_types: dict[str, str],
                       rows: list[list], language: str = "zh",
                       analysis_direction: str | None = None,
-                      computed_metrics: list[dict] | None = None) -> SalesAnalysisResult:
+                      computed_metrics: list[dict] | None = None,
+                      health_score: dict | None = None) -> SalesAnalysisResult:
         """Full pipeline: detect → build request → analyze → parse.
 
         Args:
@@ -45,6 +48,7 @@ class SalesPlugin:
                 Dataset from the canonical extraction pipeline.
             language: Response language.
             computed_metrics: System-calculated metrics injected into the prompt.
+            health_score: System-calculated health score injected into the prompt.
 
         Returns:
             Structured sales analysis result.
@@ -64,6 +68,7 @@ class SalesPlugin:
             language=language,
             analysis_direction=analysis_direction,
             computed_metrics=computed_metrics,
+            health_score=health_score,
         )
 
         request = AnalysisEngine.build_request(
