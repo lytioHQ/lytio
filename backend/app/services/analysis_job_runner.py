@@ -25,6 +25,7 @@ from app.plugins.sales import SalesPlugin
 from app.plugins.sales.prompt_builder import analysis_type_for
 from app.providers.deepseek import DeepSeekProvider
 from app.services import analysis_job_service, analysis_run_service, project_service
+from app.services import action_item_service
 from app.services.analysis_engine import AnalysisEngine
 from app.services import verification_parser, verification_service
 from app.services.workbook_service import WorkbookAccessError, extract_canonical_dataset
@@ -354,6 +355,26 @@ async def _run_verification(job_id: int, started_at: float) -> None:
                 comparison_result=comparison_json,
                 status="completed",
             )
+            # M2.12.3: mechanically link source-run action items to this
+            # verification run (factual evidence only, never flips status).
+            # Failures must not fail the verification job itself.
+            try:
+                linked = await action_item_service.link_actions_to_verification(
+                    db, job.project_id, run.id
+                )
+                if linked:
+                    logger.info(
+                        "action_items_linked_to_verification",
+                        extra={"event": "analysis_job", "job_id": job_id,
+                               "verification_run_id": run.id, "linked": linked},
+                    )
+            except Exception as link_exc:
+                logger.error(
+                    "action_items_link_failed",
+                    extra={"event": "analysis_job", "job_id": job_id,
+                           "verification_run_id": run.id},
+                    exc_info=link_exc,
+                )
             elapsed_ms = int((time.monotonic() - started_at) * 1000)
             await analysis_job_service.mark_completed(db, job, run.id, elapsed_ms)
         except Exception as exc:

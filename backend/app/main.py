@@ -8,6 +8,7 @@ import app.models.project  # noqa: F401
 import app.models.analysis_run  # noqa: F401  ensure table creation
 import app.models.audit_log  # noqa: F401  ensure table creation
 import app.models.analysis_job  # noqa: F401  ensure table creation
+import app.models.action_item  # noqa: F401  ensure table creation
 from app.core.logging_config import logger
 
 from fastapi import FastAPI, Request
@@ -22,6 +23,7 @@ from app.api.projects import router as projects_router
 from app.api.analysis_runs import router as analysis_runs_router
 from app.api.analysis_jobs import router as analysis_jobs_router
 from app.api.verification import router as verification_router
+from app.api.action_items import router as action_items_router
 
 
 @asynccontextmanager
@@ -93,6 +95,7 @@ app.include_router(projects_router)
 app.include_router(analysis_runs_router)
 app.include_router(analysis_jobs_router)
 app.include_router(verification_router)
+app.include_router(action_items_router)
 
 
 @app.get("/")
