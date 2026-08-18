@@ -672,6 +672,20 @@ const zh: TranslationDict = {
   "proj.viewVerification": "查看验证报告 →",
   "proj.timeline.verification": "效果验证",
   "proj.timeline.healthScan": "健康扫描",
+  "schema.fieldsRecognized": "已识别字段",
+  "schema.detectHint": "系统已自动识别数据字段，将用于后续指标计算。",
+  "schema.field.order_date": "成交日期",
+  "schema.field.sales_amount": "销售额",
+  "schema.field.sales_quantity": "数量",
+  "schema.field.product_name": "产品",
+  "schema.field.region": "区域",
+  "schema.field.customer_name": "客户",
+  "schema.field.sales_person": "销售人员",
+  "schema.field.pipeline_stage": "销售阶段",
+  "schema.field.lost_reason": "输单原因",
+  "schema.field.discount_rate": "折扣率",
+  "schema.field.profit_amount": "利润",
+  "schema.field.unavailable": "未提供",
 };
 
 const en: TranslationDict = {
@@ -1325,6 +1339,20 @@ const en: TranslationDict = {
   "proj.viewVerification": "View Verification →",
   "proj.timeline.verification": "Verification",
   "proj.timeline.healthScan": "Health Scan",
+  "schema.fieldsRecognized": "Fields recognized",
+  "schema.detectHint": "Fields were auto-detected and will be used for metric calculations.",
+  "schema.field.order_date": "Order Date",
+  "schema.field.sales_amount": "Sales Amount",
+  "schema.field.sales_quantity": "Quantity",
+  "schema.field.product_name": "Product",
+  "schema.field.region": "Region",
+  "schema.field.customer_name": "Customer",
+  "schema.field.sales_person": "Sales Person",
+  "schema.field.pipeline_stage": "Pipeline Stage",
+  "schema.field.lost_reason": "Lost Reason",
+  "schema.field.discount_rate": "Discount Rate",
+  "schema.field.profit_amount": "Profit",
+  "schema.field.unavailable": "Not provided",
 };
 
 const ja: TranslationDict = {
@@ -1978,6 +2006,20 @@ const ja: TranslationDict = {
   "proj.viewVerification": "検証レポートを見る →",
   "proj.timeline.verification": "効果検証",
   "proj.timeline.healthScan": "ヘルススキャン",
+  "schema.fieldsRecognized": "認識した項目",
+  "schema.detectHint": "項目は自動認識され、指標計算に使用されます。",
+  "schema.field.order_date": "成約日",
+  "schema.field.sales_amount": "売上額",
+  "schema.field.sales_quantity": "数量",
+  "schema.field.product_name": "製品",
+  "schema.field.region": "地域",
+  "schema.field.customer_name": "顧客",
+  "schema.field.sales_person": "営業担当",
+  "schema.field.pipeline_stage": "商談ステージ",
+  "schema.field.lost_reason": "失注理由",
+  "schema.field.discount_rate": "割引率",
+  "schema.field.profit_amount": "利益",
+  "schema.field.unavailable": "提供なし",
 };
 
 const de: TranslationDict = {
@@ -2631,6 +2673,20 @@ const de: TranslationDict = {
   "proj.viewVerification": "Prüfbericht ansehen →",
   "proj.timeline.verification": "Wirkungsprüfung",
   "proj.timeline.healthScan": "Health Scan",
+  "schema.fieldsRecognized": "Erkannte Felder",
+  "schema.detectHint": "Felder wurden automatisch erkannt und für die Kennzahlenberechnung verwendet.",
+  "schema.field.order_date": "Auftragsdatum",
+  "schema.field.sales_amount": "Umsatz",
+  "schema.field.sales_quantity": "Menge",
+  "schema.field.product_name": "Produkt",
+  "schema.field.region": "Region",
+  "schema.field.customer_name": "Kunde",
+  "schema.field.sales_person": "Vertrieb",
+  "schema.field.pipeline_stage": "Pipeline-Stufe",
+  "schema.field.lost_reason": "Verlustgrund",
+  "schema.field.discount_rate": "Rabattsatz",
+  "schema.field.profit_amount": "Gewinn",
+  "schema.field.unavailable": "Nicht vorhanden",
 };
 
 const dictionaries: Record<UILanguage, TranslationDict> = { zh, en, ja, de };

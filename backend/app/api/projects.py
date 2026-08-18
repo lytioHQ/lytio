@@ -8,6 +8,9 @@ from app.core.logging_config import logger
 from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.services import project_service, analysis_run_service, report_builder
+from app.schemas.schema_mapping import SchemaMappingSaveRequest
+from app.services.schema_mapper import build_saved_mapping, detect_schema
+from app.services.workbook_service import extract_canonical_dataset
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -88,6 +91,8 @@ async def link_file(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     await project_service.set_project_file(db, project_id, user.id, data.original_filename, data.saved_filename)
+    # Auto-detect and persist a canonical schema mapping (never blocks upload).
+    await project_service.ensure_schema_mapping(db, project_id, user.id)
     return {"status": "ok"}
 
 class StatusPayload(BaseModel):
@@ -194,3 +199,64 @@ async def get_executive_report(
         raise HTTPException(status_code=500, detail="Failed to parse stored result")
 
     return report.model_dump()
+
+
+@router.get("/{project_id}/schema-mapping")
+async def get_project_schema_mapping(
+    project_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Return the persisted mapping, or detect on the fly when none exists."""
+    project = await project_service.get_project(db, project_id, user.id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if project.schema_mapping:
+        return {
+            "project_id": project.id, "persisted": True, "schema_mapping": project.schema_mapping,
+        }
+    if not project.saved_filename:
+        return {
+            "project_id": project.id, "persisted": False, "schema_mapping": None,
+        }
+    try:
+        dataset = extract_canonical_dataset(user.id, project.saved_filename)
+        detection = detect_schema(dataset["headers"], dataset["column_types"])
+    except Exception:
+        raise HTTPException(
+            status_code=500, detail="Failed to inspect workbook fields. Please try again."
+        )
+    return {
+        "project_id": project.id, "persisted": False, "schema_mapping": detection.to_dict(),
+    }
+
+
+@router.patch("/{project_id}/schema-mapping")
+async def save_project_schema_mapping(
+    project_id: int,
+    payload: SchemaMappingSaveRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Persist user-confirmed canonical mappings for a project."""
+    project = await project_service.get_project(db, project_id, user.id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if not project.saved_filename:
+        raise HTTPException(status_code=400, detail="No Excel file is linked to this project.")
+    try:
+        dataset = extract_canonical_dataset(user.id, project.saved_filename)
+        confirmed = [((m.canonical_key, m.source_column)) for m in payload.mappings]
+        mapping = build_saved_mapping(dataset["headers"], confirmed)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception:
+        raise HTTPException(
+            status_code=500, detail="Failed to inspect workbook fields. Please try again."
+        )
+    saved = await project_service.save_schema_mapping(db, project_id, user.id, mapping)
+    if not saved:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {
+        "project_id": saved.id, "persisted": True, "schema_mapping": saved.schema_mapping,
+    }

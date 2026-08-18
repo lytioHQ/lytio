@@ -30,6 +30,49 @@ async def create_project(db: AsyncSession, user_id: int, data: ProjectCreate) ->
     )
     db.add(project)
     await db.commit()
+
+
+async def save_schema_mapping(
+    db: AsyncSession, project_id: int, user_id: int, mapping: dict,
+) -> Project | None:
+    """Persist a schema_mapping payload onto a project (overwrite)."""
+    project = await get_project(db, project_id, user_id)
+    if not project:
+        return None
+    project.schema_mapping = mapping
+    project.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(project)
+    return project
+
+
+async def ensure_schema_mapping(
+    db: AsyncSession, project_id: int, user_id: int,
+) -> dict | None:
+    """Auto-detect and persist a mapping when a project has none yet.
+    Never blocks upload or analysis on detection failures."""
+    project = await get_project(db, project_id, user_id)
+    if not project or not project.saved_filename:
+        return None
+    if project.schema_mapping:
+        return project.schema_mapping
+    try:
+        from app.services.schema_mapper import detect_schema
+        from app.services.workbook_service import extract_canonical_dataset
+        dataset = extract_canonical_dataset(user_id, project.saved_filename)
+        detection = detect_schema(dataset["headers"], dataset["column_types"])
+        mapping = detection.to_dict()
+        project.schema_mapping = mapping
+        project.updated_at = datetime.now(timezone.utc)
+        await db.commit()
+        return mapping
+    except Exception:
+        from app.core.logging_config import logger
+        logger.warning(
+            "schema_mapping_detect_skipped",
+            extra={"event": "schema_mapping", "project_id": project_id}, exc_info=True,
+        )
+        return None
     await db.refresh(project)
     return project
 

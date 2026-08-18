@@ -21,6 +21,7 @@ class ProjectResponse(BaseModel):
     language: str
     original_filename: str | None = None
     saved_filename: str | None = None
+    schema_mapping: dict | None = None
     latest_summary: str | None = None
     status: str
     created_at: datetime | None = None

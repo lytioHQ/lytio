@@ -298,3 +298,35 @@ def semantic_dataset(req: InspectRequest, user: User = Depends(get_current_user)
         workbook=file_path.name,
         tables=tables,
     )
+
+
+# ── Detect canonical schema fields ────────────────────
+
+class DetectFieldsResponse(BaseModel):
+    workbook: str
+    suggested_mapping: dict
+    status: str = "ok"
+
+
+@router.post("/detect-fields", response_model=DetectFieldsResponse)
+def detect_fields(req: InspectRequest, user: User = Depends(get_current_user)):
+    """Detect canonical sales field mappings for an uploaded workbook."
+    Pure runtime detection - never writes to the database."""
+    file_path = _resolve_upload(user.id, req.saved_filename)
+    _validate_file(file_path)
+
+    from app.services.schema_mapper import detect_schema
+    from app.services.workbook_service import extract_canonical_dataset
+
+    try:
+        dataset = extract_canonical_dataset(user.id, req.saved_filename)
+        detection = detect_schema(dataset["headers"], dataset["column_types"])
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to detect fields: {exc}"
+        )
+
+    return DetectFieldsResponse(
+        workbook=file_path.name,
+        suggested_mapping=detection.to_dict(),
+    )

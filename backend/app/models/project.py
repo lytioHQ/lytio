@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
 from app.core.database import Base
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class Project(Base):
@@ -12,6 +13,7 @@ class Project(Base):
     language = Column(String(10), nullable=False, default="zh")
     original_filename = Column(String(500), nullable=True)
     saved_filename = Column(String(500), nullable=True)
+    schema_mapping = Column(JSONB, nullable=True)
     status = Column(String(20), nullable=False, default="draft")
     latest_summary = Column(String(5000), nullable=True)
     latest_result_json = Column(String(20000), nullable=True)

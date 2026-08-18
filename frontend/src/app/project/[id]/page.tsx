@@ -10,6 +10,7 @@ import { useUiLang } from "@/lib/useUiLang";
 import { Button, Card, MetricCard } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 import { ANALYSIS_DIRECTIONS, ANALYSIS_DIRECTION_ICONS } from "@/lib/analysisDirections";
+import { schemaFieldMeta, type SchemaMapping } from "@/lib/schemaMapping";
 
 interface ProjectData {
   id: number; title: string; industry: string; language: string;
@@ -62,6 +63,7 @@ export default function ProjectDashboard() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [schemaMapping, setSchemaMapping] = useState<SchemaMapping | null>(null);
   const [loadError, setLoadError] = useState(false);
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
 
@@ -82,6 +84,10 @@ export default function ProjectDashboard() {
       .then(r => r.json())
       .then((data: TimelineItem[]) => setTimeline(data || []))
       .catch(() => {});
+    apiFetch(API + "/api/projects/" + id + "/schema-mapping", { headers: { Authorization: "Bearer " + token } })
+      .then(async (r) => { if (!r.ok) return null; const d = await r.json(); return d.schema_mapping ?? null; })
+      .then((m: SchemaMapping | null) => setSchemaMapping(m))
+      .catch(() => setSchemaMapping(null));
   }, [token, id, router]);
 
   // Pull the latest executive report so the dashboard renders real conclusions.
@@ -416,10 +422,45 @@ export default function ProjectDashboard() {
           {hasFile ? (
             <div className="mt-4 rounded-control border border-border bg-muted p-4">
               <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                <div className="min-w-0">
+              <div className="min-w-0">
                   <p className="truncate text-[15px] font-medium text-ink">{project.original_filename}</p>
                   <p className="mt-0.5 text-caption text-secondary">{completed ? T("proj.datasetHint") : T("proj.uploadedReady")}</p>
-                </div>
+                {schemaMapping && schemaMapping.mappings.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-caption font-medium text-secondary">{T("schema.fieldsRecognized")}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {schemaMapping.mappings
+                        .filter((m) => m.availability === "available")
+                        .map((m) => {
+                          const meta = schemaFieldMeta(m.canonical_key);
+                          return (
+                            <span
+                              key={m.canonical_key + ":" + (m.source_column ?? "")}
+                              title={m.source_column ?? ""}
+                              className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success"
+                            >
+                              <span aria-hidden>{meta.icon}</span>
+                              {T(meta.labelKey)}
+                            </span>
+                          );
+                        })}
+                      {schemaMapping.missing.slice(0, 6).map((key) => {
+                        const meta = schemaFieldMeta(key);
+                        return (
+                          <span
+                            key={key}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-secondary"
+                          >
+                            <span aria-hidden>{meta.icon}</span>
+                            {T(meta.labelKey)} · {T("schema.field.unavailable")}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2 text-caption text-secondary">{T("schema.detectHint")}</p>
+                  </div>
+                )}
+              </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   {completed && (
                     <Link href={`/project/${id}/verify`} className="inline-flex h-9 items-center justify-center rounded-control bg-ink px-4 text-sm font-medium text-white transition-colors hover:bg-ink-hover">
