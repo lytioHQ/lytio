@@ -15,6 +15,16 @@ import sys
 
 MIGRATIONS_DIR = pathlib.Path(__file__).resolve().parent
 
+def _split_statements(sql: str) -> list[str]:
+    """Split a migration file into executable statements.
+
+    ``--`` line comments are stripped first so a semicolon inside a comment
+    (e.g. ``-- one aggregate; no backfill``) can never split a statement.
+    """
+    lines = [line.split("--", 1)[0] for line in sql.splitlines()]
+    cleaned = "\n".join(lines)
+    return [part.strip() for part in cleaned.split(";") if part.strip()]
+
 
 def _normalize_database_url(url: str) -> str:
     if url.startswith("postgres://"):
@@ -43,7 +53,7 @@ async def _run() -> int:
     try:
         for sql_file in sorted(MIGRATIONS_DIR.glob("*.sql")):
             sql = sql_file.read_text(encoding="utf-8")
-            statements = [part.strip() for part in sql.split(";") if part.strip()]
+            statements = _split_statements(sql)
             for statement in statements:
                 await conn.execute(statement)
             print(f"applied {sql_file.name} ({len(statements)} statements)")
