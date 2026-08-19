@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/lib/AuthContext";
-import { localeForLang, t } from "@/lib/i18n";
+import { localeForLang, t, UILanguage } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 import { Card } from "@/components/ui";
 
@@ -63,6 +63,8 @@ interface ComparisonResult {
   confidence: string;
   limitations: string[];
   next_actions: string[];
+  reliability?: string;
+  computed_metric_changes?: MetricChange[];
 }
 
 function parseComparison(payload: RunPayload | null): ComparisonResult | null {
@@ -78,6 +80,12 @@ function parseComparison(payload: RunPayload | null): ComparisonResult | null {
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "\u2014";
   return String(value);
+}
+
+function metricLabel(uiLang: UILanguage, name: string): string {
+  const key = `metric.name.${name}`;
+  const label = t(uiLang, key);
+  return label === key ? name : label;
 }
 
 export default function VerificationReportPage() {
@@ -183,6 +191,11 @@ export default function VerificationReportPage() {
                   {comparison.comparison_summary && (
                     <p className="mt-4 text-sm leading-relaxed text-ink">{comparison.comparison_summary}</p>
                   )}
+                  {comparison.reliability && comparison.reliability !== "ai" && (
+                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
+                      {T(`verifyReport.reliability.${comparison.reliability}`)}
+                    </p>
+                  )}
                 </Card>
 
                 <div className="grid gap-4 sm:grid-cols-4">
@@ -229,6 +242,7 @@ export default function VerificationReportPage() {
                       </table>
                     </div>
                   )}
+                  <p className="mt-4 text-caption text-secondary">{T("verifyReport.computedNote")}</p>
                 </Card>
 
                 {comparison.limitations?.length > 0 && (
