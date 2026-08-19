@@ -738,6 +738,20 @@ const zh: TranslationDict = {
   "action.verification.evidenceReason": "核对结论",
   "action.verification.desc": "核对仅记录指标变化等事实证据，不代替你判定任务是否完成。",
   "action.viewVerification": "查看核对报告",
+
+  "memory.title": "企业经营记忆",
+  "memory.desc": "基于历史分析、行动与验证自动积累的经营知识，只读展示。",
+  "memory.loading": "正在加载经营记忆…",
+  "memory.noMemory": "完成分析后，这里会积累你的业务趋势与行动闭环。",
+  "memory.healthTrend": "健康度趋势",
+  "memory.salesTrend": "销售额趋势",
+  "memory.actionClosedLoop": "行动闭环",
+  "memory.verifiedOf": "{n}/{total} 已验证",
+  "memory.pendingCount": "{n} 项进行中",
+  "memory.openLoops": "待闭环事项",
+  "memory.pendingAction": "待执行行动",
+  "memory.unavailableMetric": "缺失指标",
+  "memory.engineVersion": "引擎 v0",
 };
 
 const en: TranslationDict = {
@@ -1457,6 +1471,20 @@ const en: TranslationDict = {
   "action.verification.evidenceReason": "Verification note",
   "action.verification.desc": "Verification records factual metric changes only; it never judges whether a task was executed.",
   "action.viewVerification": "View verification report",
+
+  "memory.title": "Business Memory",
+  "memory.desc": "Operating knowledge accumulated from past analyses, actions and verifications. Read-only.",
+  "memory.loading": "Loading business memory…",
+  "memory.noMemory": "Complete an analysis and this space will accumulate your business trends and action loops.",
+  "memory.healthTrend": "Health trend",
+  "memory.salesTrend": "Sales trend",
+  "memory.actionClosedLoop": "Action closed loop",
+  "memory.verifiedOf": "{n}/{total} verified",
+  "memory.pendingCount": "{n} pending",
+  "memory.openLoops": "Open loops",
+  "memory.pendingAction": "Pending action",
+  "memory.unavailableMetric": "Missing metric",
+  "memory.engineVersion": "Engine v0",
 };
 
 const ja: TranslationDict = {
@@ -2176,6 +2204,20 @@ const ja: TranslationDict = {
   "action.verification.evidenceReason": "検証メモ",
   "action.verification.desc": "検証は指標変化などの事実だけを記録し、タスク完了を判定しません。",
   "action.viewVerification": "検証レポートを表示",
+
+  "memory.title": "企業メモリー",
+  "memory.desc": "過去の分析・アクション・検証から自動で蓄積される経営知識（読み取り専用）。",
+  "memory.loading": "企業メモリーを読み込み中…",
+  "memory.noMemory": "分析を完了すると、ここにビジネス動向とアクションループが蓄積されます。",
+  "memory.healthTrend": "ヘルス傾向",
+  "memory.salesTrend": "売上傾向",
+  "memory.actionClosedLoop": "アクション閉ループ",
+  "memory.verifiedOf": "{n}/{total} 検証済み",
+  "memory.pendingCount": "{n} 件進行中",
+  "memory.openLoops": "未完了ループ",
+  "memory.pendingAction": "未実行アクション",
+  "memory.unavailableMetric": "欠落指標",
+  "memory.engineVersion": "エンジン v0",
 };
 
 const de: TranslationDict = {
@@ -2895,6 +2937,20 @@ const de: TranslationDict = {
   "action.verification.evidenceReason": "Prüfhinweis",
   "action.verification.desc": "Die Prüfung dokumentiert nur faktenbasierte Kennzahlenänderungen; sie beurteilt nie, ob eine Maßnahme ausgeführt wurde.",
   "action.viewVerification": "Prüfbericht ansehen",
+
+  "memory.title": "Business-Gedächtnis",
+  "memory.desc": "Aus früheren Analysen, Maßnahmen und Prüfungen automatisch aufgebautes Betriebswissen. Schreibgeschützt.",
+  "memory.loading": "Business-Gedächtnis wird geladen…",
+  "memory.noMemory": "Schließen Sie eine Analyse ab – hier sammeln sich Ihre Geschäftstrends und Maßnahmen-Loops.",
+  "memory.healthTrend": "Gesundheitstrend",
+  "memory.salesTrend": "Umsatztrend",
+  "memory.actionClosedLoop": "Maßnahmen-Loop",
+  "memory.verifiedOf": "{n}/{total} geprüft",
+  "memory.pendingCount": "{n} offen",
+  "memory.openLoops": "Offene Loops",
+  "memory.pendingAction": "Offene Maßnahme",
+  "memory.unavailableMetric": "Fehlende Kennzahl",
+  "memory.engineVersion": "Engine v0",
 };
 
 const dictionaries: Record<UILanguage, TranslationDict> = { zh, en, ja, de };

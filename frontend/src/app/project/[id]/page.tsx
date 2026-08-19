@@ -11,6 +11,7 @@ import { Button, Card, MetricCard } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 import { ANALYSIS_DIRECTIONS, ANALYSIS_DIRECTION_ICONS } from "@/lib/analysisDirections";
 import { schemaFieldMeta, type SchemaMapping } from "@/lib/schemaMapping";
+import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
 
 interface ProjectData {
   id: number; title: string; industry: string; language: string;
@@ -207,6 +208,8 @@ export default function ProjectDashboard() {
           />
         </div>
 
+        {/* Business Memory (M2.12.4) */}
+        <BusinessMemoryCard projectId={id} lang={uiLang} />
         {/* Key Conclusions (real data) */}
         {report && (insightCount > 0 || riskCount > 0 || recCount > 0) && (
           <Card>

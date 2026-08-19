@@ -32,6 +32,7 @@ from app.services.workbook_service import WorkbookAccessError, extract_canonical
 from app.services.metric_engine import compute_metrics
 from app.services.health_score import compute_health_score
 from app.services.schema_mapper import detect_schema
+from app.services import memory_service
 
 RUNNER_PROVIDER_TIMEOUT = float(os.getenv("ANALYSIS_JOB_PROVIDER_TIMEOUT", "180"))
 
@@ -232,6 +233,12 @@ async def _execute_job(job_id: int, started_at: float) -> None:
             )
             elapsed_ms = int((time.monotonic() - started_at) * 1000)
             await analysis_job_service.mark_completed(db, job, run.id, elapsed_ms)
+            # M2.12.4: refresh the project's business memory (derived cache).
+            # Failures are logged, never propagated to the job transaction.
+            try:
+                await memory_service.upsert_memory_after_run(job.project_id, run.id)
+            except Exception as mem_exc:
+                memory_service.log_memory_failure({"job_id": job_id, "run_id": run.id}, mem_exc)
         except Exception as exc:
             await analysis_job_service.mark_failed(
                 db, job, "unknown",
@@ -377,6 +384,11 @@ async def _run_verification(job_id: int, started_at: float) -> None:
                 )
             elapsed_ms = int((time.monotonic() - started_at) * 1000)
             await analysis_job_service.mark_completed(db, job, run.id, elapsed_ms)
+            # M2.12.4: refresh the project's business memory (derived cache).
+            try:
+                await memory_service.upsert_memory_after_run(job.project_id, run.id)
+            except Exception as mem_exc:
+                memory_service.log_memory_failure({"job_id": job_id, "run_id": run.id}, mem_exc)
         except Exception as exc:
             await analysis_job_service.mark_failed(
                 db, job, "unknown",
