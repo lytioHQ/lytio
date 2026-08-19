@@ -180,7 +180,13 @@ def build_open_loops(
 ) -> list[dict]:
     """Open loops = pending actions + unavailable latest metrics."""
     loops: list[dict] = []
+    if not isinstance(actions, list):
+        actions = []
+    if not isinstance(latest_metrics, dict):
+        latest_metrics = {}
     for a in actions:
+        if not isinstance(a, dict):
+            continue
         if a.get("status") == "pending":
             loops.append(
                 {
@@ -191,6 +197,8 @@ def build_open_loops(
                 }
             )
     for name, m in latest_metrics.items():
+        if not isinstance(m, dict):
+            continue
         if m.get("availability") != AVAILABLE:
             loops.append(
                 {

@@ -24,6 +24,15 @@ interface OpenLoop {
   note?: string | null;
 }
 
+interface VerificationPoint {
+  run_id: number;
+  parent_run_id: number | null;
+  verdict: string | null;
+  confidence: string | null;
+  metric_changes: Array<Record<string, unknown>>;
+  next_actions: Array<Record<string, unknown>>;
+}
+
 interface BusinessMemoryData {
   project_id: number;
   engine_version: string;
@@ -34,7 +43,7 @@ interface BusinessMemoryData {
   action_summary: { total: number; pending: number; completed: number; cancelled: number; verified: number };
   action_recent: Array<Record<string, unknown>>;
   issue_tracker: Array<Record<string, unknown>>;
-  verification_history: Array<Record<string, unknown>>;
+  verification_history: VerificationPoint[];
   open_loops: OpenLoop[];
   updated_at: string | null;
   ready: boolean;
@@ -56,9 +65,10 @@ function formatValue(value: unknown, lang: UILanguage): string {
 
 /**
  * M2.12.4: read-only Business Memory block.
- * Shows the project's accumulated operating knowledge (health trend, sales
- * trend, action closed-loop rate and open loops). Everything shown is a
- * derived cache from analysis_runs + action_items; nothing here is AI output.
+ * Shows the project's accumulated operating knowledge: current health & sales
+ * status, action closed-loop rate, open loops and the latest verification
+ * result. Everything shown is a derived cache from analysis_runs +
+ * action_items; nothing here is AI output.
  */
 export default function BusinessMemoryCard({ projectId, lang }: { projectId: string; lang: UILanguage }) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
@@ -82,6 +92,9 @@ export default function BusinessMemoryCard({ projectId, lang }: { projectId: str
   const lastSales = salesPoints.length > 0 ? salesPoints[salesPoints.length - 1] : null;
   const summary = memory?.action_summary ?? { total: 0, pending: 0, completed: 0, cancelled: 0, verified: 0 };
   const loops = memory?.open_loops ?? [];
+  const verificationPoints = memory?.verification_history ?? [];
+  const lastVerification =
+    verificationPoints.length > 0 ? verificationPoints[verificationPoints.length - 1] : null;
 
   return (
     <div className="rounded-card border border-border bg-surface p-6">
@@ -151,6 +164,24 @@ export default function BusinessMemoryCard({ projectId, lang }: { projectId: str
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {lastVerification && (
+            <div className="mt-5 rounded-control border border-border bg-canvas p-4">
+              <p className="text-caption font-medium text-secondary">{T("memory.lastVerification")}</p>
+              <p className="mt-1 text-[15px] font-semibold text-ink">
+                {lastVerification.verdict ? T(`verifyReport.verdict.${lastVerification.verdict}`) : "–"}
+                {lastVerification.confidence ? ` · ${T(`verifyReport.confidence.${lastVerification.confidence}`)}` : ""}
+              </p>
+              {lastVerification.metric_changes?.length > 0 && (
+                <p className="mt-1 text-sm leading-relaxed text-secondary">
+                  {lastVerification.metric_changes
+                    .slice(0, 3)
+                    .map((m) => String(m.metric ?? "–"))
+                    .join(" · ")}
+                </p>
+              )}
             </div>
           )}
         </>

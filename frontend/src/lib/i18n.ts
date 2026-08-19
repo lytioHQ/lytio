@@ -752,6 +752,7 @@ const zh: TranslationDict = {
   "memory.pendingAction": "待执行行动",
   "memory.unavailableMetric": "缺失指标",
   "memory.engineVersion": "引擎 v0",
+  "memory.lastVerification": "最近验证结果",
 };
 
 const en: TranslationDict = {
@@ -1485,6 +1486,7 @@ const en: TranslationDict = {
   "memory.pendingAction": "Pending action",
   "memory.unavailableMetric": "Missing metric",
   "memory.engineVersion": "Engine v0",
+  "memory.lastVerification": "Latest verification result",
 };
 
 const ja: TranslationDict = {
@@ -2218,6 +2220,7 @@ const ja: TranslationDict = {
   "memory.pendingAction": "未実行アクション",
   "memory.unavailableMetric": "欠落指標",
   "memory.engineVersion": "エンジン v0",
+  "memory.lastVerification": "直近の検証結果",
 };
 
 const de: TranslationDict = {
@@ -2951,6 +2954,7 @@ const de: TranslationDict = {
   "memory.pendingAction": "Offene Maßnahme",
   "memory.unavailableMetric": "Fehlende Kennzahl",
   "memory.engineVersion": "Engine v0",
+  "memory.lastVerification": "Letztes Prüfergebnis",
 };
 
 const dictionaries: Record<UILanguage, TranslationDict> = { zh, en, ja, de };

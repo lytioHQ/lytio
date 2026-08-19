@@ -15,6 +15,7 @@ import InsightList from "@/components/business/InsightList";
 import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
 import BusinessActions from "@/components/business/BusinessActions";
+import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
 import { localeForLang, t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 
@@ -235,6 +236,7 @@ export default function ExecutiveReportPage() {
             <div className="mt-6 space-y-8">
               <RecommendationList recs={report.top_recommendations} lang={uiLang} />
               <BusinessActions projectId={id} lang={uiLang} />
+              <BusinessMemoryCard projectId={id} lang={uiLang} />
             </div>
           </section>
         </div>
