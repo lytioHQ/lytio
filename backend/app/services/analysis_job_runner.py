@@ -27,7 +27,7 @@ from app.providers.deepseek import DeepSeekProvider
 from app.services import analysis_job_service, analysis_run_service, project_service
 from app.services import action_item_service
 from app.services.analysis_engine import AnalysisEngine
-from app.services import verification_parser, verification_service
+from app.services import verification_metrics, verification_parser, verification_scoring, verification_service
 from app.services.workbook_service import WorkbookAccessError, extract_canonical_dataset
 from app.services.metric_engine import compute_metrics
 from app.services.health_score import compute_health_score
@@ -35,6 +35,9 @@ from app.services.schema_mapper import detect_schema
 from app.services import memory_service
 
 RUNNER_PROVIDER_TIMEOUT = float(os.getenv("ANALYSIS_JOB_PROVIDER_TIMEOUT", "180"))
+
+# M2.13.0: maximum AI attempts for a verification job (first call + one retry).
+VERIFICATION_MAX_AI_ATTEMPTS = 2
 
 _tasks: set[asyncio.Task] = set()
 
@@ -310,6 +313,8 @@ async def _run_verification(job_id: int, started_at: float) -> None:
         # Capture scalar values so the closed ORM objects are never lazy-loaded.
         user_id = job.user_id
         parent_id = parent.id
+        parent_result_json = parent.result_json
+        project_schema_mapping = project.schema_mapping
 
     try:
         dataset = extract_canonical_dataset(user_id, saved_filename)
@@ -317,33 +322,86 @@ async def _run_verification(job_id: int, started_at: float) -> None:
         await _fail(job_id, exc.code, str(exc), started_at)
         return
 
+    # M2.13.0: system-computed before/after metric changes (pure code, no AI).
+    # Never fails the job: on any computation error the comparison simply has
+    # no computed evidence and behaves exactly like the pre-M2.13 path.
+    try:
+        schema_mapping = project_schema_mapping or detect_schema(
+            dataset["headers"], dataset["column_types"]
+        ).to_dict()
+        computed_changes = verification_metrics.compute_before_after_changes(
+            parent_result_json, dataset, schema_mapping
+        )
+    except Exception as exc:
+        logger.warning(
+            "verification_computed_metrics_failed",
+            extra={"event": "verification", "job_id": job_id, "exception": type(exc).__name__},
+        )
+        computed_changes = []
+
     engine = AnalysisEngine()
     engine.set_provider(DeepSeekProvider(timeout=RUNNER_PROVIDER_TIMEOUT, max_retries=0))
 
-    try:
-        request = AnalysisEngine.build_request(
-            workbook_name=dataset["workbook_name"],
-            sheet_name=dataset["sheet_name"],
-            headers=dataset["headers"],
-            column_types=dataset["column_types"],
-            rows=dataset["rows"],
-            analysis_type="verification",
-            plugin_name="sales",
-            language=report_language,
-            parameters={"system_prompt": prompt},
+    # M2.13.0: retry once when the AI output is unusable (empty / non-JSON /
+    # provider error marker). A stricter JSON-only instruction is added to the
+    # second attempt. Total AI spend per verification is bounded at 2 calls.
+    response = None
+    attempts = 0
+    for attempt in range(VERIFICATION_MAX_AI_ATTEMPTS):
+        attempts = attempt + 1
+        parameters = {"system_prompt": prompt}
+        if attempt >= 1:
+            parameters["strict_json"] = (
+                "Return ONLY one JSON object matching the output contract. "
+                "No markdown, no commentary, no empty fields."
+            )
+        try:
+            request = AnalysisEngine.build_request(
+                workbook_name=dataset["workbook_name"],
+                sheet_name=dataset["sheet_name"],
+                headers=dataset["headers"],
+                column_types=dataset["column_types"],
+                rows=dataset["rows"],
+                analysis_type="verification",
+                plugin_name="sales",
+                language=report_language,
+                parameters=parameters,
+            )
+            response = await engine.analyze(request)
+        except TimeoutError as exc:
+            await _fail(job_id, "provider_timeout", str(exc), started_at)
+            return
+        except ValueError as exc:
+            await _fail(job_id, "invalid_data", str(exc), started_at)
+            return
+        except Exception as exc:
+            await _fail(job_id, "unknown", f"{type(exc).__name__}: {exc}", started_at)
+            return
+        if verification_parser.is_usable_comparison(response.summary):
+            break
+        logger.warning(
+            "verification_ai_output_unusable",
+            extra={"event": "verification", "job_id": job_id, "attempt": attempt},
         )
-        response = await engine.analyze(request)
-    except TimeoutError as exc:
-        await _fail(job_id, "provider_timeout", str(exc), started_at)
-        return
-    except ValueError as exc:
-        await _fail(job_id, "invalid_data", str(exc), started_at)
-        return
-    except Exception as exc:
-        await _fail(job_id, "unknown", f"{type(exc).__name__}: {exc}", started_at)
-        return
 
-    comparison = verification_parser.parse_comparison(response.summary)
+    ai_usable = verification_parser.is_usable_comparison(response.summary)
+    if ai_usable:
+        reliability = (
+            verification_parser.RELIABILITY_AI_RETRY
+            if attempts > 1
+            else verification_parser.RELIABILITY_AI
+        )
+        comparison = verification_parser.parse_comparison(
+            response.summary, computed_changes=computed_changes, reliability=reliability
+        )
+    else:
+        comparison = verification_parser.build_computed_fallback(
+            computed_changes, language=report_language, reason=response.summary[:200]
+        )
+    # M2.13.0 hardening: the effectiveness verdict is always derived from
+    # system-computed evidence (verification_reliability_v1). The AI never
+    # decides the verdict; it only explains the system numbers.
+    comparison = verification_scoring.apply_code_verdict(comparison, computed_changes)
     comparison_json = comparison.model_dump_json()
     summary = comparison.comparison_summary or "Verification completed."
 

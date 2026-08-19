@@ -78,6 +78,10 @@ class ComparisonResult(BaseModel):
     confidence: str = ""
     limitations: list[str] = Field(default_factory=list)
     next_actions: list[str] = Field(default_factory=list)
+    # M2.13.0: system-computed metric changes and reliability source
+    # (ai | ai_retry | computed_fallback). Additive only.
+    computed_metric_changes: list[MetricChange] = Field(default_factory=list)
+    reliability: str = "ai"
 
 
 def is_valid_purpose(value: str | None) -> bool:

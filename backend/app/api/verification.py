@@ -145,6 +145,14 @@ async def get_comparison_report(
             parent = None
 
     def _run_payload(item):
+        comparison_data = {}
+        if item.comparison_result:
+            try:
+                parsed = json.loads(item.comparison_result)
+                if isinstance(parsed, dict):
+                    comparison_data = parsed
+            except (json.JSONDecodeError, TypeError):
+                comparison_data = {}
         return {
             "id": item.id,
             "project_id": item.project_id,
@@ -158,6 +166,9 @@ async def get_comparison_report(
             "summary": item.summary,
             "result_json": item.result_json,
             "comparison_result": item.comparison_result,
+            # M2.13.0: additive reliability metadata (ai | ai_retry | computed_fallback).
+            "reliability": comparison_data.get("reliability"),
+            "computed_metric_changes": comparison_data.get("computed_metric_changes"),
             "is_legacy": item.is_legacy,
         }
 
