@@ -10,6 +10,13 @@ from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.services import project_service, analysis_run_service, report_builder
 from app.schemas.schema_mapping import SchemaMappingSaveRequest
 from app.services.schema_mapper import build_saved_mapping, detect_schema
+from app.services.schema_mapper import (
+    apply_confirmation_actions,
+    attach_examples_to_mapping,
+    build_saved_mapping,
+    detect_schema,
+    upgrade_mapping,
+)
 from app.services.workbook_service import extract_canonical_dataset
 from app.services.metric_engine import compute_metrics
 from app.services.health_score import compute_health_score
@@ -209,27 +216,34 @@ async def get_project_schema_mapping(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """Return the persisted mapping, or detect on the fly when none exists."""
+    """Return the persisted mapping (v2, with examples), or detect on the fly."""
     project = await project_service.get_project(db, project_id, user.id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     if project.schema_mapping:
-        return {
-            "project_id": project.id, "persisted": True, "schema_mapping": project.schema_mapping,
-        }
-    if not project.saved_filename:
+        mapping = upgrade_mapping(project.schema_mapping)
+        persisted = True
+    elif project.saved_filename:
+        try:
+            dataset = extract_canonical_dataset(user.id, project.saved_filename)
+            mapping = detect_schema(dataset["headers"], dataset["column_types"]).to_dict()
+            persisted = False
+        except Exception:
+            raise HTTPException(
+                status_code=500, detail="Failed to inspect workbook fields. Please try again."
+            )
+    else:
         return {
             "project_id": project.id, "persisted": False, "schema_mapping": None,
         }
+    # M2.13.1: attach example values from actual rows (read-only, no AI).
     try:
         dataset = extract_canonical_dataset(user.id, project.saved_filename)
-        detection = detect_schema(dataset["headers"], dataset["column_types"])
+        mapping = attach_examples_to_mapping(mapping, dataset)
     except Exception:
-        raise HTTPException(
-            status_code=500, detail="Failed to inspect workbook fields. Please try again."
-        )
+        pass  # examples are a display nicety; never fail the request
     return {
-        "project_id": project.id, "persisted": False, "schema_mapping": detection.to_dict(),
+        "project_id": project.id, "persisted": persisted, "schema_mapping": mapping,
     }
 
 
@@ -240,7 +254,11 @@ async def save_project_schema_mapping(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """Persist user-confirmed canonical mappings for a project."""
+    """Persist user-confirmed canonical mappings for a project.
+
+    Accepts either the legacy ``mappings`` list or the M2.13.1 ``actions``
+    list (confirm / modify / skip). Actions take precedence when provided.
+    """
     project = await project_service.get_project(db, project_id, user.id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -248,8 +266,16 @@ async def save_project_schema_mapping(
         raise HTTPException(status_code=400, detail="No Excel file is linked to this project.")
     try:
         dataset = extract_canonical_dataset(user.id, project.saved_filename)
-        confirmed = [((m.canonical_key, m.source_column)) for m in payload.mappings]
-        mapping = build_saved_mapping(dataset["headers"], confirmed)
+        headers = dataset["headers"]
+        if payload.actions:
+            base = project.schema_mapping or detect_schema(
+                headers, dataset["column_types"]
+            ).to_dict()
+            actions = [a.model_dump() for a in payload.actions]
+            mapping = apply_confirmation_actions(base, actions, headers, user_id=user.id)
+        else:
+            confirmed = [(m.canonical_key, m.source_column) for m in payload.mappings]
+            mapping = build_saved_mapping(headers, confirmed)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
     except Exception:

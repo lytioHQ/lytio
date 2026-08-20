@@ -31,7 +31,7 @@ from app.services import verification_metrics, verification_parser, verification
 from app.services.workbook_service import WorkbookAccessError, extract_canonical_dataset
 from app.services.metric_engine import compute_metrics
 from app.services.health_score import compute_health_score
-from app.services.schema_mapper import detect_schema
+from app.services.schema_mapper import derive_schema_meta, detect_schema
 from app.services import memory_service
 
 RUNNER_PROVIDER_TIMEOUT = float(os.getenv("ANALYSIS_JOB_PROVIDER_TIMEOUT", "180"))
@@ -51,7 +51,7 @@ def schedule_job(job_id: int) -> None:
 
 def _build_result_json(
     result, analysis_type: str, analysis_direction: str, computed_metrics: list[dict] | None = None,
-    health_score: dict | None = None,
+    health_score: dict | None = None, schema_meta: dict | None = None,
 ) -> str:
     if result.result is not None:
         data = result.result.model_dump()
@@ -68,6 +68,8 @@ def _build_result_json(
         data["computed_metrics"] = computed_metrics
     if health_score:
         data["health_score"] = health_score
+    if schema_meta:
+        data["schema_meta"] = schema_meta
     return json.dumps(data, ensure_ascii=False)
 
 
@@ -186,6 +188,13 @@ async def _execute_job(job_id: int, started_at: float) -> None:
             health_score = compute_health_score(dataset, mapping, computed_metrics)
         except Exception:
             health_score = None
+    # M2.13.1: per-run field-semantics provenance. Pure derivation from the
+    # mapping state; never blocks analysis and never touches historical runs.
+    schema_meta: dict | None = None
+    try:
+        schema_meta = derive_schema_meta(mapping)
+    except Exception:
+        schema_meta = None
 
     try:
         result = await plugin.analyze(
@@ -211,9 +220,9 @@ async def _execute_job(job_id: int, started_at: float) -> None:
         return
 
     analysis_type = analysis_type_for(direction)
-    result_json = _build_result_json(result, analysis_type, direction, computed_metrics=computed_metrics)
     result_json = _build_result_json(
-        result, analysis_type, direction, computed_metrics=computed_metrics, health_score=health_score
+        result, analysis_type, direction,
+        computed_metrics=computed_metrics, health_score=health_score, schema_meta=schema_meta,
     )
     summary = result.summary or ""
 
@@ -403,6 +412,15 @@ async def _run_verification(job_id: int, started_at: float) -> None:
     # decides the verdict; it only explains the system numbers.
     comparison = verification_scoring.apply_code_verdict(comparison, computed_changes)
     comparison_json = comparison.model_dump_json()
+    # M2.13.1: provenance for the verification dataset's field semantics.
+    # Embedded into the stored comparison JSON (pydantic ignores the unknown
+    # key on later reads), so the verification run is traceable like analyses.
+    try:
+        comparison_obj = json.loads(comparison_json)
+        comparison_obj["schema_meta"] = derive_schema_meta(schema_mapping)
+        comparison_json = json.dumps(comparison_obj, ensure_ascii=False)
+    except Exception:
+        pass
     summary = comparison.comparison_summary or "Verification completed."
 
     async with async_session() as db:

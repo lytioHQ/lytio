@@ -12,6 +12,7 @@ import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button"
 import { ANALYSIS_DIRECTIONS, ANALYSIS_DIRECTION_ICONS } from "@/lib/analysisDirections";
 import { schemaFieldMeta, type SchemaMapping } from "@/lib/schemaMapping";
 import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
+import SchemaConfirmationPanel from "@/components/schema/SchemaConfirmationPanel";
 
 interface ProjectData {
   id: number; title: string; industry: string; language: string;
@@ -461,6 +462,17 @@ export default function ProjectDashboard() {
                       })}
                     </div>
                     <p className="mt-2 text-caption text-secondary">{T("schema.detectHint")}</p>
+                  </div>
+                )}
+                {schemaMapping && (
+                  <div className="mt-3">
+                    <SchemaConfirmationPanel
+                      mapping={schemaMapping}
+                      lang={uiLang}
+                      projectId={id}
+                      token={token}
+                      onChanged={setSchemaMapping}
+                    />
                   </div>
                 )}
               </div>

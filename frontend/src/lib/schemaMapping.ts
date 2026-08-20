@@ -33,6 +33,14 @@ export interface SchemaFieldMapping {
   confidence: number;
   value_type: string;
   availability: string;
+  /** M2.13.1: exact_synonym | prefix_strip | heuristic_type | user_confirmed */
+  match_method?: string;
+  required?: boolean;
+  example_values?: string[];
+  /** pending | confirmed | modified | skipped | auto | unavailable */
+  confirmation_status?: string;
+  /** system_detection | user_confirmed | auto_accept */
+  confirmation_source?: string;
 }
 
 export interface SchemaMapping {
@@ -43,4 +51,29 @@ export interface SchemaMapping {
   missing: string[];
   sales_core_available: boolean;
   detected_at: string;
+  schema_version?: string;
+  conflicts?: SchemaConflict[];
+  audit?: SchemaMappingAudit;
+}
+
+export interface SchemaConflict {
+  canonical_key: string;
+  candidates: string[];
+  resolved: boolean;
+}
+
+export interface SchemaMappingAudit {
+  suggested_at?: string | null;
+  confirmed_at?: string | null;
+  confirmation_status?: string;
+  mapping_source?: string;
+  schema_version?: string;
+  confirmed_by_user_id?: number | null;
+  history?: Array<Record<string, unknown>>;
+}
+
+export interface SchemaAction {
+  canonical_key: string;
+  action: "confirm" | "modify" | "skip";
+  source_column?: string | null;
 }
