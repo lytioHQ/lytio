@@ -24,6 +24,16 @@ interface ActionItem {
   verification_run_id: number | null;
   verification_evidence: { recommendation?: string; evidence?: unknown; reason?: string } | null;
   verified_at: string | null;
+  target_metric_name: string | null;
+  target_direction: string | null;
+  target_metric_source: string | null;
+  execution_count: number;
+  observations_summary: {
+    total?: number;
+    aligned?: number;
+    not_aligned?: number;
+    unable_to_verify?: number;
+  } | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -39,6 +49,12 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: "bg-canvas text-secondary",
 };
 
+const ALIGNMENT_STYLES: Record<string, string> = {
+  aligned: "bg-success-soft text-success",
+  not_aligned: "bg-danger-soft text-danger",
+  unable_to_verify: "bg-canvas text-secondary",
+};
+
 const PRI_ACCENT: Record<string, string> = {
   high: "border-l-danger",
   medium: "border-l-warning",
@@ -51,11 +67,30 @@ const PRI_TEXT: Record<string, string> = {
   low: "text-secondary",
 };
 
+const METRIC_KEYS: Record<string, string> = {
+  total_sales: "action.metric.total_sales",
+  sales_growth: "action.metric.sales_growth",
+  order_count: "action.metric.order_count",
+  average_order_value: "action.metric.average_order_value",
+  customer_count: "action.metric.customer_count",
+  customer_concentration: "action.metric.customer_concentration",
+};
+
+function alignmentOf(item: ActionItem): string | null {
+  const s = item.observations_summary;
+  if (!s) return item.target_metric_name ? "unable_to_verify" : null;
+  if ((s.aligned ?? 0) > 0) return "aligned";
+  if ((s.not_aligned ?? 0) > 0) return "not_aligned";
+  return "unable_to_verify";
+}
+
 /**
  * M2.12.3: read-only Business Actions block.
  * Shows the Recommendation -> Action -> Verification chain for a project.
- * Verification linkage only displays factual evidence (never claims the
- * task itself was executed); creation is idempotent via the existing API.
+ * M2.14.0 adds: execution count, code-computed alignment badges and a minimal
+ * execution-note / target-binding form. Verification linkage only displays
+ * factual evidence; the alignment badge is system-calculated and never claims
+ * causation ("因为建议所以增长" is forbidden).
  */
 export default function BusinessActions({ projectId, lang }: { projectId: string; lang: UILanguage }) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
@@ -64,6 +99,11 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
   const [sourceRunId, setSourceRunId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
   const [feedback, setFeedback] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [notes, setNotes] = useState<Record<number, string>>({});
+  const [metrics, setMetrics] = useState<Record<number, string>>({});
+  const [directions, setDirections] = useState<Record<number, string>>({});
+  const [busy, setBusy] = useState<Record<number, string>>({});
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
   const loadActions = useCallback(() => {
     if (!token) return;
@@ -118,6 +158,52 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
     }
   };
 
+  const recordExecution = async (item: ActionItem) => {
+    const note = (notes[item.id] ?? "").trim();
+    if (!token || busy[item.id] || !note) return;
+    setBusy((b) => ({ ...b, [item.id]: "exec" }));
+    try {
+      const res = await apiFetch(`${API}/api/projects/${projectId}/actions/${item.id}/executions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "execution", note, client_key: `ui-${item.id}-${Date.now()}` }),
+      });
+      if (!res.ok) throw new Error("failed");
+      setNotes((n) => ({ ...n, [item.id]: "" }));
+      setFeedback({ kind: "ok", text: T("action.execution.saved") });
+      await loadActions();
+    } catch {
+      setFeedback({ kind: "err", text: T("action.execution.failed") });
+    } finally {
+      setBusy((b) => ({ ...b, [item.id]: "" }));
+    }
+  };
+
+  const saveBinding = async (item: ActionItem) => {
+    const metric = (metrics[item.id] ?? "").trim() || null;
+    const direction = directions[item.id] || null;
+    if (!token || busy[item.id]) return;
+    setBusy((b) => ({ ...b, [item.id]: "bind" }));
+    try {
+      const res = await apiFetch(`${API}/api/projects/${projectId}/actions/${item.id}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target_metric_name: metric,
+          target_direction: direction,
+          target_metric_source: metric ? "user" : "none",
+        }),
+      });
+      if (!res.ok) throw new Error("failed");
+      setFeedback({ kind: "ok", text: T("action.target.saved") });
+      await loadActions();
+    } catch {
+      setFeedback({ kind: "err", text: T("action.target.saveFailed") });
+    } finally {
+      setBusy((b) => ({ ...b, [item.id]: "" }));
+    }
+  };
+
   const hasActions = actions !== null && actions.length > 0;
 
   return (
@@ -150,6 +236,7 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
           {actions.map((item) => {
             const priority = item.priority_snapshot ?? "medium";
             const verified = item.verification_run_id != null;
+            const alignment = alignmentOf(item);
             return (
               <div key={item.id} className={`rounded-card border border-border border-l-4 bg-surface p-5 ${PRI_ACCENT[priority] || "border-l-ink"}`}>
                 <div className="flex items-start justify-between gap-3">
@@ -198,6 +285,88 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
                 {!verified && (
                   <p className="mt-2 text-caption text-secondary/70">{T("action.verification.desc")}</p>
                 )}
+                {/* M2.14.0: execution count + code-computed alignment badge */}
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border pt-3 text-xs text-secondary">
+                  <span>
+                    {T("action.execution.title")}:{" "}
+                    <span className="font-medium text-ink">{item.execution_count ?? 0}</span>
+                  </span>
+                  {alignment && (
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${ALIGNMENT_STYLES[alignment] || "bg-canvas text-secondary"}`}>
+                      {T(`action.alignment.${alignment}`)} · {T("action.alignment.source")}
+                    </span>
+                  )}
+                  {!alignment && !item.target_metric_name && (
+                    <span>{T("action.target.unbound")}</span>
+                  )}
+                </div>
+                {item.target_metric_name && (
+                  <p className="mt-2 text-xs text-secondary">
+                    {T("action.target.bound", {
+                      metric: T(METRIC_KEYS[item.target_metric_name] ?? "action.metric.unknown"),
+                      dir: item.target_direction ? T(`action.target.direction.${item.target_direction}`) : "—",
+                    })}
+                  </p>
+                )}
+                {expanded[item.id] && (
+                  <div className="mt-3 rounded-card border border-border bg-canvas/50 p-3 text-sm">
+                    <p className="text-xs font-medium text-ink">{T("action.execution.record")}</p>
+                    <textarea
+                      value={notes[item.id] ?? ""}
+                      onChange={(e) => setNotes((n) => ({ ...n, [item.id]: e.target.value }))}
+                      placeholder={T("action.execution.notePlaceholder")}
+                      rows={2}
+                      className="mt-2 w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+                    />
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <select
+                        value={metrics[item.id] ?? item.target_metric_name ?? ""}
+                        onChange={(e) => setMetrics((m) => ({ ...m, [item.id]: e.target.value }))}
+                        className="h-9 rounded-control border border-border bg-surface px-2 text-sm text-ink outline-none"
+                      >
+                        <option value="">{T("action.target.metric.placeholder")}</option>
+                        {Object.entries(METRIC_KEYS).map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {T(label)}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={directions[item.id] ?? item.target_direction ?? ""}
+                        onChange={(e) => setDirections((d) => ({ ...d, [item.id]: e.target.value }))}
+                        className="h-9 rounded-control border border-border bg-surface px-2 text-sm text-ink outline-none"
+                      >
+                        <option value="">—</option>
+                        <option value="up">{T("action.target.direction.up")}</option>
+                        <option value="down">{T("action.target.direction.down")}</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => saveBinding(item)}
+                        disabled={busy[item.id] === "bind"}
+                        className="inline-flex h-9 items-center justify-center rounded-control border border-border bg-surface px-3 text-xs font-medium text-ink transition-colors hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {busy[item.id] === "bind" ? T("action.saving") : T("action.target.save")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => recordExecution(item)}
+                        disabled={busy[item.id] === "exec" || !(notes[item.id] ?? "").trim()}
+                        className="inline-flex h-9 items-center justify-center rounded-control border border-border bg-surface px-3 text-xs font-medium text-ink transition-colors hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {busy[item.id] === "exec" ? T("action.saving") : T("action.execution.submit")}
+                      </button>
+                    </div>
+                    <p className="mt-2 text-caption text-secondary/70">{T("action.execution.hint")}</p>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setExpanded((e) => ({ ...e, [item.id]: !e[item.id] }))}
+                  className="mt-2 text-xs font-medium text-accent hover:underline"
+                >
+                  {expanded[item.id] ? T("action.collapse") : T("action.execution.open")}
+                </button>
               </div>
             );
           })}

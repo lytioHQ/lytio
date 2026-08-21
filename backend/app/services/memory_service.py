@@ -19,11 +19,11 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.core.database import async_session
 from app.core.logging_config import logger
-from app.models.action_item import ActionItem
+from app.models.action_item import ActionExecution, ActionItem, ActionObservation
 from app.models.analysis_run import AnalysisRun
 from app.models.business_memory import BusinessMemory
 from app.models.project import Project
@@ -295,13 +295,27 @@ def _action_item_dict(a: ActionItem) -> dict[str, Any]:
 
 def _action_items_snapshot(
     actions: list[ActionItem],
+    exec_counts: dict[int, int] | None = None,
+    obs_summary: dict[int, dict[str, Any]] | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
-    summary: dict[str, Any] = {"total": len(actions), "pending": 0, "completed": 0, "cancelled": 0, "verified": 0}
+    summary: dict[str, Any] = {
+        "total": len(actions), "pending": 0, "completed": 0, "cancelled": 0,
+        "verified": 0, "executed": 0, "observed": 0,
+        "aligned": 0, "not_aligned": 0, "unable_to_verify": 0,
+    }
     all_items: list[dict[str, Any]] = []
     for a in actions:
         summary[a.status] = summary.get(a.status, 0) + 1
         if a.verification_run_id is not None:
             summary["verified"] += 1
+        if exec_counts and exec_counts.get(a.id, 0) > 0:
+            summary["executed"] += 1
+        obs = (obs_summary or {}).get(a.id)
+        if obs and obs.get("total", 0) > 0:
+            summary["observed"] += 1
+            summary["aligned"] += obs.get("aligned", 0)
+            summary["not_aligned"] += obs.get("not_aligned", 0)
+            summary["unable_to_verify"] += obs.get("unable_to_verify", 0)
         all_items.append(_action_item_dict(a))
     recent = sorted(all_items, key=lambda a: a["id"] or 0, reverse=True)
     return summary, recent[:ACTION_RECENT_CAP], all_items
@@ -316,7 +330,30 @@ async def _refresh_action_data(
         .order_by(ActionItem.id)
     )
     actions = list(res.scalars().all())
-    summary, recent, all_items = _action_items_snapshot(actions)
+    exec_counts: dict[int, int] = {}
+    obs_summary: dict[int, dict[str, Any]] = {}
+    if actions:
+        action_ids = [a.id for a in actions]
+        er = await db.execute(
+            select(ActionExecution.action_id, func.count())
+            .where(ActionExecution.action_id.in_(action_ids))
+            .group_by(ActionExecution.action_id)
+        )
+        for action_id, count in er.all():
+            exec_counts[int(action_id)] = int(count)
+        orows = await db.execute(
+            select(ActionObservation.action_id, ActionObservation.alignment).where(
+                ActionObservation.action_id.in_(action_ids)
+            )
+        )
+        for action_id, alignment in orows.all():
+            summary = obs_summary.setdefault(
+                int(action_id),
+                {"total": 0, "aligned": 0, "not_aligned": 0, "unable_to_verify": 0},
+            )
+            summary["total"] += 1
+            summary[alignment] = summary.get(alignment, 0) + 1
+    summary, recent, all_items = _action_items_snapshot(actions, exec_counts, obs_summary)
     memory.action_summary = summary
     memory.action_recent = recent
     memory.open_loops = build_open_loops(all_items, dict(memory.latest_metrics or {}))

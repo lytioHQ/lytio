@@ -25,6 +25,7 @@ from app.plugins.sales import SalesPlugin
 from app.plugins.sales.prompt_builder import analysis_type_for
 from app.providers.deepseek import DeepSeekProvider
 from app.services import analysis_job_service, analysis_run_service, project_service
+from app.services import action_execution_service
 from app.services import action_item_service
 from app.services.analysis_engine import AnalysisEngine
 from app.services import verification_metrics, verification_parser, verification_scoring, verification_service
@@ -489,6 +490,25 @@ async def _run_verification(job_id: int, started_at: float) -> None:
                 )
             elapsed_ms = int((time.monotonic() - started_at) * 1000)
             await analysis_job_service.mark_completed(db, job, run.id, elapsed_ms)
+            # M2.14.0: code-compute per-action observations from the same
+            # computed_metric_changes. Isolated: must never fail the job.
+            try:
+                created_obs = await action_execution_service.create_observations_for_verification(
+                    db, job.project_id, run.id, computed_changes
+                )
+                if created_obs:
+                    logger.info(
+                        "action_observations_created",
+                        extra={"event": "analysis_job", "job_id": job_id,
+                               "verification_run_id": run.id, "created": created_obs},
+                    )
+            except Exception as obs_exc:
+                logger.error(
+                    "action_observations_failed",
+                    extra={"event": "analysis_job", "job_id": job_id,
+                           "verification_run_id": run.id},
+                    exc_info=obs_exc,
+                )
             # M2.12.4: refresh the project's business memory (derived cache).
             try:
                 await memory_service.upsert_memory_after_run(job.project_id, run.id)

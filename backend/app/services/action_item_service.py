@@ -27,6 +27,7 @@ from app.schemas.action_item import (
     ACTION_STATUSES,
     ActionItemUpdate,
 )
+from app.services import action_execution_service
 from app.services import analysis_run_service
 
 MATCH_THRESHOLD = 0.85
@@ -159,6 +160,7 @@ async def create_actions_from_run(
         if match is not None:
             existing.append(match)
             continue
+        binding = action_execution_service.auto_bind_target_metric(rec["title"])
         action = ActionItem(
             project_id=project_id,
             source_run_id=run_id,
@@ -171,6 +173,9 @@ async def create_actions_from_run(
             evidence_snapshot=_jstr(rec["evidence"]),
             expected_impact=_jstr(rec["expected_impact"]),
             expected_result=rec["expected_result"],
+            target_metric_name=binding["target_metric_name"],
+            target_direction=binding["target_direction"],
+            target_metric_source=binding["target_metric_source"],
             status="pending",
         )
         db.add(action)
@@ -238,6 +243,29 @@ async def update_action(
         action.owner = data.owner.strip() or None
     if data.deadline is not None:
         action.deadline = data.deadline
+    if data.target_metric_name is not None:
+        name = data.target_metric_name.strip() or None
+        action.target_metric_name = name
+        if name:
+            action.target_metric_source = (
+                data.target_metric_source.strip()
+                if data.target_metric_source is not None
+                else "user"
+            )
+        else:
+            action.target_metric_name = None
+            action.target_direction = None
+            action.target_metric_source = "none"
+    if data.target_direction is not None:
+        direction = data.target_direction.strip() or None
+        if direction not in (None, "up", "down"):
+            raise ValueError("invalid_target_direction")
+        action.target_direction = direction
+    if data.target_metric_source is not None:
+        source = data.target_metric_source.strip()
+        if source not in ("user", "code_keyword", "none"):
+            raise ValueError("invalid_target_metric_source")
+        action.target_metric_source = source
     if data.status is not None:
         if data.status not in ACTION_STATUSES:
             raise ValueError("invalid_status")
@@ -256,11 +284,28 @@ async def update_action(
 
 async def get_action_overview(db: AsyncSession, project_id: int, user_id: int) -> dict:
     rows = await list_actions(db, project_id, user_id)
-    overview = {"total": len(rows), "pending": 0, "completed": 0, "cancelled": 0, "verified": 0}
+    overview = {
+        "total": len(rows), "pending": 0, "completed": 0, "cancelled": 0,
+        "verified": 0, "executed": 0, "observed": 0,
+        "aligned": 0, "not_aligned": 0, "unable_to_verify": 0,
+    }
     for action in rows:
         overview[action.status] = overview.get(action.status, 0) + 1
         if action.verification_run_id is not None:
             overview["verified"] += 1
+    if rows:
+        exec_counts, obs_summary = await action_execution_service.get_action_stats(
+            db, [a.id for a in rows]
+        )
+        for action in rows:
+            if exec_counts.get(action.id, 0) > 0:
+                overview["executed"] += 1
+            summary = obs_summary.get(action.id)
+            if summary and summary.get("total", 0) > 0:
+                overview["observed"] += 1
+                overview["aligned"] += summary.get("aligned", 0)
+                overview["not_aligned"] += summary.get("not_aligned", 0)
+                overview["unable_to_verify"] += summary.get("unable_to_verify", 0)
     return overview
 
 

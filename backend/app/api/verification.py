@@ -12,7 +12,12 @@ from app.schemas.verification import (
     VerificationJobResponse,
     is_valid_purpose,
 )
-from app.services import analysis_job_service, analysis_run_service, project_service
+from app.services import (
+    action_execution_service,
+    analysis_job_service,
+    analysis_run_service,
+    project_service,
+)
 from app.services.analysis_job_runner import schedule_job
 
 router = APIRouter(prefix="/api/projects", tags=["verification"])
@@ -172,7 +177,20 @@ async def get_comparison_report(
             "is_legacy": item.is_legacy,
         }
 
+    observations: list[dict] = []
+    try:
+        observations = await action_execution_service.build_run_observation_view(
+            db, project_id, run.id
+        )
+    except Exception as obs_exc:
+        logger.warning(
+            "comparison_action_observations_failed",
+            extra={"event": "comparison", "run_id": run.id},
+            exc_info=obs_exc,
+        )
+
     return {
         "run": _run_payload(run),
         "parent": _run_payload(parent) if parent else None,
+        "action_observations": observations,
     }
