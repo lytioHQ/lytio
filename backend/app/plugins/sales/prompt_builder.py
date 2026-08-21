@@ -75,6 +75,8 @@ def build(
     version: str = DEFAULT_VERSION,
     computed_metrics: list[dict] | None = None,
     health_score: dict | None = None,
+    schema_meta: dict | None = None,
+    memory_context: str | None = None,
 ) -> str:
     """Generate a sales analysis prompt from a versioned template.
 
@@ -87,6 +89,10 @@ def build(
         analysis_direction: Optional focus lens (see ANALYSIS_DIRECTIONS). None = overview.
         version: Template version to load (e.g. "v1").
         health_score: System-calculated health score injected into the prompt.
+        schema_meta: Per-run field-mapping provenance (M2.13.1) injected as
+            the Current Schema section.
+        memory_context: Rendered historical context (M2.13.2) injected as
+            the Business Memory Context section; strict historical-fact isolation.
 
     Returns:
         Rendered prompt string with all variables substituted.
@@ -152,5 +158,36 @@ def build(
             + json.dumps(health_score, ensure_ascii=False)
         )
         prompt = prompt.replace("## Rules", health_section + "\n\n## Rules", 1)
+
+    # M2.13.1: inject the current run's field-mapping provenance. The AI must
+    # not judge the mapping; pending/skipped must never be described as confirmed.
+    if schema_meta:
+        schema_section = (
+            "\n\n## Current Schema (system)\n"
+            "The following field-mapping state applies to THIS dataset. "
+            "AI must not judge whether the mapping is correct. "
+            "A confirmation_status of 'pending' or 'skipped' means the mapping was not "
+            "user-confirmed - do not describe it as confirmed.\n"
+            + json.dumps(schema_meta, ensure_ascii=False)
+        )
+        prompt = prompt.replace("## Rules", schema_section + "\n\n## Rules", 1)
+
+    # M2.13.2: inject historical memory context. These are HISTORICAL FACTS
+    # for trend interpretation only; the AI must never treat them as current.
+    if memory_context:
+        memory_section = (
+            "\n\n## Business Memory Context (historical facts, system calculated)\n"
+            "The system computed the following trends from PREVIOUS analysis runs of "
+            "this business. These are HISTORICAL FACTS for trend interpretation only.\n"
+            "AI constraints:\n"
+            "- Treat every number here as historical, NOT current-period data. "
+            "Never present historical numbers as this dataset's numbers.\n"
+            "- Never compute or infer any number that is not present in this context.\n"
+            "- A verification verdict of 'unable_to_verify' means insufficient evidence, "
+            "never a failed action.\n"
+            "- Do not judge whether the schema mapping is correct.\n"
+            + memory_context
+        )
+        prompt = prompt.replace("## Rules", memory_section + "\n\n## Rules", 1)
 
     return prompt

@@ -33,6 +33,55 @@ interface VerificationPoint {
   next_actions: Array<Record<string, unknown>>;
 }
 
+interface MetricTrend {
+  metric_name: string;
+  latest: number | null;
+  previous: number | null;
+  absolute_delta: number | null;
+  percent_delta: number | null;
+  direction: string;
+  period_count: number;
+  latest_period?: { min?: string; max?: string } | null;
+  availability: string;
+  confidence: string | null;
+  source_run_ids: number[];
+}
+
+interface TrendDeltas {
+  metric_trends: MetricTrend[];
+  health_trend: {
+    latest_score: number | null;
+    previous_score: number | null;
+    delta: number | null;
+    direction: string;
+    latest_level: string | null;
+    score_confidence: string | null;
+    period_count: number;
+    source_run_ids: number[];
+  } | null;
+  action_trend: {
+    total_actions: number;
+    pending: number;
+    completed: number;
+    cancelled: number;
+    verified: number;
+    verification_rate: number;
+    open_loops: number;
+    source: string;
+  };
+  verification_trend: {
+    latest_verdict: string | null;
+    previous_verdict: string | null;
+    latest_reliability: string | null;
+    latest_confidence: string | null;
+    verified_recommendations: number;
+    metric_changes_summary: Array<{ metric_name?: string; direction?: string }>;
+    source_run_ids: number[];
+  } | null;
+  periods_used: number;
+  latest_run_id: number | null;
+}
+
 interface BusinessMemoryData {
   project_id: number;
   engine_version: string;
@@ -45,6 +94,15 @@ interface BusinessMemoryData {
   issue_tracker: Array<Record<string, unknown>>;
   verification_history: VerificationPoint[];
   open_loops: OpenLoop[];
+  trend_deltas: TrendDeltas | null;
+  context_meta: {
+    version: string;
+    periods_used: number;
+    latest_run_id: number | null;
+    generated_at: string;
+    length_chars: number;
+    injected: boolean;
+  } | null;
   updated_at: string | null;
   ready: boolean;
 }
@@ -95,6 +153,18 @@ export default function BusinessMemoryCard({ projectId, lang }: { projectId: str
   const verificationPoints = memory?.verification_history ?? [];
   const lastVerification =
     verificationPoints.length > 0 ? verificationPoints[verificationPoints.length - 1] : null;
+  const trends = memory?.trend_deltas ?? null;
+  const salesTrend = trends?.metric_trends?.find((m) => m.metric_name === "total_sales") ?? null;
+  const healthTrend = trends?.health_trend ?? null;
+  const actionTrend = trends?.action_trend ?? null;
+  const verificationTrend = trends?.verification_trend ?? null;
+
+  function trendIcon(direction: string | undefined): string {
+    if (direction === "up") return "\u2191";
+    if (direction === "down") return "\u2193";
+    if (direction === "flat") return "\u2192";
+    return "\u2013";
+  }
 
   return (
     <div className="rounded-card border border-border bg-surface p-6">
@@ -141,6 +211,65 @@ export default function BusinessMemoryCard({ projectId, lang }: { projectId: str
               <p className="mt-0.5 text-xs text-secondary">{T("memory.engineVersion")}</p>
             </div>
           </div>
+
+          {trends && trends.periods_used > 0 && (
+            <div className="mt-5">
+              <div className="flex items-baseline justify-between">
+                <p className="text-caption font-medium text-secondary">{T("memory.businessChange")}</p>
+                <p className="text-xs text-secondary">{T("memory.periodsReferenced", { n: trends.periods_used })}</p>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="rounded-control border border-border bg-canvas p-3">
+                  <p className="text-caption text-secondary">{T("memory.salesTrend")}</p>
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
+                    {salesTrend ? formatValue(salesTrend.latest, lang) : "–"}
+                    <span className="ml-1">{salesTrend ? trendIcon(salesTrend.direction) : ""}</span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-secondary">
+                    {salesTrend?.percent_delta != null
+                      ? `${salesTrend.percent_delta > 0 ? "+" : ""}${salesTrend.percent_delta}%`
+                      : "–"}
+                    {salesTrend?.previous != null ? ` · ${T("memory.prevValue")} ${formatValue(salesTrend.previous, lang)}` : ""}
+                  </p>
+                </div>
+                <div className="rounded-control border border-border bg-canvas p-3">
+                  <p className="text-caption text-secondary">{T("memory.healthTrend")}</p>
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
+                    {healthTrend?.latest_score != null ? String(healthTrend.latest_score) : "–"}
+                    <span className="ml-1">{healthTrend ? trendIcon(healthTrend.direction) : ""}</span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-secondary">
+                    {healthTrend?.delta != null ? `${healthTrend.delta > 0 ? "+" : ""}${healthTrend.delta}` : "–"}
+                    {healthTrend?.latest_level ? ` · ${healthTrend.latest_level}` : ""}
+                  </p>
+                </div>
+                <div className="rounded-control border border-border bg-canvas p-3">
+                  <p className="text-caption text-secondary">{T("memory.actionClosedLoop")}</p>
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
+                    {actionTrend ? T("memory.verifiedOf", { n: actionTrend.verified, total: actionTrend.total_actions }) : "–"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-secondary">
+                    {actionTrend ? T("memory.verifiedRate", { pct: Math.round(actionTrend.verification_rate * 100) }) : ""}
+                    {actionTrend && actionTrend.open_loops > 0 ? ` · ${T("memory.openLoops")} ${actionTrend.open_loops}` : ""}
+                  </p>
+                </div>
+                <div className="rounded-control border border-border bg-canvas p-3">
+                  <p className="text-caption text-secondary">{T("memory.lastVerification")}</p>
+                  <p className="mt-1 text-lg font-semibold text-ink">
+                    {verificationTrend?.latest_verdict
+                      ? T(`verifyReport.verdict.${verificationTrend.latest_verdict}`)
+                      : "–"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-secondary">
+                    {verificationTrend?.latest_reliability ?? ""}
+                    {verificationTrend?.latest_confidence
+                      ? ` · ${T(`verifyReport.confidence.${verificationTrend.latest_confidence}`)}`
+                      : ""}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {loops.length > 0 && (
             <div className="mt-5">

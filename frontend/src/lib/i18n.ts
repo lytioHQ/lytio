@@ -791,6 +791,10 @@ const zh: TranslationDict = {
   "memory.unavailableMetric": "缺失指标",
   "memory.engineVersion": "引擎 v0",
   "memory.lastVerification": "最近验证结果",
+  "memory.businessChange": "经营变化",
+  "memory.periodsReferenced": "参考了 {n} 个历史周期",
+  "memory.prevValue": "上期",
+  "memory.verifiedRate": "验证率 {pct}%",
 };
 
 const en: TranslationDict = {
@@ -1563,6 +1567,10 @@ const en: TranslationDict = {
   "memory.unavailableMetric": "Missing metric",
   "memory.engineVersion": "Engine v0",
   "memory.lastVerification": "Latest verification result",
+  "memory.businessChange": "Business change",
+  "memory.periodsReferenced": "References {n} historical period(s)",
+  "memory.prevValue": "prev",
+  "memory.verifiedRate": "Verified rate {pct}%",
 };
 
 const ja: TranslationDict = {
@@ -2335,6 +2343,10 @@ const ja: TranslationDict = {
   "memory.unavailableMetric": "欠落指標",
   "memory.engineVersion": "エンジン v0",
   "memory.lastVerification": "直近の検証結果",
+  "memory.businessChange": "経営変化",
+  "memory.periodsReferenced": "{n} 周期を参照",
+  "memory.prevValue": "前期",
+  "memory.verifiedRate": "検証率 {pct}%",
 };
 
 const de: TranslationDict = {
@@ -3107,6 +3119,10 @@ const de: TranslationDict = {
   "memory.unavailableMetric": "Fehlende Kennzahl",
   "memory.engineVersion": "Engine v0",
   "memory.lastVerification": "Letztes Prüfergebnis",
+  "memory.businessChange": "Geschäftsentwicklung",
+  "memory.periodsReferenced": "Bezieht sich auf {n} historische Perioden",
+  "memory.prevValue": "vorher",
+  "memory.verifiedRate": "Verifiziert {pct}%",
 };
 
 const dictionaries: Record<UILanguage, TranslationDict> = { zh, en, ja, de };

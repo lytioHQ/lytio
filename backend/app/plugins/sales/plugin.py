@@ -20,7 +20,9 @@ class SalesPlugin:
                      column_types: dict[str, str], rows: list[list],
                      language: str = "zh", analysis_direction: str | None = None,
                      computed_metrics: list[dict] | None = None,
-                     health_score: dict | None = None) -> str:
+                     health_score: dict | None = None,
+                     schema_meta: dict | None = None,
+                     memory_context: str | None = None) -> str:
         """Generate a sales-specific analysis prompt."""
         return build(
             sheet_name=sheet_name,
@@ -31,6 +33,8 @@ class SalesPlugin:
             analysis_direction=analysis_direction,
             computed_metrics=computed_metrics,
             health_score=health_score,
+            schema_meta=schema_meta,
+            memory_context=memory_context,
         )
 
     async def analyze(self, engine: AnalysisEngine, *,
@@ -39,7 +43,9 @@ class SalesPlugin:
                       rows: list[list], language: str = "zh",
                       analysis_direction: str | None = None,
                       computed_metrics: list[dict] | None = None,
-                      health_score: dict | None = None) -> SalesAnalysisResult:
+                      health_score: dict | None = None,
+                      schema_meta: dict | None = None,
+                      memory_context: str | None = None) -> SalesAnalysisResult:
         """Full pipeline: detect → build request → analyze → parse.
 
         Args:
@@ -49,6 +55,8 @@ class SalesPlugin:
             language: Response language.
             computed_metrics: System-calculated metrics injected into the prompt.
             health_score: System-calculated health score injected into the prompt.
+            schema_meta: Per-run field-mapping provenance injected into the prompt.
+            memory_context: Rendered historical memory context (M2.13.2).
 
         Returns:
             Structured sales analysis result.
@@ -69,6 +77,8 @@ class SalesPlugin:
             analysis_direction=analysis_direction,
             computed_metrics=computed_metrics,
             health_score=health_score,
+            schema_meta=schema_meta,
+            memory_context=memory_context,
         )
 
         request = AnalysisEngine.build_request(

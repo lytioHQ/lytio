@@ -14,6 +14,7 @@ from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.services import memory_service, project_service
+from app.services import memory_context as memory_context_service
 
 router = APIRouter(prefix="/api/projects", tags=["business_memory"])
 
@@ -23,6 +24,15 @@ def _iso(value: datetime | None) -> str | None:
 
 
 def _serialize(memory) -> dict:
+    context = memory_context_service.context_from_memory(memory)
+    trend_deltas = memory_context_service.build_trend_deltas(
+        memory.metric_history or {},
+        memory.health_history or [],
+        memory.action_summary or {},
+        memory.open_loops or [],
+        memory.verification_history or [],
+    )
+    rendered = memory_context_service.render_memory_context(context)
     return {
         "project_id": memory.project_id,
         "engine_version": memory.engine_version,
@@ -37,6 +47,10 @@ def _serialize(memory) -> dict:
         "open_loops": list(memory.open_loops or []),
         "updated_at": _iso(memory.updated_at),
         "ready": memory_service.memory_ready(memory),
+        "trend_deltas": trend_deltas,
+        "context_meta": memory_context_service.build_context_meta(
+            context, injected=False, length_chars=len(rendered)
+        ),
     }
 
 

@@ -142,6 +142,7 @@ def extract_verification_summary(
         "parent_run_id": parent_run_id,
         "verdict": data.get("verdict"),
         "confidence": data.get("confidence"),
+        "reliability": data.get("reliability"),
         "metric_changes": changes[:5],
         "next_actions": next_actions[:5],
     }

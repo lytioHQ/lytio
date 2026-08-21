@@ -33,6 +33,7 @@ from app.services.metric_engine import compute_metrics
 from app.services.health_score import compute_health_score
 from app.services.schema_mapper import derive_schema_meta, detect_schema
 from app.services import memory_service
+from app.services import memory_context as memory_context_service
 
 RUNNER_PROVIDER_TIMEOUT = float(os.getenv("ANALYSIS_JOB_PROVIDER_TIMEOUT", "180"))
 
@@ -52,6 +53,7 @@ def schedule_job(job_id: int) -> None:
 def _build_result_json(
     result, analysis_type: str, analysis_direction: str, computed_metrics: list[dict] | None = None,
     health_score: dict | None = None, schema_meta: dict | None = None,
+    memory_context_meta: dict | None = None,
 ) -> str:
     if result.result is not None:
         data = result.result.model_dump()
@@ -70,6 +72,8 @@ def _build_result_json(
         data["health_score"] = health_score
     if schema_meta:
         data["schema_meta"] = schema_meta
+    if memory_context_meta:
+        data["memory_context_meta"] = memory_context_meta
     return json.dumps(data, ensure_ascii=False)
 
 
@@ -196,6 +200,23 @@ async def _execute_job(job_id: int, started_at: float) -> None:
     except Exception:
         schema_meta = None
 
+    # M2.13.2: build the historical memory context (pure code, never
+    # blocks analysis; failures degrade to no context).
+    memory_context: dict | None = None
+    memory_context_text: str | None = None
+    try:
+        memory = await memory_service.get_memory(job.project_id, user_id)
+        memory_context = memory_context_service.context_from_memory(memory)
+        memory_context_text = memory_context_service.render_memory_context(memory_context)
+    except Exception as ctx_exc:
+        logger.warning(
+            "memory_context_build_failed",
+            extra={"event": "analysis_job", "job_id": job_id},
+            exc_info=ctx_exc,
+        )
+        memory_context = None
+        memory_context_text = None
+
     try:
         result = await plugin.analyze(
             engine,
@@ -208,6 +229,8 @@ async def _execute_job(job_id: int, started_at: float) -> None:
             analysis_direction=direction,
             computed_metrics=computed_metrics,
             health_score=health_score,
+            schema_meta=schema_meta,
+            memory_context=memory_context_text,
         )
     except TimeoutError as exc:
         await _fail(job_id, "provider_timeout", str(exc), started_at)
@@ -220,9 +243,15 @@ async def _execute_job(job_id: int, started_at: float) -> None:
         return
 
     analysis_type = analysis_type_for(direction)
+    memory_context_meta = memory_context_service.build_context_meta(
+        memory_context,
+        injected=bool(memory_context_text),
+        length_chars=len(memory_context_text or ""),
+    )
     result_json = _build_result_json(
         result, analysis_type, direction,
         computed_metrics=computed_metrics, health_score=health_score, schema_meta=schema_meta,
+        memory_context_meta=memory_context_meta,
     )
     summary = result.summary or ""
 
