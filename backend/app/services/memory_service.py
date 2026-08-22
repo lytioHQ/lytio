@@ -29,6 +29,8 @@ from app.models.business_memory import BusinessMemory
 from app.models.project import Project
 from app.services import action_item_service
 from app.services.canonical_schema import CANONICAL_BY_KEY
+from app.services.action_execution_service import _num as _num_value
+from app.services import memory_intelligence
 
 ENGINE_VERSION = "business_memory_v0"
 METRIC_HISTORY_CAP = 12
@@ -39,6 +41,12 @@ ACTION_RECENT_CAP = 10
 OPEN_LOOP_CAP = 10
 
 AVAILABLE = "available"
+
+ALIGNED = memory_intelligence.ALIGNED
+NOT_ALIGNED = memory_intelligence.NOT_ALIGNED
+UNABLE_TO_VERIFY = memory_intelligence.UNABLE_TO_VERIFY
+OBSERVATIONS_PER_RUN_CAP = memory_intelligence.OBSERVATIONS_PER_RUN_CAP
+UNABLE_REASON_ORDER = memory_intelligence.UNABLE_REASON_ORDER
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +138,10 @@ def extract_health_point(
 
 
 def extract_verification_summary(
-    comparison_result: str | None, run_id: int, parent_run_id: int | None
+    comparison_result: str | None,
+    run_id: int,
+    parent_run_id: int | None,
+    dataset_version: str | None = None,
 ) -> dict | None:
     data = _parse_json(comparison_result)
     if not data:
@@ -140,6 +151,7 @@ def extract_verification_summary(
     return {
         "run_id": run_id,
         "parent_run_id": parent_run_id,
+        "dataset_version": dataset_version,
         "verdict": data.get("verdict"),
         "confidence": data.get("confidence"),
         "reliability": data.get("reliability"),
@@ -177,14 +189,24 @@ def extract_issue_entries(result_json: str | None, run_id: int) -> list[dict]:
 
 
 def build_open_loops(
-    actions: list[dict], latest_metrics: dict[str, dict]
+    actions: list[dict],
+    latest_metrics: dict[str, dict],
+    exec_counts: dict[int, int] | None = None,
+    issue_tracker: list[dict] | None = None,
+    verification_run_ids: list[int] | None = None,
 ) -> list[dict]:
-    """Open loops = pending actions + unavailable latest metrics."""
+    """Open loops: pending actions, unavailable metrics, completed-without-
+    execution-record actions and long-open issues.
+
+    Facts only: not executed != failed, not verified != invalid.
+    """
     loops: list[dict] = []
     if not isinstance(actions, list):
         actions = []
     if not isinstance(latest_metrics, dict):
         latest_metrics = {}
+    has_exec_info = exec_counts is not None
+    exec_counts = exec_counts or {}
     for a in actions:
         if not isinstance(a, dict):
             continue
@@ -192,6 +214,19 @@ def build_open_loops(
             loops.append(
                 {
                     "type": "pending_action",
+                    "action_id": a.get("id"),
+                    "description": a.get("description"),
+                    "priority": a.get("priority_snapshot"),
+                }
+            )
+        elif (
+            has_exec_info
+            and a.get("status") == "completed"
+            and exec_counts.get(a.get("id"), 0) == 0
+        ):
+            loops.append(
+                {
+                    "type": "not_executed_action",
                     "action_id": a.get("id"),
                     "description": a.get("description"),
                     "priority": a.get("priority_snapshot"),
@@ -208,6 +243,21 @@ def build_open_loops(
                     "note": m.get("formula"),
                 }
             )
+    if isinstance(issue_tracker, list) and verification_run_ids:
+        latest_verification_run_id = max(verification_run_ids)
+        for e in issue_tracker:
+            if not isinstance(e, dict) or e.get("status") != "open":
+                continue
+            first_seen = e.get("first_seen_run_id")
+            if first_seen is not None and first_seen < latest_verification_run_id:
+                loops.append(
+                    {
+                        "type": "long_open_issue",
+                        "title": e.get("title"),
+                        "priority": e.get("priority"),
+                        "first_seen_run_id": first_seen,
+                    }
+                )
     return loops[:OPEN_LOOP_CAP]
 
 
@@ -302,6 +352,8 @@ def _action_items_snapshot(
         "total": len(actions), "pending": 0, "completed": 0, "cancelled": 0,
         "verified": 0, "executed": 0, "observed": 0,
         "aligned": 0, "not_aligned": 0, "unable_to_verify": 0,
+        "total_verified_actions": 0, "verified_count": 0, "unable_count": 0,
+        "unable_reasons": {"not_executed": 0, "metric_unavailable": 0, "insufficient_data": 0},
     }
     all_items: list[dict[str, Any]] = []
     for a in actions:
@@ -316,9 +368,91 @@ def _action_items_snapshot(
             summary["aligned"] += obs.get("aligned", 0)
             summary["not_aligned"] += obs.get("not_aligned", 0)
             summary["unable_to_verify"] += obs.get("unable_to_verify", 0)
+            summary["total_verified_actions"] += 1
+            decisive = (obs.get("aligned") or 0) + (obs.get("not_aligned") or 0)
+            if decisive > 0:
+                summary["verified_count"] += 1
+            else:
+                summary["unable_count"] += 1
+                reason = _majority_unable_reason(obs)
+                summary["unable_reasons"][reason] = (
+                    summary["unable_reasons"].get(reason, 0) + 1
+                )
         all_items.append(_action_item_dict(a))
     recent = sorted(all_items, key=lambda a: a["id"] or 0, reverse=True)
     return summary, recent[:ACTION_RECENT_CAP], all_items
+
+
+def _majority_unable_reason(obs: dict) -> str:
+    """Deterministic majority reason for an observed-but-undecidable action."""
+    reasons = obs.get("unable_reasons")
+    if isinstance(reasons, dict) and reasons:
+        best = UNABLE_REASON_ORDER[0]
+        best_count = -1
+        for reason in UNABLE_REASON_ORDER:
+            count = reasons.get(reason) or 0
+            if count > best_count:
+                best, best_count = reason, count
+        return best
+    return "insufficient_data"
+
+
+def _observation_intel_dict(obs: ActionObservation, description: str | None) -> dict[str, Any]:
+    """Factual per-observation evidence snapshot (no AI, no verdicts)."""
+    return {
+        "action_id": obs.action_id,
+        "description": description,
+        "metric_name": obs.metric_name,
+        "before_value": _num_value(obs.before_value),
+        "after_value": _num_value(obs.after_value),
+        "absolute_delta": _num_value(obs.absolute_delta),
+        "percent_delta": _num_value(obs.percent_delta),
+        "direction": obs.direction,
+        "expected_direction": obs.expected_direction,
+        "alignment": obs.alignment,
+        "executed": bool(obs.executed),
+        "reason": obs.reason,
+    }
+
+
+def _enrich_verification_history(
+    memory: BusinessMemory, obs_by_run: dict[int, list[dict[str, Any]]]
+) -> None:
+    """Attach code-computed alignment + observation evidence per verification
+    cycle. Derived fresh from observations each refresh (idempotent)."""
+    history = list(memory.verification_history or [])
+    for entry in history:
+        if not isinstance(entry, dict):
+            continue
+        run_id = entry.get("run_id")
+        rows = obs_by_run.get(run_id) or []
+        aligned = sum(1 for r in rows if r.get("alignment") == ALIGNED)
+        not_aligned = sum(1 for r in rows if r.get("alignment") == NOT_ALIGNED)
+        unable = sum(1 for r in rows if r.get("alignment") == UNABLE_TO_VERIFY)
+        entry["period"] = entry.get("period") or entry.get("dataset_version") or None
+        entry["alignment"] = {
+            "total": len(rows),
+            "aligned": aligned,
+            "not_aligned": not_aligned,
+            "unable": unable,
+        }
+        entry["observations"] = rows[:OBSERVATIONS_PER_RUN_CAP]
+    memory.verification_history = history
+
+
+def _memory_needs_intelligence_refresh(memory: BusinessMemory | None) -> bool:
+    """Legacy rows lack M2.14.2 enrichment -> rebuild once (idempotent)."""
+    if memory is None:
+        return False
+    summary = memory.action_summary or {}
+    if summary and "total_verified_actions" not in summary:
+        return True
+    history = memory.verification_history or []
+    if history and not any(
+        isinstance(e, dict) and "alignment" in e for e in history
+    ):
+        return True
+    return False
 
 
 async def _refresh_action_data(
@@ -332,6 +466,7 @@ async def _refresh_action_data(
     actions = list(res.scalars().all())
     exec_counts: dict[int, int] = {}
     obs_summary: dict[int, dict[str, Any]] = {}
+    obs_by_run: dict[int, list[dict[str, Any]]] = {}
     if actions:
         action_ids = [a.id for a in actions]
         er = await db.execute(
@@ -342,21 +477,41 @@ async def _refresh_action_data(
         for action_id, count in er.all():
             exec_counts[int(action_id)] = int(count)
         orows = await db.execute(
-            select(ActionObservation.action_id, ActionObservation.alignment).where(
-                ActionObservation.action_id.in_(action_ids)
-            )
+            select(ActionObservation).where(ActionObservation.action_id.in_(action_ids))
         )
-        for action_id, alignment in orows.all():
+        desc_by_id = {a.id: a.description for a in actions}
+        for obs in orows.scalars().all():
+            oid = int(obs.action_id)
             summary = obs_summary.setdefault(
-                int(action_id),
+                oid,
                 {"total": 0, "aligned": 0, "not_aligned": 0, "unable_to_verify": 0},
             )
             summary["total"] += 1
-            summary[alignment] = summary.get(alignment, 0) + 1
+            summary[obs.alignment] = summary.get(obs.alignment, 0) + 1
+            if obs.alignment == UNABLE_TO_VERIFY and obs.reason:
+                reasons = summary.setdefault("unable_reasons", {})
+                reasons[obs.reason] = reasons.get(obs.reason, 0) + 1
+            obs_by_run.setdefault(int(obs.verification_run_id), []).append(
+                _observation_intel_dict(obs, desc_by_id.get(oid))
+            )
     summary, recent, all_items = _action_items_snapshot(actions, exec_counts, obs_summary)
     memory.action_summary = summary
     memory.action_recent = recent
-    memory.open_loops = build_open_loops(all_items, dict(memory.latest_metrics or {}))
+    verification_run_ids = sorted(
+        {
+            int(e.get("run_id"))
+            for e in (memory.verification_history or [])
+            if isinstance(e, dict) and e.get("run_id") is not None
+        }
+    )
+    memory.open_loops = build_open_loops(
+        all_items,
+        dict(memory.latest_metrics or {}),
+        exec_counts,
+        list(memory.issue_tracker or []),
+        verification_run_ids,
+    )
+    _enrich_verification_history(memory, obs_by_run)
 
 
 async def _apply_run_updates(db, memory: BusinessMemory, run: AnalysisRun, project: Project) -> None:
@@ -381,7 +536,9 @@ async def _apply_run_updates(db, memory: BusinessMemory, run: AnalysisRun, proje
         )
 
     if run.analysis_type == "verification":
-        summary = extract_verification_summary(run.comparison_result, run.id, run.parent_run_id)
+        summary = extract_verification_summary(
+            run.comparison_result, run.id, run.parent_run_id, run.dataset_version
+        )
         if summary:
             memory.verification_history = _merge_points(
                 list(memory.verification_history or []),
@@ -458,6 +615,13 @@ async def get_memory(project_id: int, owner_id: int) -> BusinessMemory | None:
                 select(BusinessMemory).where(BusinessMemory.project_id == project_id)
             )
             memory = res.scalar_one_or_none()
+        elif _memory_needs_intelligence_refresh(memory):
+            # M2.14.2: enrich legacy rows once (rebuild is idempotent).
+            await rebuild_memory(project_id, owner_id)
+            res = await db.execute(
+                select(BusinessMemory).where(BusinessMemory.project_id == project_id)
+            )
+            memory = res.scalar_one_or_none()
         return memory
 
 
@@ -490,6 +654,9 @@ def log_memory_failure(context: dict, exc: Exception) -> None:
 __all__ = [
     "ENGINE_VERSION",
     "AVAILABLE",
+    "ALIGNED",
+    "NOT_ALIGNED",
+    "UNABLE_TO_VERIFY",
     "extract_latest_metrics",
     "extract_metric_points",
     "extract_health_point",

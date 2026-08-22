@@ -16,12 +16,63 @@ interface MemoryPoint {
 }
 
 interface OpenLoop {
-  type: "pending_action" | "unavailable_metric" | string;
+  type: "pending_action" | "unavailable_metric" | "not_executed_action" | "long_open_issue" | string;
   action_id?: number | null;
   description?: string | null;
   priority?: string | null;
   metric?: string | null;
   note?: string | null;
+  title?: string | null;
+  first_seen_run_id?: number | null;
+}
+
+interface IntelObservation {
+  action_id: number;
+  description?: string | null;
+  metric_name: string;
+  before_value?: number | null;
+  after_value?: number | null;
+  absolute_delta?: number | null;
+  percent_delta?: number | null;
+  direction?: string | null;
+  alignment: string;
+  executed: boolean;
+  reason?: string | null;
+}
+
+interface AlignmentTrendPoint {
+  period?: string | null;
+  verification_run_id?: number | null;
+  aligned_count: number;
+  not_aligned_count: number;
+  unable_count: number;
+  source_run_ids: number[];
+}
+
+interface ImprovementTimelinePoint {
+  period?: string | null;
+  verification_run_id?: number | null;
+  parent_run_id?: number | null;
+  observation_count: number;
+  observations: IntelObservation[];
+}
+
+interface MemoryIntelligence {
+  engine_version: string;
+  rates: {
+    execution: { action_total: number; executed_count: number; execution_rate: number | null };
+    verification: {
+      total_verified_actions: number;
+      verified_count: number;
+      verification_rate: number | null;
+      unable_to_verify_count: number;
+      unable_rate: number | null;
+      unable_reasons: { not_executed: number; metric_unavailable: number; insufficient_data: number };
+    };
+  };
+  alignment_trend: AlignmentTrendPoint[];
+  improvement_timeline: ImprovementTimelinePoint[];
+  open_loops: OpenLoop[];
 }
 
 interface VerificationPoint {
@@ -94,6 +145,7 @@ interface BusinessMemoryData {
   issue_tracker: Array<Record<string, unknown>>;
   verification_history: VerificationPoint[];
   open_loops: OpenLoop[];
+  intelligence: MemoryIntelligence | null;
   trend_deltas: TrendDeltas | null;
   context_meta: {
     version: string;
@@ -110,6 +162,8 @@ interface BusinessMemoryData {
 const LOOP_ACCENT: Record<string, string> = {
   pending_action: "border-l-warning",
   unavailable_metric: "border-l-muted",
+  not_executed_action: "border-l-warning",
+  long_open_issue: "border-l-danger",
 };
 
 function formatValue(value: unknown, lang: UILanguage): string {
@@ -158,6 +212,11 @@ export default function BusinessMemoryCard({ projectId, lang }: { projectId: str
   const healthTrend = trends?.health_trend ?? null;
   const actionTrend = trends?.action_trend ?? null;
   const verificationTrend = trends?.verification_trend ?? null;
+  const intelligence = memory?.intelligence ?? null;
+  const intelRates = intelligence?.rates;
+  const alignmentTrend = intelligence?.alignment_trend ?? [];
+  const improvementTimeline = intelligence?.improvement_timeline ?? [];
+  const intelOpenLoops = intelligence?.open_loops ?? [];
 
   function trendIcon(direction: string | undefined): string {
     if (direction === "up") return "\u2191";
@@ -293,6 +352,107 @@ export default function BusinessMemoryCard({ projectId, lang }: { projectId: str
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {intelligence && intelRates && (
+            <div className="mt-5">
+              <div className="flex items-baseline justify-between">
+                <p className="text-caption font-medium text-secondary">{T("memory.intel.title")}</p>
+                <p className="text-xs text-secondary">{T("memory.intel.desc")}</p>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="rounded-control border border-border bg-canvas p-3">
+                  <p className="text-caption text-secondary">{T("memory.intel.executionRate")}</p>
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
+                    {intelRates.execution.execution_rate != null
+                      ? `${Math.round(intelRates.execution.execution_rate * 100)}%`
+                      : "–"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-secondary">
+                    {intelRates.execution.action_total > 0
+                      ? T("memory.intel.executedOf", {
+                          n: intelRates.execution.executed_count,
+                          total: intelRates.execution.action_total,
+                        })
+                      : "–"}
+                  </p>
+                </div>
+                <div className="rounded-control border border-border bg-canvas p-3">
+                  <p className="text-caption text-secondary">{T("memory.intel.verificationRate")}</p>
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
+                    {intelRates.verification.verification_rate != null
+                      ? `${Math.round(intelRates.verification.verification_rate * 100)}%`
+                      : "–"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-secondary">
+                    {intelRates.verification.total_verified_actions > 0
+                      ? T("memory.intel.verifiedOf", {
+                          n: intelRates.verification.verified_count,
+                          total: intelRates.verification.total_verified_actions,
+                        })
+                      : "–"}
+                  </p>
+                </div>
+                <div className="rounded-control border border-border bg-canvas p-3">
+                  <p className="text-caption text-secondary">{T("memory.intel.unable_to_verify")}</p>
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
+                    {intelRates.verification.unable_to_verify_count > 0
+                      ? String(intelRates.verification.unable_to_verify_count)
+                      : "–"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-secondary">
+                    {Object.entries(intelRates.verification.unable_reasons)
+                      .filter(([, v]) => (v as number) > 0)
+                      .map(([k, v]) => `${k}:${String(v)}`)
+                      .join(" · ") || "–"}
+                  </p>
+                </div>
+                <div className="rounded-control border border-border bg-canvas p-3">
+                  <p className="text-caption text-secondary">{T("memory.openLoops")}</p>
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
+                    {intelOpenLoops.length > 0 ? String(intelOpenLoops.length) : "–"}
+                  </p>
+                </div>
+              </div>
+
+              {alignmentTrend.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-caption font-medium text-secondary">{T("memory.intel.alignmentTrend")}</p>
+                  <ul className="mt-1 space-y-1">
+                    {alignmentTrend.slice(0, 4).map((pt, i) => (
+                      <li key={i} className="flex items-center justify-between text-sm text-ink">
+                        <span className="text-secondary">{pt.period ?? `#${String(pt.verification_run_id ?? "")}`}</span>
+                        <span className="tabular-nums">
+                          <span>{T("memory.intel.aligned")} {pt.aligned_count}</span>
+                          <span className="mx-2 text-secondary">·</span>
+                          <span>{T("memory.intel.not_aligned")} {pt.not_aligned_count}</span>
+                          <span className="mx-2 text-secondary">·</span>
+                          <span className="text-secondary">{T("memory.intel.unable_to_verify")} {pt.unable_count}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {improvementTimeline.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-caption font-medium text-secondary">{T("memory.intel.improvementTimeline")}</p>
+                  <ul className="mt-1 space-y-1">
+                    {improvementTimeline.slice(0, 3).map((pt, i) => (
+                      <li key={i} className="text-sm text-secondary">
+                        {pt.period ?? `#${String(pt.verification_run_id ?? "")}`} ·{" "}
+                        {pt.observations
+                          .slice(0, 3)
+                          .map((o) => `${o.metric_name} ${o.alignment}`)
+                          .join(" · ") || T("memory.intel.none")}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 text-xs text-secondary">{T("memory.intel.evidenceNote")}</p>
+                </div>
+              )}
             </div>
           )}
 

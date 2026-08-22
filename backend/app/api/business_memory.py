@@ -15,6 +15,7 @@ from app.core.database import get_db
 from app.models.user import User
 from app.services import memory_service, project_service
 from app.services import memory_context as memory_context_service
+from app.services import memory_intelligence
 
 router = APIRouter(prefix="/api/projects", tags=["business_memory"])
 
@@ -45,6 +46,7 @@ def _serialize(memory) -> dict:
         "issue_tracker": list(memory.issue_tracker or []),
         "verification_history": list(memory.verification_history or []),
         "open_loops": list(memory.open_loops or []),
+        "intelligence": memory_intelligence.build_intelligence(memory),
         "updated_at": _iso(memory.updated_at),
         "ready": memory_service.memory_ready(memory),
         "trend_deltas": trend_deltas,
