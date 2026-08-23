@@ -19,6 +19,8 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
+import asyncio
+
 from sqlalchemy import func, select
 
 from app.core.database import async_session
@@ -49,6 +51,19 @@ OBSERVATIONS_PER_RUN_CAP = memory_intelligence.OBSERVATIONS_PER_RUN_CAP
 UNABLE_REASON_ORDER = memory_intelligence.UNABLE_REASON_ORDER
 
 
+# M2.14.2 P1 fix: serialize memory refreshes per project so two concurrent
+# upserts/rebuilds can never overwrite each other's merged history with a
+# stale snapshot (in-process; the job runner is a single event loop).
+_memory_refresh_locks: dict[int, asyncio.Lock] = {}
+
+
+def _memory_lock(project_id: int) -> asyncio.Lock:
+    """Return the per-project refresh lock (created once per process)."""
+    lock = _memory_refresh_locks.get(project_id)
+    if lock is None:
+        lock = asyncio.Lock()
+        _memory_refresh_locks[project_id] = lock
+    return lock
 # ---------------------------------------------------------------------------
 # Pure extraction helpers (offline-testable, no I/O)
 # ---------------------------------------------------------------------------
@@ -420,24 +435,32 @@ def _enrich_verification_history(
 ) -> None:
     """Attach code-computed alignment + observation evidence per verification
     cycle. Derived fresh from observations each refresh (idempotent)."""
-    history = list(memory.verification_history or [])
-    for entry in history:
+    # M2.14.2 P1 fix: never mutate the stored entries in place. Plain JSONB
+    # columns only track *reassignment*, and assigning a deep-equal copy after
+    # in-place edits is treated as unchanged -> the enrichment was silently
+    # dropped on commit. Rebuild each entry as a fresh dict so the assigned
+    # list genuinely differs and SQLAlchemy persists it.
+    enriched: list[dict[str, Any]] = []
+    for entry in memory.verification_history or []:
         if not isinstance(entry, dict):
+            enriched.append(entry)
             continue
         run_id = entry.get("run_id")
         rows = obs_by_run.get(run_id) or []
         aligned = sum(1 for r in rows if r.get("alignment") == ALIGNED)
         not_aligned = sum(1 for r in rows if r.get("alignment") == NOT_ALIGNED)
         unable = sum(1 for r in rows if r.get("alignment") == UNABLE_TO_VERIFY)
-        entry["period"] = entry.get("period") or entry.get("dataset_version") or None
-        entry["alignment"] = {
+        new_entry = dict(entry)
+        new_entry["period"] = entry.get("period") or entry.get("dataset_version") or None
+        new_entry["alignment"] = {
             "total": len(rows),
             "aligned": aligned,
             "not_aligned": not_aligned,
             "unable": unable,
         }
-        entry["observations"] = rows[:OBSERVATIONS_PER_RUN_CAP]
-    memory.verification_history = history
+        new_entry["observations"] = rows[:OBSERVATIONS_PER_RUN_CAP]
+        enriched.append(new_entry)
+    memory.verification_history = enriched
 
 
 def _memory_needs_intelligence_refresh(memory: BusinessMemory | None) -> bool:
@@ -562,20 +585,29 @@ async def upsert_memory_after_run(project_id: int, run_id: int) -> None:
     Opens its own session so a memory failure can never poison the job
     transaction. Failures are logged by the caller, never propagated.
     """
-    async with async_session() as db:
-        run = await db.get(AnalysisRun, run_id)
-        if run is None or run.project_id != project_id:
-            return
-        project = await db.get(Project, project_id)
-        if project is None:
-            return
-        memory = await _load_memory(db, project_id)
-        await _apply_run_updates(db, memory, run, project)
-        await db.commit()
+    # M2.14.2 P1 fix: serialize same-project refreshes (stale-overwrite guard).
+    async with _memory_lock(project_id):
+        async with async_session() as db:
+            run = await db.get(AnalysisRun, run_id)
+            if run is None or run.project_id != project_id:
+                return
+            project = await db.get(Project, project_id)
+            if project is None:
+                return
+            memory = await _load_memory(db, project_id)
+            await _apply_run_updates(db, memory, run, project)
+            await db.commit()
 
 
 async def rebuild_memory(project_id: int, owner_id: int) -> None:
     """Rebuild the derived memory row from all runs + actions. Idempotent."""
+    # M2.14.2 P1 fix: serialize with upsert_memory_after_run per project.
+    async with _memory_lock(project_id):
+        await _rebuild_memory_locked(project_id, owner_id)
+
+
+async def _rebuild_memory_locked(project_id: int, owner_id: int) -> None:
+    """Core rebuild body (call under the per-project lock)."""
     async with async_session() as db:
         memory = await _load_memory(db, project_id)
         memory.profile = {}
@@ -622,6 +654,20 @@ async def get_memory(project_id: int, owner_id: int) -> BusinessMemory | None:
                 select(BusinessMemory).where(BusinessMemory.project_id == project_id)
             )
             memory = res.scalar_one_or_none()
+        # M2.14.2 P1 fix: always re-derive the verification-history enrichment
+        # (and the action summary) from live observations at read time.
+        # Read-only self-healing: even a row written before the persistence
+        # fix returns the correct intelligence, deterministically, without a
+        # rebuild or a write.
+        if memory is not None:
+            try:
+                await _refresh_action_data(db, memory, project_id, owner_id)
+            except Exception:
+                # Never fail reads because the derived refresh hiccuped.
+                logger.exception(
+                    "business_memory_read_refresh_failed",
+                    extra={"event": "business_memory", "project_id": project_id},
+                )
         return memory
 
 

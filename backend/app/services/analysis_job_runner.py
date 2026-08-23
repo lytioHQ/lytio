@@ -488,8 +488,6 @@ async def _run_verification(job_id: int, started_at: float) -> None:
                            "verification_run_id": run.id},
                     exc_info=link_exc,
                 )
-            elapsed_ms = int((time.monotonic() - started_at) * 1000)
-            await analysis_job_service.mark_completed(db, job, run.id, elapsed_ms)
             # M2.14.0: code-compute per-action observations from the same
             # computed_metric_changes. Isolated: must never fail the job.
             try:
@@ -514,6 +512,12 @@ async def _run_verification(job_id: int, started_at: float) -> None:
                 await memory_service.upsert_memory_after_run(job.project_id, run.id)
             except Exception as mem_exc:
                 memory_service.log_memory_failure({"job_id": job_id, "run_id": run.id}, mem_exc)
+            # M2.14.2 P1 fix: mark the job completed only AFTER observations and
+            # the memory refresh have been persisted, so a "completed" job
+            # always implies a fully consistent verification_history. This also
+            # removes the poll-then-read race for consumers that poll the job.
+            elapsed_ms = int((time.monotonic() - started_at) * 1000)
+            await analysis_job_service.mark_completed(db, job, run.id, elapsed_ms)
         except Exception as exc:
             await analysis_job_service.mark_failed(
                 db, job, "unknown",

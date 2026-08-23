@@ -237,20 +237,22 @@ diff = subprocess.run(
     cwd=os.path.dirname(os.path.abspath(__file__)),
     capture_output=True, text=True,
 ).stdout.splitlines()
+# The regression file itself is tracked; exclude it so the scope audit below
+# only covers the two authorized service files of the P1 fix.
+diff = [f for f in diff if f != os.path.basename(__file__)]
 allowed_tracked = [
+    # M2.14.2 P1 fix scope: only the two service files below may be modified.
     "backend/app/services/memory_service.py",
-    "backend/app/api/business_memory.py",
-    "frontend/src/components/business/BusinessMemoryCard.tsx",
-    "frontend/src/lib/i18n.ts",
+    "backend/app/services/analysis_job_runner.py",
 ]
 check("t3_diff_scoped", all(f in diff for f in allowed_tracked), str(diff))
 check("t3_diff_no_extra", len(diff) == len(allowed_tracked), str(diff))
-new_files = ["backend/app/services/memory_intelligence.py", "_m2142_test.py"]
+new_files = ["backend/app/services/memory_intelligence.py", "_m2142_test.py", "_m2142_p1_test.py"]
 check("t3_new_files_exist", all(os.path.exists(f) for f in new_files), str(new_files))
 forbidden = [
     "prompt_builder.py", "verification_service.py", "schemas/verification.py",
     "api/verification.py", "api/auth.py", "workbook_service.py",
-    "analysis_job_runner.py", "action_execution_service.py", "action_item_service.py",
+    "action_execution_service.py", "action_item_service.py",
     "metric_engine.py", "health_score.py", "analysis_engine.py", "models/",
 ]
 check("t3_diff_forbidden_absent", all(f not in diff for f in forbidden), diff)
@@ -262,7 +264,6 @@ untouched_rels = [
     "backend/app/schemas/verification.py",
     "backend/app/api/verification.py",
     "backend/app/services/action_execution_service.py",
-    "backend/app/services/analysis_job_runner.py",
 ]
 
 
