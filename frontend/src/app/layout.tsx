@@ -4,11 +4,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Lytio",
-  description: "Lytio — AI-powered Excel analysis platform",
+  description: "Lytio — AI-assisted sales operations intelligence: code computes metrics, health scores, and verification; AI explains and recommends.",
   metadataBase: new URL("https://lytio.co"),
   openGraph: {
     title: "Lytio",
-    description: "Lytio — AI-powered Excel analysis platform",
+    description: "Lytio — AI-assisted sales operations intelligence: code computes metrics, health scores, and verification; AI explains and recommends.",
     url: "https://lytio.co",
     siteName: "Lytio",
     locale: "en_US",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Lytio",
-    description: "Lytio — AI-powered Excel analysis platform",
+    description: "Lytio — AI-assisted sales operations intelligence: code computes metrics, health scores, and verification; AI explains and recommends.",
   },
 };
 
