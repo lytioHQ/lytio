@@ -15,6 +15,7 @@ import { Card, MetricCard } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 import { useUiLang } from "@/lib/useUiLang";
 import { t, localeForLang } from "@/lib/i18n";
+import { schemaFieldMeta } from "@/lib/schemaMapping";
 import {
   DEMO_META,
   DEMO_PERIOD_COUNT,
@@ -326,7 +327,17 @@ export default function DemoPage() {
               <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-secondary">
                 <span>
                   <span className="font-medium text-ink">{T("demo.schema.missing")}:</span>{" "}
-                  {schema.missing.length > 0 ? schema.missing.join(", ") : "–"}
+                  {schema.missing.length > 0
+                    ? schema.missing.map((key) => {
+                        const meta = schemaFieldMeta(key);
+                        return (
+                          <span key={key} className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-secondary">
+                            <span aria-hidden>{meta.icon}</span>
+                            {T(meta.labelKey)} · {T("schema.field.unavailable")}
+                          </span>
+                        );
+                      })
+                    : "–"}
                 </span>
                 <span>
                   <span className="font-medium text-ink">{T("demo.schema.conflicts")}:</span>{" "}
