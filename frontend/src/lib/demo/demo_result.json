@@ -4,7 +4,7 @@
     "engine_version": "metric_engine_v1",
     "health_score_engine": "health_score_v1",
     "generated_at": "2026-08-25T12:00:00.000000+00:00",
-    "source_commit": "04af2b0",
+    "source_commit": "2174f73",
     "sample_file": "backend/demo/sample_sales_data.xlsx",
     "data_md5": "9937732909c23ab8d2e0f169a8586b1f"
   },
