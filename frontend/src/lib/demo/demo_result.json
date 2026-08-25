@@ -1,0 +1,2137 @@
+{
+  "meta": {
+    "schema_version": "canonical_sales_v1",
+    "engine_version": "metric_engine_v1",
+    "health_score_engine": "health_score_v1",
+    "generated_at": "2026-08-24T05:30:19.151112+00:00",
+    "source_commit": "03db6e8",
+    "sample_file": "backend/demo/sample_sales_data.xlsx",
+    "data_md5": "1fa3f1117935ca720f918c3d8274f7f0"
+  },
+  "supported_metrics": [
+    "average_order_value",
+    "customer_concentration",
+    "customer_count",
+    "date_range",
+    "order_count",
+    "product_sales_rank",
+    "row_count",
+    "sales_growth",
+    "total_sales"
+  ],
+  "periods": [
+    {
+      "schema_meta": {
+        "schema_version": "canonical_sales_v1",
+        "mapping_source": "auto",
+        "confirmation_status": "pending",
+        "confirmed_at": null,
+        "source_file": null,
+        "conflicts": []
+      },
+      "schema_mapping": {
+        "version": 2,
+        "schema_version": "canonical_sales_v1",
+        "mappings": [
+          {
+            "canonical_key": "order_date",
+            "source_column": "订单日期",
+            "confidence": 0.6,
+            "value_type": "date",
+            "availability": "available",
+            "match_method": "heuristic_type",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "customer_name",
+            "source_column": "客户名称",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "product_name",
+            "source_column": "产品名称",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "sales_amount",
+            "source_column": "销售金额",
+            "confidence": 0.97,
+            "value_type": "number",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": true,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "sales_quantity",
+            "source_column": "数量",
+            "confidence": 0.97,
+            "value_type": "number",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": true,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "region",
+            "source_column": "区域",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "sales_person",
+            "source_column": "销售人员",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          }
+        ],
+        "missing": [
+          "order_id",
+          "pipeline_stage",
+          "lost_reason",
+          "discount_rate",
+          "profit_amount"
+        ],
+        "conflicts": [],
+        "sales_core_available": true
+      },
+      "computed_metrics": [
+        {
+          "metric_name": "row_count",
+          "value": 40,
+          "formula": "COUNT(rows)",
+          "source_columns": [],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "total_sales",
+          "value": 380000.01,
+          "formula": "SUM(sales_amount)",
+          "source_columns": [
+            "销售金额"
+          ],
+          "evidence_rows": [
+            {
+              "index": 27,
+              "values": {
+                "订单日期": "2026-01-21",
+                "客户名称": "天达百货",
+                "产品名称": "智能手表",
+                "销售金额": 43939.44,
+                "数量": 58,
+                "区域": "华北",
+                "销售人员": "陈静"
+              }
+            },
+            {
+              "index": 12,
+              "values": {
+                "订单日期": "2026-01-08",
+                "客户名称": "科讯电子",
+                "产品名称": "智能手表",
+                "销售金额": 29506.23,
+                "数量": 49,
+                "区域": "华北",
+                "销售人员": "李娜"
+              }
+            },
+            {
+              "index": 14,
+              "values": {
+                "订单日期": "2026-01-10",
+                "客户名称": "华信贸易",
+                "产品名称": "智能手表",
+                "销售金额": 27843.45,
+                "数量": 47,
+                "区域": "华东",
+                "销售人员": "王磊"
+              }
+            },
+            {
+              "index": 31,
+              "values": {
+                "订单日期": "2026-01-23",
+                "客户名称": "青禾零售",
+                "产品名称": "智能手表",
+                "销售金额": 21765.32,
+                "数量": 37,
+                "区域": "西南",
+                "销售人员": "李娜"
+              }
+            },
+            {
+              "index": 26,
+              "values": {
+                "订单日期": "2026-01-19",
+                "客户名称": "远航商贸",
+                "产品名称": "智能手表",
+                "销售金额": 19032.58,
+                "数量": 31,
+                "区域": "华南",
+                "销售人员": "陈静"
+              }
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "date_range",
+          "value": {
+            "min": "2026-01",
+            "max": "2026-01"
+          },
+          "formula": "MIN(order_date) .. MAX(order_date)",
+          "source_columns": [
+            "订单日期"
+          ],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "sales_growth",
+          "value": null,
+          "formula": "last_month_total / prev_month_total - 1",
+          "source_columns": [
+            "sales_amount",
+            "order_date"
+          ],
+          "evidence_rows": [],
+          "availability": "unavailable",
+          "confidence": "low",
+          "assumptions": [],
+          "note": "need at least 2 distinct months"
+        },
+        {
+          "metric_name": "order_count",
+          "value": 40,
+          "formula": "row_count approximation",
+          "source_columns": [],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "medium",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": "order_id field missing; approximated from row count"
+        },
+        {
+          "metric_name": "average_order_value",
+          "value": 9500.0,
+          "formula": "total_sales / order_count",
+          "source_columns": [
+            "销售金额"
+          ],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "medium",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_count",
+          "value": 8,
+          "formula": "COUNT(DISTINCT customer_name)",
+          "source_columns": [
+            "客户名称"
+          ],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_concentration",
+          "value": 0.2213,
+          "formula": "Top1/Top5 customer sales / total_sales",
+          "source_columns": [
+            "客户名称",
+            "销售金额"
+          ],
+          "evidence_rows": [
+            {
+              "rank": 1,
+              "customer": "天达百货",
+              "sales": 84092.14,
+              "share": 0.2213
+            },
+            {
+              "rank": 2,
+              "customer": "远航商贸",
+              "sales": 74963.78,
+              "share": 0.1973
+            },
+            {
+              "rank": 3,
+              "customer": "科讯电子",
+              "sales": 39778.83,
+              "share": 0.1047
+            },
+            {
+              "rank": 4,
+              "customer": "华信贸易",
+              "sales": 39717.18,
+              "share": 0.1045
+            },
+            {
+              "rank": 5,
+              "customer": "青禾零售",
+              "sales": 39135.54,
+              "share": 0.103
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "product_sales_rank",
+          "value": "智能手表",
+          "formula": "group by product_name, order by SUM(sales_amount) desc",
+          "source_columns": [
+            "产品名称",
+            "销售金额"
+          ],
+          "evidence_rows": [
+            {
+              "rank": 1,
+              "product": "智能手表",
+              "sales": 194710.28,
+              "share": 0.5124
+            },
+            {
+              "rank": 2,
+              "product": "蓝牙键盘",
+              "sales": 48747.46,
+              "share": 0.1283
+            },
+            {
+              "rank": 3,
+              "product": "无线耳机",
+              "sales": 48314.16,
+              "share": 0.1271
+            },
+            {
+              "rank": 4,
+              "product": "智能音箱",
+              "sales": 47075.07,
+              "share": 0.1239
+            },
+            {
+              "rank": 5,
+              "product": "便携充电宝",
+              "sales": 41153.04,
+              "share": 0.1083
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        }
+      ],
+      "health_score": {
+        "health_score": 66.9,
+        "health_level": "Fair",
+        "coverage": 0.6,
+        "score_confidence": "high",
+        "engine_version": "health_score_v1",
+        "dimensions": [
+          {
+            "name": "pipeline_health",
+            "score": null,
+            "weight": 0.2,
+            "weighted_score": null,
+            "formula": "100 × won_share | 100 × (1 - max_stage_share)",
+            "evidence": {},
+            "source_metrics": [],
+            "availability": "unavailable",
+            "confidence": "low",
+            "note": "missing field: pipeline_stage"
+          },
+          {
+            "name": "conversion_stability",
+            "score": null,
+            "weight": 0.2,
+            "weighted_score": null,
+            "formula": "100 - min(100, CV(monthly_sales) × 120)",
+            "evidence": {},
+            "source_metrics": [
+              "sales_growth"
+            ],
+            "availability": "unavailable",
+            "confidence": "low",
+            "note": "need at least 2 months (order_date + sales_amount)"
+          },
+          {
+            "name": "revenue_quality",
+            "score": 60.0,
+            "weight": 0.3333,
+            "weighted_score": 20.0,
+            "formula": "60 + clamp(sales_growth, ±0.5) × 40",
+            "evidence": {
+              "total_sales": 380000.01,
+              "sales_growth": null
+            },
+            "source_metrics": [
+              "total_sales"
+            ],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          },
+          {
+            "name": "customer_risk",
+            "score": 77.9,
+            "weight": 0.3333,
+            "weighted_score": 25.96,
+            "formula": "100 - top1_customer_share × 100",
+            "evidence": {
+              "top1_share": 0.2213,
+              "top_customers": [
+                {
+                  "rank": 1,
+                  "customer": "天达百货",
+                  "sales": 84092.14,
+                  "share": 0.2213
+                },
+                {
+                  "rank": 2,
+                  "customer": "远航商贸",
+                  "sales": 74963.78,
+                  "share": 0.1973
+                },
+                {
+                  "rank": 3,
+                  "customer": "科讯电子",
+                  "sales": 39778.83,
+                  "share": 0.1047
+                },
+                {
+                  "rank": 4,
+                  "customer": "华信贸易",
+                  "sales": 39717.18,
+                  "share": 0.1045
+                },
+                {
+                  "rank": 5,
+                  "customer": "青禾零售",
+                  "sales": 39135.54,
+                  "share": 0.103
+                }
+              ]
+            },
+            "source_metrics": [
+              "customer_concentration"
+            ],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          },
+          {
+            "name": "productivity",
+            "score": 62.7,
+            "weight": 0.3333,
+            "weighted_score": 20.9,
+            "formula": "100 - top1_salesperson_share × 100",
+            "evidence": {
+              "top1_person_share": 0.3734,
+              "salesperson_count": 4
+            },
+            "source_metrics": [],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          }
+        ]
+      },
+      "key_metrics": [
+        {
+          "metric_name": "total_sales",
+          "value": 380000.01,
+          "display": "380,000.01",
+          "availability": "available",
+          "confidence": "high",
+          "formula": "SUM(sales_amount)",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "order_count",
+          "value": 40,
+          "display": "40",
+          "availability": "available",
+          "confidence": "medium",
+          "formula": "row_count approximation",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": "order_id field missing; approximated from row count"
+        },
+        {
+          "metric_name": "average_order_value",
+          "value": 9500.0,
+          "display": "9,500.00",
+          "availability": "available",
+          "confidence": "medium",
+          "formula": "total_sales / order_count",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_count",
+          "value": 8,
+          "display": "8",
+          "availability": "available",
+          "confidence": "high",
+          "formula": "COUNT(DISTINCT customer_name)",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_concentration",
+          "value": 0.2213,
+          "display": "0.22",
+          "availability": "available",
+          "confidence": "high",
+          "formula": "Top1/Top5 customer sales / total_sales",
+          "assumptions": [],
+          "note": ""
+        }
+      ],
+      "period_id": 1
+    },
+    {
+      "schema_meta": {
+        "schema_version": "canonical_sales_v1",
+        "mapping_source": "auto",
+        "confirmation_status": "pending",
+        "confirmed_at": null,
+        "source_file": null,
+        "conflicts": []
+      },
+      "schema_mapping": {
+        "version": 2,
+        "schema_version": "canonical_sales_v1",
+        "mappings": [
+          {
+            "canonical_key": "order_date",
+            "source_column": "订单日期",
+            "confidence": 0.6,
+            "value_type": "date",
+            "availability": "available",
+            "match_method": "heuristic_type",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "customer_name",
+            "source_column": "客户名称",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "product_name",
+            "source_column": "产品名称",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "sales_amount",
+            "source_column": "销售金额",
+            "confidence": 0.97,
+            "value_type": "number",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": true,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "sales_quantity",
+            "source_column": "数量",
+            "confidence": 0.97,
+            "value_type": "number",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": true,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "region",
+            "source_column": "区域",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "sales_person",
+            "source_column": "销售人员",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          }
+        ],
+        "missing": [
+          "order_id",
+          "pipeline_stage",
+          "lost_reason",
+          "discount_rate",
+          "profit_amount"
+        ],
+        "conflicts": [],
+        "sales_core_available": true
+      },
+      "computed_metrics": [
+        {
+          "metric_name": "row_count",
+          "value": 80,
+          "formula": "COUNT(rows)",
+          "source_columns": [],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "total_sales",
+          "value": 600000.02,
+          "formula": "SUM(sales_amount)",
+          "source_columns": [
+            "销售金额"
+          ],
+          "evidence_rows": [
+            {
+              "index": 27,
+              "values": {
+                "订单日期": "2026-01-21",
+                "客户名称": "天达百货",
+                "产品名称": "智能手表",
+                "销售金额": 43939.44,
+                "数量": 58,
+                "区域": "华北",
+                "销售人员": "陈静"
+              }
+            },
+            {
+              "index": 12,
+              "values": {
+                "订单日期": "2026-01-08",
+                "客户名称": "科讯电子",
+                "产品名称": "智能手表",
+                "销售金额": 29506.23,
+                "数量": 49,
+                "区域": "华北",
+                "销售人员": "李娜"
+              }
+            },
+            {
+              "index": 14,
+              "values": {
+                "订单日期": "2026-01-10",
+                "客户名称": "华信贸易",
+                "产品名称": "智能手表",
+                "销售金额": 27843.45,
+                "数量": 47,
+                "区域": "华东",
+                "销售人员": "王磊"
+              }
+            },
+            {
+              "index": 49,
+              "values": {
+                "订单日期": "2026-02-04",
+                "客户名称": "蓝海连锁",
+                "产品名称": "智能手表",
+                "销售金额": 22804.29,
+                "数量": 58,
+                "区域": "华北",
+                "销售人员": "王磊"
+              }
+            },
+            {
+              "index": 69,
+              "values": {
+                "订单日期": "2026-02-20",
+                "客户名称": "启明科技",
+                "产品名称": "智能手表",
+                "销售金额": 22705.97,
+                "数量": 54,
+                "区域": "华南",
+                "销售人员": "陈静"
+              }
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "date_range",
+          "value": {
+            "min": "2026-01",
+            "max": "2026-02"
+          },
+          "formula": "MIN(order_date) .. MAX(order_date)",
+          "source_columns": [
+            "订单日期"
+          ],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "sales_growth",
+          "value": -0.4211,
+          "formula": "last_month_total / prev_month_total - 1",
+          "source_columns": [
+            "销售金额",
+            "订单日期"
+          ],
+          "evidence_rows": [
+            {
+              "month": "2026-01",
+              "total": 380000.01
+            },
+            {
+              "month": "2026-02",
+              "total": 220000.01
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "order_count",
+          "value": 80,
+          "formula": "row_count approximation",
+          "source_columns": [],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "medium",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": "order_id field missing; approximated from row count"
+        },
+        {
+          "metric_name": "average_order_value",
+          "value": 7500.0,
+          "formula": "total_sales / order_count",
+          "source_columns": [
+            "销售金额"
+          ],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "medium",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_count",
+          "value": 8,
+          "formula": "COUNT(DISTINCT customer_name)",
+          "source_columns": [
+            "客户名称"
+          ],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_concentration",
+          "value": 0.194,
+          "formula": "Top1/Top5 customer sales / total_sales",
+          "source_columns": [
+            "客户名称",
+            "销售金额"
+          ],
+          "evidence_rows": [
+            {
+              "rank": 1,
+              "customer": "远航商贸",
+              "sales": 116427.52,
+              "share": 0.194
+            },
+            {
+              "rank": 2,
+              "customer": "天达百货",
+              "sales": 89001.78,
+              "share": 0.1483
+            },
+            {
+              "rank": 3,
+              "customer": "蓝海连锁",
+              "sales": 86972.75,
+              "share": 0.145
+            },
+            {
+              "rank": 4,
+              "customer": "启明科技",
+              "sales": 67171.84,
+              "share": 0.112
+            },
+            {
+              "rank": 5,
+              "customer": "华信贸易",
+              "sales": 65564.81,
+              "share": 0.1093
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "product_sales_rank",
+          "value": "智能手表",
+          "formula": "group by product_name, order by SUM(sales_amount) desc",
+          "source_columns": [
+            "产品名称",
+            "销售金额"
+          ],
+          "evidence_rows": [
+            {
+              "rank": 1,
+              "product": "智能手表",
+              "sales": 268806.02,
+              "share": 0.448
+            },
+            {
+              "rank": 2,
+              "product": "智能音箱",
+              "sales": 120522.36,
+              "share": 0.2009
+            },
+            {
+              "rank": 3,
+              "product": "无线耳机",
+              "sales": 85474.65,
+              "share": 0.1425
+            },
+            {
+              "rank": 4,
+              "product": "蓝牙键盘",
+              "sales": 69592.56,
+              "share": 0.116
+            },
+            {
+              "rank": 5,
+              "product": "便携充电宝",
+              "sales": 55604.43,
+              "share": 0.0927
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        }
+      ],
+      "health_score": {
+        "health_score": 64.5,
+        "health_level": "Fair",
+        "coverage": 0.8,
+        "score_confidence": "medium",
+        "engine_version": "health_score_v1",
+        "dimensions": [
+          {
+            "name": "pipeline_health",
+            "score": null,
+            "weight": 0.2,
+            "weighted_score": null,
+            "formula": "100 × won_share | 100 × (1 - max_stage_share)",
+            "evidence": {},
+            "source_metrics": [],
+            "availability": "unavailable",
+            "confidence": "low",
+            "note": "missing field: pipeline_stage"
+          },
+          {
+            "name": "conversion_stability",
+            "score": 68.0,
+            "weight": 0.25,
+            "weighted_score": 17.0,
+            "formula": "100 - min(100, CV(monthly_sales) × 120)",
+            "evidence": {
+              "cv": 0.2667,
+              "monthly_totals": [
+                380000.01,
+                220000.01
+              ]
+            },
+            "source_metrics": [
+              "sales_growth"
+            ],
+            "availability": "available",
+            "confidence": "medium",
+            "note": ""
+          },
+          {
+            "name": "revenue_quality",
+            "score": 43.2,
+            "weight": 0.25,
+            "weighted_score": 10.8,
+            "formula": "60 + clamp(sales_growth, ±0.5) × 40",
+            "evidence": {
+              "total_sales": 600000.02,
+              "sales_growth": -0.4211
+            },
+            "source_metrics": [
+              "total_sales",
+              "sales_growth"
+            ],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          },
+          {
+            "name": "customer_risk",
+            "score": 80.6,
+            "weight": 0.25,
+            "weighted_score": 20.15,
+            "formula": "100 - top1_customer_share × 100",
+            "evidence": {
+              "top1_share": 0.194,
+              "top_customers": [
+                {
+                  "rank": 1,
+                  "customer": "远航商贸",
+                  "sales": 116427.52,
+                  "share": 0.194
+                },
+                {
+                  "rank": 2,
+                  "customer": "天达百货",
+                  "sales": 89001.78,
+                  "share": 0.1483
+                },
+                {
+                  "rank": 3,
+                  "customer": "蓝海连锁",
+                  "sales": 86972.75,
+                  "share": 0.145
+                },
+                {
+                  "rank": 4,
+                  "customer": "启明科技",
+                  "sales": 67171.84,
+                  "share": 0.112
+                },
+                {
+                  "rank": 5,
+                  "customer": "华信贸易",
+                  "sales": 65564.81,
+                  "share": 0.1093
+                }
+              ]
+            },
+            "source_metrics": [
+              "customer_concentration"
+            ],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          },
+          {
+            "name": "productivity",
+            "score": 66.3,
+            "weight": 0.25,
+            "weighted_score": 16.57,
+            "formula": "100 - top1_salesperson_share × 100",
+            "evidence": {
+              "top1_person_share": 0.3373,
+              "salesperson_count": 4
+            },
+            "source_metrics": [],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          }
+        ]
+      },
+      "key_metrics": [
+        {
+          "metric_name": "total_sales",
+          "value": 600000.02,
+          "display": "600,000.02",
+          "availability": "available",
+          "confidence": "high",
+          "formula": "SUM(sales_amount)",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "order_count",
+          "value": 80,
+          "display": "80",
+          "availability": "available",
+          "confidence": "medium",
+          "formula": "row_count approximation",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": "order_id field missing; approximated from row count"
+        },
+        {
+          "metric_name": "average_order_value",
+          "value": 7500.0,
+          "display": "7,500.00",
+          "availability": "available",
+          "confidence": "medium",
+          "formula": "total_sales / order_count",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_count",
+          "value": 8,
+          "display": "8",
+          "availability": "available",
+          "confidence": "high",
+          "formula": "COUNT(DISTINCT customer_name)",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_concentration",
+          "value": 0.194,
+          "display": "0.19",
+          "availability": "available",
+          "confidence": "high",
+          "formula": "Top1/Top5 customer sales / total_sales",
+          "assumptions": [],
+          "note": ""
+        }
+      ],
+      "period_id": 2
+    },
+    {
+      "schema_meta": {
+        "schema_version": "canonical_sales_v1",
+        "mapping_source": "auto",
+        "confirmation_status": "pending",
+        "confirmed_at": null,
+        "source_file": null,
+        "conflicts": []
+      },
+      "schema_mapping": {
+        "version": 2,
+        "schema_version": "canonical_sales_v1",
+        "mappings": [
+          {
+            "canonical_key": "order_date",
+            "source_column": "订单日期",
+            "confidence": 0.6,
+            "value_type": "date",
+            "availability": "available",
+            "match_method": "heuristic_type",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "customer_name",
+            "source_column": "客户名称",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "product_name",
+            "source_column": "产品名称",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "sales_amount",
+            "source_column": "销售金额",
+            "confidence": 0.97,
+            "value_type": "number",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": true,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "sales_quantity",
+            "source_column": "数量",
+            "confidence": 0.97,
+            "value_type": "number",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": true,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "region",
+            "source_column": "区域",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          },
+          {
+            "canonical_key": "sales_person",
+            "source_column": "销售人员",
+            "confidence": 0.97,
+            "value_type": "text",
+            "availability": "available",
+            "match_method": "exact_synonym",
+            "required": false,
+            "example_values": [],
+            "confirmation_status": "pending",
+            "confirmation_source": "system_detection"
+          }
+        ],
+        "missing": [
+          "order_id",
+          "pipeline_stage",
+          "lost_reason",
+          "discount_rate",
+          "profit_amount"
+        ],
+        "conflicts": [],
+        "sales_core_available": true
+      },
+      "computed_metrics": [
+        {
+          "metric_name": "row_count",
+          "value": 120,
+          "formula": "COUNT(rows)",
+          "source_columns": [],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "total_sales",
+          "value": 910000.02,
+          "formula": "SUM(sales_amount)",
+          "source_columns": [
+            "销售金额"
+          ],
+          "evidence_rows": [
+            {
+              "index": 27,
+              "values": {
+                "订单日期": "2026-01-21",
+                "客户名称": "天达百货",
+                "产品名称": "智能手表",
+                "销售金额": 43939.44,
+                "数量": 58,
+                "区域": "华北",
+                "销售人员": "陈静"
+              }
+            },
+            {
+              "index": 108,
+              "values": {
+                "订单日期": "2026-03-20",
+                "客户名称": "启明科技",
+                "产品名称": "智能手表",
+                "销售金额": 36915.32,
+                "数量": 46,
+                "区域": "华东",
+                "销售人员": "李娜"
+              }
+            },
+            {
+              "index": 12,
+              "values": {
+                "订单日期": "2026-01-08",
+                "客户名称": "科讯电子",
+                "产品名称": "智能手表",
+                "销售金额": 29506.23,
+                "数量": 49,
+                "区域": "华北",
+                "销售人员": "李娜"
+              }
+            },
+            {
+              "index": 14,
+              "values": {
+                "订单日期": "2026-01-10",
+                "客户名称": "华信贸易",
+                "产品名称": "智能手表",
+                "销售金额": 27843.45,
+                "数量": 47,
+                "区域": "华东",
+                "销售人员": "王磊"
+              }
+            },
+            {
+              "index": 49,
+              "values": {
+                "订单日期": "2026-02-04",
+                "客户名称": "蓝海连锁",
+                "产品名称": "智能手表",
+                "销售金额": 22804.29,
+                "数量": 58,
+                "区域": "华北",
+                "销售人员": "王磊"
+              }
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "date_range",
+          "value": {
+            "min": "2026-01",
+            "max": "2026-03"
+          },
+          "formula": "MIN(order_date) .. MAX(order_date)",
+          "source_columns": [
+            "订单日期"
+          ],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "sales_growth",
+          "value": 0.4091,
+          "formula": "last_month_total / prev_month_total - 1",
+          "source_columns": [
+            "销售金额",
+            "订单日期"
+          ],
+          "evidence_rows": [
+            {
+              "month": "2026-01",
+              "total": 380000.01
+            },
+            {
+              "month": "2026-02",
+              "total": 220000.01
+            },
+            {
+              "month": "2026-03",
+              "total": 310000.0
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "order_count",
+          "value": 120,
+          "formula": "row_count approximation",
+          "source_columns": [],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "medium",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": "order_id field missing; approximated from row count"
+        },
+        {
+          "metric_name": "average_order_value",
+          "value": 7583.33,
+          "formula": "total_sales / order_count",
+          "source_columns": [
+            "销售金额"
+          ],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "medium",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_count",
+          "value": 8,
+          "formula": "COUNT(DISTINCT customer_name)",
+          "source_columns": [
+            "客户名称"
+          ],
+          "evidence_rows": [],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_concentration",
+          "value": 0.1637,
+          "formula": "Top1/Top5 customer sales / total_sales",
+          "source_columns": [
+            "客户名称",
+            "销售金额"
+          ],
+          "evidence_rows": [
+            {
+              "rank": 1,
+              "customer": "启明科技",
+              "sales": 148988.77,
+              "share": 0.1637
+            },
+            {
+              "rank": 2,
+              "customer": "天达百货",
+              "sales": 138373.91,
+              "share": 0.1521
+            },
+            {
+              "rank": 3,
+              "customer": "远航商贸",
+              "sales": 134095.28,
+              "share": 0.1474
+            },
+            {
+              "rank": 4,
+              "customer": "蓝海连锁",
+              "sales": 115940.34,
+              "share": 0.1274
+            },
+            {
+              "rank": 5,
+              "customer": "科讯电子",
+              "sales": 107241.95,
+              "share": 0.1178
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "product_sales_rank",
+          "value": "智能手表",
+          "formula": "group by product_name, order by SUM(sales_amount) desc",
+          "source_columns": [
+            "产品名称",
+            "销售金额"
+          ],
+          "evidence_rows": [
+            {
+              "rank": 1,
+              "product": "智能手表",
+              "sales": 358149.57,
+              "share": 0.3936
+            },
+            {
+              "rank": 2,
+              "product": "智能音箱",
+              "sales": 167408.47,
+              "share": 0.184
+            },
+            {
+              "rank": 3,
+              "product": "蓝牙键盘",
+              "sales": 140884.88,
+              "share": 0.1548
+            },
+            {
+              "rank": 4,
+              "product": "无线耳机",
+              "sales": 131862.54,
+              "share": 0.1449
+            },
+            {
+              "rank": 5,
+              "product": "便携充电宝",
+              "sales": 111694.56,
+              "share": 0.1227
+            }
+          ],
+          "availability": "available",
+          "confidence": "high",
+          "assumptions": [],
+          "note": ""
+        }
+      ],
+      "health_score": {
+        "health_score": 75.0,
+        "health_level": "Good",
+        "coverage": 0.8,
+        "score_confidence": "high",
+        "engine_version": "health_score_v1",
+        "dimensions": [
+          {
+            "name": "pipeline_health",
+            "score": null,
+            "weight": 0.2,
+            "weighted_score": null,
+            "formula": "100 × won_share | 100 × (1 - max_stage_share)",
+            "evidence": {},
+            "source_metrics": [],
+            "availability": "unavailable",
+            "confidence": "low",
+            "note": "missing field: pipeline_stage"
+          },
+          {
+            "name": "conversion_stability",
+            "score": 74.1,
+            "weight": 0.25,
+            "weighted_score": 18.52,
+            "formula": "100 - min(100, CV(monthly_sales) × 120)",
+            "evidence": {
+              "cv": 0.2159,
+              "monthly_totals": [
+                380000.01,
+                220000.01,
+                310000.0
+              ]
+            },
+            "source_metrics": [
+              "sales_growth"
+            ],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          },
+          {
+            "name": "revenue_quality",
+            "score": 76.4,
+            "weight": 0.25,
+            "weighted_score": 19.1,
+            "formula": "60 + clamp(sales_growth, ±0.5) × 40",
+            "evidence": {
+              "total_sales": 910000.02,
+              "sales_growth": 0.4091
+            },
+            "source_metrics": [
+              "total_sales",
+              "sales_growth"
+            ],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          },
+          {
+            "name": "customer_risk",
+            "score": 83.6,
+            "weight": 0.25,
+            "weighted_score": 20.9,
+            "formula": "100 - top1_customer_share × 100",
+            "evidence": {
+              "top1_share": 0.1637,
+              "top_customers": [
+                {
+                  "rank": 1,
+                  "customer": "启明科技",
+                  "sales": 148988.77,
+                  "share": 0.1637
+                },
+                {
+                  "rank": 2,
+                  "customer": "天达百货",
+                  "sales": 138373.91,
+                  "share": 0.1521
+                },
+                {
+                  "rank": 3,
+                  "customer": "远航商贸",
+                  "sales": 134095.28,
+                  "share": 0.1474
+                },
+                {
+                  "rank": 4,
+                  "customer": "蓝海连锁",
+                  "sales": 115940.34,
+                  "share": 0.1274
+                },
+                {
+                  "rank": 5,
+                  "customer": "科讯电子",
+                  "sales": 107241.95,
+                  "share": 0.1178
+                }
+              ]
+            },
+            "source_metrics": [
+              "customer_concentration"
+            ],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          },
+          {
+            "name": "productivity",
+            "score": 65.8,
+            "weight": 0.25,
+            "weighted_score": 16.45,
+            "formula": "100 - top1_salesperson_share × 100",
+            "evidence": {
+              "top1_person_share": 0.3419,
+              "salesperson_count": 4
+            },
+            "source_metrics": [],
+            "availability": "available",
+            "confidence": "high",
+            "note": ""
+          }
+        ]
+      },
+      "key_metrics": [
+        {
+          "metric_name": "total_sales",
+          "value": 910000.02,
+          "display": "910,000.02",
+          "availability": "available",
+          "confidence": "high",
+          "formula": "SUM(sales_amount)",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "order_count",
+          "value": 120,
+          "display": "120",
+          "availability": "available",
+          "confidence": "medium",
+          "formula": "row_count approximation",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": "order_id field missing; approximated from row count"
+        },
+        {
+          "metric_name": "average_order_value",
+          "value": 7583.33,
+          "display": "7,583.33",
+          "availability": "available",
+          "confidence": "medium",
+          "formula": "total_sales / order_count",
+          "assumptions": [
+            "1 row approximately equals 1 order"
+          ],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_count",
+          "value": 8,
+          "display": "8",
+          "availability": "available",
+          "confidence": "high",
+          "formula": "COUNT(DISTINCT customer_name)",
+          "assumptions": [],
+          "note": ""
+        },
+        {
+          "metric_name": "customer_concentration",
+          "value": 0.1637,
+          "display": "0.16",
+          "availability": "available",
+          "confidence": "high",
+          "formula": "Top1/Top5 customer sales / total_sales",
+          "assumptions": [],
+          "note": ""
+        }
+      ],
+      "period_id": 3
+    }
+  ],
+  "narrative": {
+    "insights": [
+      {
+        "id": "insight_growth",
+        "confidence": "high"
+      },
+      {
+        "id": "insight_concentration",
+        "confidence": "high"
+      },
+      {
+        "id": "insight_product",
+        "confidence": "medium"
+      },
+      {
+        "id": "insight_region",
+        "confidence": "medium"
+      }
+    ],
+    "risks": [
+      {
+        "id": "risk_revenue",
+        "severity": "high"
+      },
+      {
+        "id": "risk_concentration",
+        "severity": "medium"
+      },
+      {
+        "id": "risk_pipeline",
+        "severity": "medium"
+      }
+    ],
+    "recommendations": [
+      {
+        "id": "rec_recovery",
+        "priority": "high"
+      },
+      {
+        "id": "rec_region",
+        "priority": "high"
+      },
+      {
+        "id": "rec_customers",
+        "priority": "medium"
+      }
+    ],
+    "actions": [
+      {
+        "id": 101,
+        "recommendation_id": "rec_recovery",
+        "source_run_id": 303,
+        "description_key": "demo.rec.recovery.desc",
+        "expected_result_key": "demo.rec.recovery.expected",
+        "reason_key": "demo.verify.reason.aligned",
+        "priority_snapshot": "high",
+        "status": "completed",
+        "execution_count": 1,
+        "target_metric_name": "total_sales",
+        "target_direction": "up",
+        "target_metric_source": "user",
+        "observations_summary": {
+          "total": 1,
+          "aligned": 1,
+          "not_aligned": 0,
+          "unable_to_verify": 0
+        },
+        "verification_run_id": 401,
+        "verified_at": "2026-03-20T10:00:00Z"
+      },
+      {
+        "id": 102,
+        "recommendation_id": "rec_region",
+        "source_run_id": 303,
+        "description_key": "demo.rec.region.desc",
+        "expected_result_key": "demo.rec.region.expected",
+        "reason_key": "demo.verify.reason.aligned",
+        "priority_snapshot": "high",
+        "status": "completed",
+        "execution_count": 1,
+        "target_metric_name": "total_sales",
+        "target_direction": "up",
+        "target_metric_source": "user",
+        "observations_summary": {
+          "total": 1,
+          "aligned": 1,
+          "not_aligned": 0,
+          "unable_to_verify": 0
+        },
+        "verification_run_id": 401,
+        "verified_at": "2026-03-20T10:00:00Z"
+      },
+      {
+        "id": 103,
+        "recommendation_id": "rec_customers",
+        "source_run_id": 303,
+        "description_key": "demo.rec.customers.desc",
+        "expected_result_key": "demo.rec.customers.expected",
+        "priority_snapshot": "medium",
+        "status": "pending",
+        "execution_count": 0,
+        "target_metric_name": "customer_concentration",
+        "target_direction": "down",
+        "target_metric_source": "user",
+        "observations_summary": null,
+        "verification_run_id": null,
+        "verified_at": null
+      },
+      {
+        "id": 104,
+        "recommendation_id": "rec_pipeline",
+        "source_run_id": 302,
+        "description_key": "demo.rec.pipeline.desc",
+        "expected_result_key": "demo.rec.pipeline.expected",
+        "priority_snapshot": "medium",
+        "status": "pending",
+        "execution_count": 0,
+        "target_metric_name": null,
+        "target_direction": null,
+        "target_metric_source": "none",
+        "observations_summary": null,
+        "verification_run_id": null,
+        "verified_at": null
+      }
+    ],
+    "verification": {
+      "run_id": 401,
+      "parent_run_id": 303,
+      "verdict": "partially_effective",
+      "confidence": "medium",
+      "reliability": "verification_reliability_v1",
+      "metric_changes": [
+        {
+          "metric": "total_sales",
+          "before": "600,000.02",
+          "after": "910,000.02",
+          "absolute_delta": null,
+          "percent_delta": "+40.9%",
+          "direction": "up",
+          "status": "computed"
+        },
+        {
+          "metric": "average_order_value",
+          "before": "7,500.00",
+          "after": "7,583.33",
+          "absolute_delta": null,
+          "percent_delta": "—",
+          "direction": "unchanged",
+          "status": "computed"
+        }
+      ]
+    },
+    "memory": {
+      "project_id": 0,
+      "engine_version": "business_memory_v0",
+      "profile": {},
+      "latest_metrics": {
+        "total_sales": {
+          "value": 910000.02,
+          "availability": "available",
+          "confidence": "high"
+        },
+        "average_order_value": {
+          "value": 7583.33,
+          "availability": "available",
+          "confidence": "medium"
+        },
+        "customer_count": {
+          "value": 8,
+          "availability": "available",
+          "confidence": "high"
+        },
+        "customer_concentration": {
+          "value": 0.1637,
+          "availability": "available",
+          "confidence": "high"
+        }
+      },
+      "metric_history": {
+        "total_sales": [
+          {
+            "run_id": 301,
+            "dataset_version": "周期1",
+            "period": {
+              "min": "2026-01",
+              "max": "2026-01"
+            },
+            "value": 380000.01
+          },
+          {
+            "run_id": 302,
+            "dataset_version": "周期2",
+            "period": {
+              "min": "2026-01",
+              "max": "2026-02"
+            },
+            "value": 600000.02
+          },
+          {
+            "run_id": 303,
+            "dataset_version": "周期3",
+            "period": {
+              "min": "2026-01",
+              "max": "2026-03"
+            },
+            "value": 910000.02
+          }
+        ]
+      },
+      "health_history": [
+        {
+          "run_id": 301,
+          "dataset_version": "周期1",
+          "period": {
+            "min": "2026-01",
+            "max": "2026-01"
+          },
+          "score": 66.9,
+          "level": "Fair"
+        },
+        {
+          "run_id": 302,
+          "dataset_version": "周期2",
+          "period": {
+            "min": "2026-01",
+            "max": "2026-02"
+          },
+          "score": 64.5,
+          "level": "Fair"
+        },
+        {
+          "run_id": 303,
+          "dataset_version": "周期3",
+          "period": {
+            "min": "2026-01",
+            "max": "2026-03"
+          },
+          "score": 75.0,
+          "level": "Good"
+        }
+      ],
+      "action_summary": {
+        "total": 4,
+        "pending": 2,
+        "completed": 2,
+        "cancelled": 0,
+        "verified": 2
+      },
+      "action_recent": [],
+      "issue_tracker": [],
+      "verification_history": [
+        {
+          "run_id": 401,
+          "parent_run_id": 303,
+          "verdict": "partially_effective",
+          "confidence": "medium",
+          "period": {
+            "min": "2026-02",
+            "max": "2026-03"
+          },
+          "alignment": "aligned",
+          "observations": 2,
+          "metric_changes": [
+            {
+              "metric": "total_sales",
+              "direction": "up"
+            },
+            {
+              "metric": "average_order_value",
+              "direction": "unchanged"
+            }
+          ],
+          "next_actions": []
+        }
+      ],
+      "open_loops": [
+        {
+          "type": "not_executed_action",
+          "priority": "medium",
+          "description_key": "demo.loop.notExecuted",
+          "first_seen_run_id": 303
+        },
+        {
+          "type": "long_open_issue",
+          "priority": "medium",
+          "metric": "pipeline_health",
+          "description_key": "demo.loop.longOpen",
+          "first_seen_run_id": 301
+        }
+      ],
+      "intelligence": {
+        "engine_version": "business_memory_intelligence_v1",
+        "rates": {
+          "execution": {
+            "action_total": 4,
+            "executed_count": 2,
+            "execution_rate": 0.5
+          },
+          "verification": {
+            "total_verified_actions": 4,
+            "verified_count": 2,
+            "verification_rate": 0.5,
+            "unable_to_verify_count": 2,
+            "unable_rate": 0.5,
+            "unable_reasons": {
+              "not_executed": 1,
+              "metric_unavailable": 1,
+              "insufficient_data": 0
+            }
+          }
+        },
+        "alignment_trend": [
+          {
+            "period": "2026-02 ~ 2026-03",
+            "verification_run_id": 401,
+            "aligned_count": 2,
+            "not_aligned_count": 0,
+            "unable_count": 0,
+            "source_run_ids": [
+              303
+            ]
+          }
+        ],
+        "improvement_timeline": [
+          {
+            "period": "2026-02 ~ 2026-03",
+            "verification_run_id": 401,
+            "parent_run_id": 303,
+            "observation_count": 2,
+            "observations": [
+              {
+                "action_id": 101,
+                "description_key": "demo.rec.recovery.desc",
+                "metric_name": "total_sales",
+                "before_value": 600000.02,
+                "after_value": 910000.02,
+                "absolute_delta": 310000.0,
+                "percent_delta": 0.4091,
+                "direction": "up",
+                "alignment": "aligned",
+                "executed": true,
+                "reason_key": "demo.verify.reason.aligned"
+              },
+              {
+                "action_id": 102,
+                "description_key": "demo.rec.region.desc",
+                "metric_name": "total_sales",
+                "before_value": 600000.02,
+                "after_value": 910000.02,
+                "absolute_delta": 310000.0,
+                "percent_delta": 0.4091,
+                "direction": "up",
+                "alignment": "aligned",
+                "executed": true,
+                "reason_key": "demo.verify.reason.aligned"
+              }
+            ]
+          }
+        ],
+        "open_loops": [
+          {
+            "type": "not_executed_action",
+            "priority": "medium",
+            "description_key": "demo.loop.notExecuted",
+            "first_seen_run_id": 303
+          },
+          {
+            "type": "long_open_issue",
+            "priority": "medium",
+            "metric": "pipeline_health",
+            "description_key": "demo.loop.longOpen",
+            "first_seen_run_id": 301
+          }
+        ]
+      },
+      "trend_deltas": {
+        "metric_trends": [
+          {
+            "metric_name": "total_sales",
+            "latest": 910000.02,
+            "previous": 600000.02,
+            "absolute_delta": 310000.0,
+            "percent_delta": 0.4091,
+            "direction": "up",
+            "period_count": 3,
+            "availability": "available",
+            "confidence": "high",
+            "source_run_ids": [
+              301,
+              302,
+              303
+            ]
+          }
+        ],
+        "health_trend": {
+          "latest_score": 75.0,
+          "previous_score": 64.5,
+          "delta": 10.5,
+          "direction": "up",
+          "latest_level": "Good",
+          "score_confidence": "high",
+          "period_count": 3,
+          "source_run_ids": [
+            301,
+            302,
+            303
+          ]
+        },
+        "action_trend": {
+          "total_actions": 4,
+          "pending": 2,
+          "completed": 2,
+          "cancelled": 0,
+          "verified": 2,
+          "verification_rate": 0.5,
+          "open_loops": 2,
+          "source": "demo_fixture"
+        },
+        "verification_trend": {
+          "latest_verdict": "partially_effective",
+          "previous_verdict": null,
+          "latest_reliability": "verification_reliability_v1",
+          "latest_confidence": "medium",
+          "verified_recommendations": 2,
+          "metric_changes_summary": [
+            {
+              "metric_name": "total_sales",
+              "direction": "up"
+            }
+          ],
+          "source_run_ids": [
+            401
+          ]
+        },
+        "periods_used": 3,
+        "latest_run_id": 303
+      },
+      "context_meta": {
+        "version": "demo_fixture",
+        "periods_used": 3,
+        "latest_run_id": 303,
+        "generated_at": "2026-08-24T05:30:19.151080+00:00",
+        "length_chars": 0,
+        "injected": false
+      },
+      "updated_at": "2026-08-24T05:30:19.151089+00:00",
+      "ready": true
+    },
+    "timeline": [
+      {
+        "id": 1,
+        "run_id": 301,
+        "created_at": "2026-01-15T09:00:00Z",
+        "business_health_score": 66.9,
+        "level": "Fair",
+        "period": "周期1",
+        "summary_key": "demo.timeline.c1"
+      },
+      {
+        "id": 2,
+        "run_id": 302,
+        "created_at": "2026-02-15T09:00:00Z",
+        "business_health_score": 64.5,
+        "level": "Fair",
+        "period": "周期2",
+        "summary_key": "demo.timeline.c2"
+      },
+      {
+        "id": 3,
+        "run_id": 303,
+        "created_at": "2026-03-15T09:00:00Z",
+        "business_health_score": 75.0,
+        "level": "Good",
+        "period": "周期3",
+        "summary_key": "demo.timeline.c3"
+      }
+    ],
+    "params": {
+      "total_sales": "910,000.02",
+      "growth": "+40.9%",
+      "growth_sign": "up",
+      "concentration": "16.4%",
+      "customers": "8",
+      "aov": "7,583.33",
+      "top_product": "智能手表",
+      "health_score": "75",
+      "health_level": "Good"
+    }
+  }
+}

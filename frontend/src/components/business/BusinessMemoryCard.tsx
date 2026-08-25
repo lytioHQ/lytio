@@ -6,7 +6,7 @@ import { localeForLang, t, UILanguage } from "@/lib/i18n";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-interface MemoryPoint {
+export interface MemoryPoint {
   run_id: number;
   dataset_version: string | null;
   period?: { min?: string; max?: string } | null;
@@ -15,10 +15,11 @@ interface MemoryPoint {
   value?: unknown;
 }
 
-interface OpenLoop {
+export interface OpenLoop {
   type: "pending_action" | "unavailable_metric" | "not_executed_action" | "long_open_issue" | string;
   action_id?: number | null;
   description?: string | null;
+  description_key?: string | null;
   priority?: string | null;
   metric?: string | null;
   note?: string | null;
@@ -26,9 +27,11 @@ interface OpenLoop {
   first_seen_run_id?: number | null;
 }
 
-interface IntelObservation {
+export interface IntelObservation {
   action_id: number;
   description?: string | null;
+  description_key?: string | null;
+  reason_key?: string | null;
   metric_name: string;
   before_value?: number | null;
   after_value?: number | null;
@@ -40,7 +43,7 @@ interface IntelObservation {
   reason?: string | null;
 }
 
-interface AlignmentTrendPoint {
+export interface AlignmentTrendPoint {
   period?: string | null;
   verification_run_id?: number | null;
   aligned_count: number;
@@ -49,7 +52,7 @@ interface AlignmentTrendPoint {
   source_run_ids: number[];
 }
 
-interface ImprovementTimelinePoint {
+export interface ImprovementTimelinePoint {
   period?: string | null;
   verification_run_id?: number | null;
   parent_run_id?: number | null;
@@ -57,7 +60,7 @@ interface ImprovementTimelinePoint {
   observations: IntelObservation[];
 }
 
-interface MemoryIntelligence {
+export interface MemoryIntelligence {
   engine_version: string;
   rates: {
     execution: { action_total: number; executed_count: number; execution_rate: number | null };
@@ -75,7 +78,7 @@ interface MemoryIntelligence {
   open_loops: OpenLoop[];
 }
 
-interface VerificationPoint {
+export interface VerificationPoint {
   run_id: number;
   parent_run_id: number | null;
   verdict: string | null;
@@ -84,7 +87,7 @@ interface VerificationPoint {
   next_actions: Array<Record<string, unknown>>;
 }
 
-interface MetricTrend {
+export interface MetricTrend {
   metric_name: string;
   latest: number | null;
   previous: number | null;
@@ -98,7 +101,7 @@ interface MetricTrend {
   source_run_ids: number[];
 }
 
-interface TrendDeltas {
+export interface TrendDeltas {
   metric_trends: MetricTrend[];
   health_trend: {
     latest_score: number | null;
@@ -133,7 +136,7 @@ interface TrendDeltas {
   latest_run_id: number | null;
 }
 
-interface BusinessMemoryData {
+export interface BusinessMemoryData {
   project_id: number;
   engine_version: string;
   profile: Record<string, unknown>;
@@ -182,19 +185,32 @@ function formatValue(value: unknown, lang: UILanguage): string {
  * result. Everything shown is a derived cache from analysis_runs +
  * action_items; nothing here is AI output.
  */
-export default function BusinessMemoryCard({ projectId, lang }: { projectId: string; lang: UILanguage }) {
+export default function BusinessMemoryCard({
+  projectId,
+  lang,
+  demoData,
+}: {
+  projectId: string;
+  lang: UILanguage;
+  demoData?: { data: BusinessMemoryData };
+}) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+  const isDemo = demoData != null;
   const [memory, setMemory] = useState<BusinessMemoryData | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    if (isDemo) {
+      setMemory(demoData?.data ?? null);
+      return;
+    }
     if (!token) return;
     apiFetch(`${API}/api/projects/${projectId}/memory`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : null))
       .then((data: BusinessMemoryData | null) => setMemory(data))
       .catch(() => setFailed(true));
-  }, [token, projectId]);
+  }, [isDemo, demoData, token, projectId]);
 
   if (failed) return null;
 
@@ -341,7 +357,17 @@ export default function BusinessMemoryCard({ projectId, lang }: { projectId: str
                   >
                     {loop.type === "pending_action" ? (
                       <span>
-                        {T("memory.pendingAction")} · {loop.description ?? "–"}
+                        {T("memory.pendingAction")} · {loop.description_key ? T(loop.description_key) : (loop.description ?? "–")}
+                        {loop.priority ? ` (${T(`action.priority.${loop.priority}`)})` : ""}
+                      </span>
+                    ) : loop.type === "not_executed_action" ? (
+                      <span>
+                        {T("memory.loop.notExecuted")} · {loop.description_key ? T(loop.description_key) : (loop.description ?? "–")}
+                        {loop.priority ? ` (${T(`action.priority.${loop.priority}`)})` : ""}
+                      </span>
+                    ) : loop.type === "long_open_issue" ? (
+                      <span>
+                        {T("memory.loop.longOpen")} · {loop.description_key ? T(loop.description_key) : (loop.title ?? "–")}
                         {loop.priority ? ` (${T(`action.priority.${loop.priority}`)})` : ""}
                       </span>
                     ) : (
@@ -445,7 +471,7 @@ export default function BusinessMemoryCard({ projectId, lang }: { projectId: str
                         {pt.period ?? `#${String(pt.verification_run_id ?? "")}`} ·{" "}
                         {pt.observations
                           .slice(0, 3)
-                          .map((o) => `${o.metric_name} ${o.alignment}`)
+                          .map((o) => `${o.description_key ? T(o.description_key) : (o.description ?? o.metric_name)} · ${T(`action.alignment.${o.alignment}`)}`)
                           .join(" · ") || T("memory.intel.none")}
                       </li>
                     ))}

@@ -7,7 +7,31 @@ import { t, UILanguage } from "@/lib/i18n";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-interface ActionItem {
+/** Read-only snapshot shape used by the public Demo (no mutation, no run links). */
+export interface DemoActionItem {
+  id: number;
+  recommendation_id: string | null;
+  source_run_id: number;
+  description_key: string;
+  expected_result_key: string | null;
+  reason_key?: string | null;
+  priority_snapshot: string;
+  status: string;
+  execution_count: number;
+  target_metric_name: string | null;
+  target_direction: string | null;
+  target_metric_source: string | null;
+  observations_summary: {
+    total?: number;
+    aligned?: number;
+    not_aligned?: number;
+    unable_to_verify?: number;
+  } | null;
+  verification_run_id: number | null;
+  verified_at: string | null;
+}
+
+export interface ActionItem {
   id: number;
   project_id: number;
   source_run_id: number;
@@ -92,9 +116,18 @@ function alignmentOf(item: ActionItem): string | null {
  * factual evidence; the alignment badge is system-calculated and never claims
  * causation ("因为建议所以增长" is forbidden).
  */
-export default function BusinessActions({ projectId, lang }: { projectId: string; lang: UILanguage }) {
+export default function BusinessActions({
+  projectId,
+  lang,
+  demoData,
+}: {
+  projectId: string;
+  lang: UILanguage;
+  demoData?: { actions: DemoActionItem[] };
+}) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+  const isDemo = demoData != null;
   const [actions, setActions] = useState<ActionItem[] | null>(null);
   const [sourceRunId, setSourceRunId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
@@ -116,6 +149,7 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
   // Locate the latest non-verification run (the one the Executive Report is
   // based on) so recommendations can be turned into actions in one click.
   useEffect(() => {
+    if (isDemo) return;
     if (!token) return;
     apiFetch(`${API}/api/projects/${projectId}/timeline`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : []))
@@ -127,8 +161,39 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
   }, [token, projectId]);
 
   useEffect(() => {
-    loadActions();
-  }, [loadActions]);
+    if (!isDemo) {
+      loadActions();
+      return;
+    }
+    setActions(
+      (demoData?.actions ?? []).map((a) => ({
+        id: a.id,
+        project_id: 0,
+        source_run_id: a.source_run_id,
+        recommendation_id: a.recommendation_id,
+        description: t(lang, a.description_key),
+        detail: null,
+        priority_snapshot: a.priority_snapshot,
+        action_type: "recommendation",
+        expected_result: a.expected_result_key ? t(lang, a.expected_result_key) : null,
+        owner: null,
+        deadline: null,
+        status: a.status,
+        completed_at: null,
+        verification_run_id: a.verification_run_id,
+        verification_evidence: null,
+        verified_at: a.verified_at,
+        target_metric_name: a.target_metric_name,
+        target_direction: a.target_direction,
+        target_metric_source: a.target_metric_source,
+        execution_count: a.execution_count,
+        observations_summary: a.observations_summary,
+        created_at: null,
+        updated_at: null,
+      })),
+    );
+    setSourceRunId(null);
+  }, [isDemo, demoData, lang, loadActions]);
 
   const createActions = async () => {
     if (!token || sourceRunId == null || creating) return;
@@ -213,7 +278,7 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
           <h3 className="text-base font-semibold text-ink">{T("action.title")}</h3>
           <p className="text-caption text-secondary">{T("action.subtitle")}</p>
         </div>
-        {sourceRunId != null && !hasActions && (
+        {!isDemo && sourceRunId != null && !hasActions && (
           <button
             type="button"
             onClick={createActions}
@@ -260,17 +325,25 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
                   <span>
                     {T("action.source")}: {item.recommendation_id || T("action.legacyRec")}
                     {" · "}
-                    <Link href={`/project/${projectId}/report/${item.source_run_id}`} className="font-medium text-accent hover:underline">
-                      {T("action.fromRun", { id: item.source_run_id })}
-                    </Link>
+                    {isDemo ? (
+                      <span className="font-medium text-accent">{T("action.fromRun", { id: item.source_run_id })}</span>
+                    ) : (
+                      <Link href={`/project/${projectId}/report/${item.source_run_id}`} className="font-medium text-accent hover:underline">
+                        {T("action.fromRun", { id: item.source_run_id })}
+                      </Link>
+                    )}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     {verified ? (
                       <>
                         <span className="font-medium text-success">{T("action.verification.linked")}</span>
-                        <Link href={`/project/${projectId}/verification/${item.verification_run_id}`} className="font-medium text-accent hover:underline">
-                          {T("action.viewVerification")}
-                        </Link>
+                        {isDemo ? (
+                          <span className="font-medium text-accent">{T("action.viewVerification")}</span>
+                        ) : (
+                          <Link href={`/project/${projectId}/verification/${item.verification_run_id}`} className="font-medium text-accent hover:underline">
+                            {T("action.viewVerification")}
+                          </Link>
+                        )}
                       </>
                     ) : (
                       <span>{T("action.verification.unlinked")}</span>
@@ -308,7 +381,7 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
                     })}
                   </p>
                 )}
-                {expanded[item.id] && (
+                {!isDemo && expanded[item.id] && (
                   <div className="mt-3 rounded-card border border-border bg-canvas/50 p-3 text-sm">
                     <p className="text-xs font-medium text-ink">{T("action.execution.record")}</p>
                     <textarea
@@ -360,13 +433,15 @@ export default function BusinessActions({ projectId, lang }: { projectId: string
                     <p className="mt-2 text-caption text-secondary/70">{T("action.execution.hint")}</p>
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => setExpanded((e) => ({ ...e, [item.id]: !e[item.id] }))}
-                  className="mt-2 text-xs font-medium text-accent hover:underline"
-                >
-                  {expanded[item.id] ? T("action.collapse") : T("action.execution.open")}
-                </button>
+                {!isDemo && (
+                  <button
+                    type="button"
+                    onClick={() => setExpanded((e) => ({ ...e, [item.id]: !e[item.id] }))}
+                    className="mt-2 text-xs font-medium text-accent hover:underline"
+                  >
+                    {expanded[item.id] ? T("action.collapse") : T("action.execution.open")}
+                  </button>
+                )}
               </div>
             );
           })}
