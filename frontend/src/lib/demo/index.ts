@@ -7,6 +7,10 @@
  *   pipeline (canonical schema -> metric engine -> health score).
  * - All UI copy lives in i18n (`demo.*`); the snapshot only stores facts and
  *   stable ids. Numeric values are identical across all four languages.
+ * - Each period carries its own narrative: insights, risks, recommendations,
+ *   actions and verification are driven by that period's business facts, so
+ *   switching periods shows a genuinely different operating story — not the
+ *   same text with different numbers.
  *
  * The adapters below shape the snapshot into the exact props consumed by the
  * production components, so the Demo renders with the same components as the
@@ -77,6 +81,22 @@ export interface DemoKeyMetric {
   note: string;
 }
 
+export interface DemoNarrativeItem {
+  id: string;
+  confidence?: string;
+  severity?: string;
+  priority?: string;
+}
+
+export interface DemoPeriodNarrative {
+  summary_key: string;
+  params: DemoParams;
+  insights: DemoNarrativeItem[];
+  risks: DemoNarrativeItem[];
+  recommendations: DemoNarrativeItem[];
+  actions: DemoActionItem[];
+}
+
 export interface DemoPeriod {
   period_id: number;
   schema_meta: {
@@ -91,13 +111,8 @@ export interface DemoPeriod {
   computed_metrics: DemoComputedMetric[];
   health_score: HealthScoreData;
   key_metrics: DemoKeyMetric[];
-}
-
-export interface DemoNarrativeItem {
-  id: string;
-  confidence?: string;
-  severity?: string;
-  priority?: string;
+  narrative?: DemoPeriodNarrative;
+  verification?: DemoVerification | null;
 }
 
 export interface DemoVerificationMetricChange {
@@ -196,6 +211,19 @@ export function demoPeriodAt(index: number): DemoPeriod {
 
 export const demoLatestPeriod = (): DemoPeriod => demoPeriodAt(DEMO_PERIOD_COUNT - 1);
 
+function periodNarrative(period: DemoPeriod): DemoPeriodNarrative {
+  if (period.narrative) return period.narrative;
+  // Backward-compatible fallback: latest snapshot narrative.
+  return {
+    summary_key: "demo.summary",
+    params: DEMO_RESULT.narrative.params,
+    insights: DEMO_RESULT.narrative.insights,
+    risks: DEMO_RESULT.narrative.risks,
+    recommendations: DEMO_RESULT.narrative.recommendations,
+    actions: DEMO_RESULT.narrative.actions,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Adapters -> production component props
 // ---------------------------------------------------------------------------
@@ -208,13 +236,13 @@ export interface DemoHealthCardData {
 
 export function buildDemoHealthCard(period: DemoPeriod, T: TFunc): DemoHealthCardData {
   const hs = period.health_score;
-  const params = DEMO_RESULT.narrative.params;
+  const params = periodNarrative(period).params;
   return {
     score: Number(hs.health_score ?? 0),
     level: hs.health_level ?? "—",
     summary: T("demo.health.summary", {
       health: params.health_score,
-      level: params.health_level,
+      level: T(`health.level.${params.health_level}`) || params.health_level,
       growth: params.growth,
       total: params.total_sales,
       product: params.top_product,
@@ -278,45 +306,46 @@ function narrativeDesc(kind: "insight" | "risk" | "rec", id: string): string {
   return `demo.${kind}.${id.replace(`${kind}_`, "")}Desc`;
 }
 
-export function buildDemoInsights(T: TFunc): DemoInsightData[] {
-  return DEMO_RESULT.narrative.insights.map((item) => ({
+export function buildDemoInsights(period: DemoPeriod, T: TFunc): DemoInsightData[] {
+  return periodNarrative(period).insights.map((item) => ({
     title: T(narrativeTitle("insight", item.id)),
     description: T(narrativeDesc("insight", item.id)),
     confidence: item.confidence ?? "medium",
   }));
 }
 
-export function buildDemoRisks(T: TFunc): DemoRiskData[] {
-  return DEMO_RESULT.narrative.risks.map((item) => ({
+export function buildDemoRisks(period: DemoPeriod, T: TFunc): DemoRiskData[] {
+  return periodNarrative(period).risks.map((item) => ({
     title: T(narrativeTitle("risk", item.id)),
     description: T(narrativeDesc("risk", item.id)),
     severity: item.severity ?? "medium",
   }));
 }
 
-export function buildDemoRecs(T: TFunc): DemoRecData[] {
-  return DEMO_RESULT.narrative.recommendations.map((item) => ({
+export function buildDemoRecs(period: DemoPeriod, T: TFunc): DemoRecData[] {
+  return periodNarrative(period).recommendations.map((item) => ({
     title: T(`demo.rec.${item.id.replace("rec_", "")}Title`),
     description: T(`demo.rec.${item.id.replace("rec_", "")}.desc`),
     priority: item.priority ?? "medium",
   }));
 }
 
-export function buildDemoExecutiveSummary(T: TFunc): string {
-  const p = DEMO_RESULT.narrative.params;
-  return T("demo.summary", {
-    total: p.total_sales,
-    growth: p.growth,
-    health: p.health_score,
-    level: p.health_level,
-    concentration: p.concentration,
-    customers: p.customers,
-    product: p.top_product,
+export function buildDemoExecutiveSummary(period: DemoPeriod, T: TFunc): string {
+  const narrative = periodNarrative(period);
+  return T(narrative.summary_key, {
+    total: narrative.params.total_sales,
+    growth: narrative.params.growth,
+    health: narrative.params.health_score,
+    level: T(`health.level.${narrative.params.health_level}`) || narrative.params.health_level,
+    concentration: narrative.params.concentration,
+    customers: narrative.params.customers,
+    product: narrative.params.top_product,
+    aov: narrative.params.aov,
   });
 }
 
-export function buildDemoActions(): DemoActionItem[] {
-  return DEMO_RESULT.narrative.actions.map((a) => ({
+export function buildDemoActions(period: DemoPeriod): DemoActionItem[] {
+  return periodNarrative(period).actions.map((a) => ({
     ...a,
     description_key: a.description_key,
     expected_result_key: a.expected_result_key,
@@ -361,8 +390,8 @@ export interface DemoVerificationView {
   metric_changes: DemoVerificationMetricChange[];
 }
 
-export function buildDemoVerification(): DemoVerificationView {
-  return DEMO_RESULT.narrative.verification;
+export function buildDemoVerification(period: DemoPeriod): DemoVerificationView | null {
+  return period.verification ?? DEMO_RESULT.narrative.verification;
 }
 
 export { DISPLAY_METRICS };

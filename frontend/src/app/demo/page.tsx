@@ -55,13 +55,75 @@ function ScreenHeading({ index, title }: { index: string; title: string }) {
   );
 }
 
+function VerificationSection({
+  period,
+  T,
+}: {
+  period: ReturnType<typeof demoPeriodAt>;
+  T: (key: string, params?: Record<string, string | number>) => string;
+}) {
+  const verification = buildDemoVerification(period);
+  if (!verification) {
+    return (
+      <Card variant="subtle" className="p-6">
+        <p className="text-h3 text-ink">{T("demo.verification.none")}</p>
+        <p className="mt-2 max-w-[680px] text-body leading-relaxed text-secondary">{T("demo.verification.noneDesc")}</p>
+      </Card>
+    );
+  }
+  return (
+    <Card>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <span className="text-h4 text-ink">{T("demo.period.label", { n: period.period_id })}</span>
+        {verification.verdict ? (
+          <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
+            {T(`verifyReport.verdict.${verification.verdict}`)}
+            {verification.confidence ? ` · ${T(`verifyReport.confidence.${verification.confidence}`)}` : ""}
+          </span>
+        ) : null}
+        {verification.reliability && (
+          <span className="rounded-full bg-success-soft px-2.5 py-1 text-xs font-medium text-success">
+            {T(`verifyReport.reliability.${verification.reliability}`) ?? verification.reliability}
+          </span>
+        )}
+      </div>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full min-w-[520px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-caption text-secondary">
+              <th className="py-2 pr-4 font-medium">{T("demo.verification.metric")}</th>
+              <th className="py-2 pr-4 font-medium">{T("demo.verification.before")}</th>
+              <th className="py-2 pr-4 font-medium">{T("demo.verification.after")}</th>
+              <th className="py-2 pr-4 font-medium">{T("demo.verification.change")}</th>
+              <th className="py-2 font-medium">{T("demo.verification.direction")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {verification.metric_changes.map((mc) => (
+              <tr key={mc.metric} className="border-b border-border last:border-none">
+                <td className="py-2.5 pr-4 font-medium text-ink">{mc.metric}</td>
+                <td className="py-2.5 pr-4 text-secondary">{mc.before ?? "–"}</td>
+                <td className="py-2.5 pr-4 text-secondary">{mc.after ?? "–"}</td>
+                <td className="py-2.5 pr-4 text-secondary">{mc.percent_delta ?? mc.absolute_delta ?? "–"}</td>
+                <td className="py-2.5 capitalize text-secondary">
+                  {T(`verifyReport.direction.${mc.direction}`) ?? mc.direction}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-4 text-caption italic leading-relaxed text-secondary/70">{T("demo.verification.computedNote")}</p>
+    </Card>
+  );
+}
+
 export default function DemoPage() {
   const { uiLang } = useUiLang();
   const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const [periodIndex, setPeriodIndex] = useState(DEMO_PERIOD_COUNT - 1);
   const period = demoPeriodAt(periodIndex);
   const timeline = buildDemoTimeline(T);
-  const verification = buildDemoVerification();
   const schema = period.schema_mapping;
   const meta = DEMO_META;
 
@@ -91,44 +153,47 @@ export default function DemoPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl space-y-10 px-4 py-10 md:px-8">
-        {/* Period navigation */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold text-ink">{T("demo.period.title")}</h2>
-            <p className="text-caption text-secondary">{T("demo.period.label", { n: period.period_id })}</p>
+      <div className="mx-auto max-w-5xl space-y-12 px-4 py-10 md:px-8">
+        {/* Period navigation + explainer (customer-facing definition) */}
+        <div className="rounded-card border border-border bg-surface p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-ink">{T("demo.period.title")}</h2>
+              <p className="text-sm text-secondary">{T("demo.period.label", { n: period.period_id })}</p>
+            </div>
+            <div className="flex gap-2">
+              {Array.from({ length: DEMO_PERIOD_COUNT }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setPeriodIndex(n - 1)}
+                  aria-pressed={periodIndex === n - 1}
+                  className={`inline-flex h-9 min-w-9 items-center justify-center rounded-control border px-3 text-sm font-medium transition-colors ${
+                    periodIndex === n - 1
+                      ? "border-accent/40 bg-accent-soft text-accent"
+                      : "border-border bg-surface text-secondary hover:bg-canvas hover:text-ink"
+                  }`}
+                >
+                  {T("demo.period.label", { n })}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2">
-            {Array.from({ length: DEMO_PERIOD_COUNT }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setPeriodIndex(n - 1)}
-                aria-pressed={periodIndex === n - 1}
-                className={`inline-flex h-9 min-w-9 items-center justify-center rounded-control border px-3 text-sm font-medium transition-colors ${
-                  periodIndex === n - 1
-                    ? "border-accent/40 bg-accent-soft text-accent"
-                    : "border-border bg-surface text-secondary hover:bg-canvas hover:text-ink"
-                }`}
-              >
-                {T("demo.period.label", { n })}
-              </button>
-            ))}
-          </div>
+          <p className="mt-3 max-w-[720px] text-caption leading-relaxed text-secondary">{T("demo.period.explain")}</p>
         </div>
 
-        {/* ===== Screen 1 · Now ===== */}
-        <section aria-label={T("exec.screen1")}>
-          <ScreenHeading index="1" title={T("exec.screen1")} />
+        {/* ===== Screen 1 · How is the business doing now? ===== */}
+        <section aria-label={T("demo.screen1")}>
+          <ScreenHeading index="1" title={T("demo.screen1")} />
           <div className="mt-6 space-y-8">
             <BusinessHealthCard data={buildDemoHealthCard(period, T)} lang={uiLang} />
-            <ExecutiveSummaryCard content={buildDemoExecutiveSummary(T)} lang={uiLang} />
+            <ExecutiveSummaryCard content={buildDemoExecutiveSummary(period, T)} lang={uiLang} />
           </div>
         </section>
 
-        {/* ===== Screen 2 · Why ===== */}
-        <section aria-label={T("exec.screen2")}>
-          <ScreenHeading index="2" title={T("exec.screen2")} />
+        {/* ===== Screen 2 · Why? ===== */}
+        <section aria-label={T("demo.screen2")}>
+          <ScreenHeading index="2" title={T("demo.screen2")} />
           <div className="mt-6 space-y-8">
             <div>
               <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -160,72 +225,68 @@ export default function DemoPage() {
             </div>
             <HealthScoreBreakdown data={period.health_score} lang={uiLang} />
             <MetricGrid metrics={buildDemoMetricGrid(period, T)} lang={uiLang} />
-            <InsightList insights={buildDemoInsights(T)} lang={uiLang} />
-            <RiskList risks={buildDemoRisks(T)} lang={uiLang} />
+            <InsightList insights={buildDemoInsights(period, T)} lang={uiLang} />
+            <RiskList risks={buildDemoRisks(period, T)} lang={uiLang} />
           </div>
         </section>
 
-        {/* ===== Screen 3 · How to improve ===== */}
-        <section aria-label={T("exec.screen3")}>
-          <ScreenHeading index="3" title={T("exec.screen3")} />
+        {/* ===== Screen 3 · What should we do next? ===== */}
+        <section aria-label={T("demo.screen3")}>
+          <ScreenHeading index="3" title={T("demo.screen3")} />
           <div className="mt-6 space-y-8">
-            <RecommendationList recs={buildDemoRecs(T)} lang={uiLang} />
-            <BusinessActions projectId="demo" lang={uiLang} demoData={{ actions: buildDemoActions() }} />
-            <BusinessMemoryCard projectId="demo" lang={uiLang} demoData={{ data: buildDemoMemory() }} />
+            <RecommendationList recs={buildDemoRecs(period, T)} lang={uiLang} />
+            <BusinessActions projectId="demo" lang={uiLang} demoData={{ actions: buildDemoActions(period) }} />
           </div>
         </section>
 
-        {/* ===== Verification ===== */}
-        <section>
-          <ScreenHeading index="V" title={T("demo.verification.title")} />
+        {/* ===== Screen 4 · What happened after we did it? ===== */}
+        <section aria-label={T("demo.screen4")}>
+          <ScreenHeading index="4" title={T("demo.screen4")} />
           <div className="mt-6">
-            <Card>
-              <p className="mb-3 text-h3 text-ink">{T("demo.verification.title")}</p>
-              <p className="max-w-[680px] text-body leading-relaxed text-secondary">{T("demo.verification.desc")}</p>
-              <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-                <span>
-                  {verification.verdict ? T(`verifyReport.verdict.${verification.verdict}`) : "–"}
-                  {verification.confidence ? ` · ${T(`verifyReport.confidence.${verification.confidence}`)}` : ""}
-                </span>
-                {verification.reliability && (
-                  <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{verification.reliability}</span>
-                )}
-              </div>
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[520px] border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-caption text-secondary">
-                      <th className="py-2 pr-4 font-medium">{T("demo.verification.metric")}</th>
-                      <th className="py-2 pr-4 font-medium">{T("demo.verification.before")}</th>
-                      <th className="py-2 pr-4 font-medium">{T("demo.verification.after")}</th>
-                      <th className="py-2 pr-4 font-medium">{T("demo.verification.change")}</th>
-                      <th className="py-2 font-medium">{T("demo.verification.direction")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {verification.metric_changes.map((mc) => (
-                      <tr key={mc.metric} className="border-b border-border last:border-none">
-                        <td className="py-2.5 pr-4 font-medium text-ink">{mc.metric}</td>
-                        <td className="py-2.5 pr-4 text-secondary">{mc.before ?? "–"}</td>
-                        <td className="py-2.5 pr-4 text-secondary">{mc.after ?? "–"}</td>
-                        <td className="py-2.5 pr-4 text-secondary">{mc.percent_delta ?? "–"}</td>
-                        <td className="py-2.5 capitalize text-secondary">{mc.direction}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="mt-4 text-caption italic leading-relaxed text-secondary/70">{T("demo.verification.computedNote")}</p>
-            </Card>
+            <VerificationSection period={period} T={T} />
           </div>
         </section>
 
-        {/* ===== Schema Mapping ===== */}
-        <section>
+        {/* ===== Screen 5 · Long-term improvement ===== */}
+        <section aria-label={T("demo.screen5")}>
+          <ScreenHeading index="5" title={T("demo.screen5")} />
+          <div className="mt-6 space-y-6">
+            <BusinessMemoryCard projectId="demo" lang={uiLang} demoData={{ data: buildDemoMemory() }} />
+            <div>
+              <h3 className="text-base font-semibold text-ink">{T("demo.timelineTitle")}</h3>
+              <div className="mt-3 space-y-3">
+                {timeline.map((item) => {
+                  const score = item.score;
+                  const color =
+                    score >= 90
+                      ? "border-l-success bg-success-soft"
+                      : score >= 75
+                        ? "border-l-accent bg-accent-soft"
+                        : score >= 60
+                          ? "border-l-warning bg-warning-soft"
+                          : "border-l-danger bg-danger-soft";
+                  return (
+                    <div key={item.id} className={`rounded-card border border-border border-l-4 ${color} p-4`}>
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-semibold text-ink tabular-nums">{score}</span>
+                        <span className="text-caption text-secondary">
+                          {T(`health.level.${item.level}`) ?? item.level} · {formatDate(item.created_at, localeForLang(uiLang))}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-relaxed text-secondary">{item.summary}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== Schema: confirm your sales data ===== */}
+        <section aria-label={T("demo.schema.title")}>
           <ScreenHeading index="S" title={T("demo.schema.title")} />
           <div className="mt-6">
             <Card>
-              <p className="mb-3 text-h3 text-ink">{T("demo.schema.title")}</p>
               <p className="max-w-[680px] text-body leading-relaxed text-secondary">{T("demo.schema.desc")}</p>
               <div className="mt-5 overflow-x-auto">
                 <table className="w-full min-w-[640px] border-collapse text-sm">
@@ -277,35 +338,6 @@ export default function DemoPage() {
           </div>
         </section>
 
-        {/* ===== Timeline ===== */}
-        <section>
-          <ScreenHeading index="T" title={T("demo.timelineTitle")} />
-          <div className="mt-6 space-y-3">
-            {timeline.map((item) => {
-              const score = item.score;
-              const color =
-                score >= 90
-                  ? "border-l-success bg-success-soft"
-                  : score >= 75
-                    ? "border-l-accent bg-accent-soft"
-                    : score >= 60
-                      ? "border-l-warning bg-warning-soft"
-                      : "border-l-danger bg-danger-soft";
-              return (
-                <div key={item.id} className={`rounded-card border border-border border-l-4 ${color} p-4`}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-semibold text-ink tabular-nums">{score}</span>
-                    <span className="text-caption text-secondary">
-                      {item.level} · {formatDate(item.created_at, localeForLang(uiLang))}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm leading-relaxed text-secondary">{item.summary}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
         {/* CTA Footer: primary = register with own data; secondary = back home */}
         <Card variant="highlighted" className="p-8 text-center md:p-12">
           <h2 className="text-h2 text-ink">{T("demo.ctaTitle")}</h2>
@@ -320,12 +352,21 @@ export default function DemoPage() {
           </div>
         </Card>
 
-        {/* Snapshot footer */}
-        <footer className="border-t border-border pt-6">
-          <p className="text-center text-caption text-secondary/60">
-            {T("demo.fixtureNote", { engine: meta.engine_version, commit: meta.source_commit })}
-          </p>
-        </footer>
+        {/* Technical notes: collapsed, audit-grade only */}
+        <details className="group rounded-card border border-border bg-canvas p-4">
+          <summary className="cursor-pointer text-sm font-medium text-secondary transition-colors hover:text-ink">
+            {T("demo.tech.title")}
+          </summary>
+          <div className="mt-3 space-y-2 text-sm text-secondary">
+            <p className="max-w-[680px] leading-relaxed">{T("demo.tech.desc")}</p>
+            <div className="grid gap-x-8 gap-y-1 text-caption sm:grid-cols-2">
+              <p><span className="font-medium text-ink">{T("demo.tech.sample")}:</span> {meta.sample_file}</p>
+              <p><span className="font-medium text-ink">{T("demo.tech.engine")}:</span> {meta.engine_version} · {meta.health_score_engine}</p>
+              <p><span className="font-medium text-ink">{T("demo.tech.generated")}:</span> {formatDate(meta.generated_at, localeForLang(uiLang))}</p>
+              <p><span className="font-medium text-ink">{T("demo.tech.commit")}:</span> {meta.source_commit}</p>
+            </div>
+          </div>
+        </details>
       </div>
     </main>
   );

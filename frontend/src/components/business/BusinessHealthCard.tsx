@@ -19,7 +19,7 @@ export default function BusinessHealthCard({ data, lang }: { data: HealthData; l
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-caption font-medium text-secondary">{T("landing.diff.businessHealth")}</p>
-          <p className="mt-1 text-h3 font-semibold">{data.level}</p>
+          <p className="mt-1 text-h3 font-semibold">{T(`health.level.${data.level}`) ?? data.level}</p>
           <p className="mt-2 max-w-[680px] text-body leading-relaxed text-ink/80">{data.summary}</p>
         </div>
       </div>

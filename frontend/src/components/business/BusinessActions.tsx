@@ -323,13 +323,13 @@ export default function BusinessActions({
                 )}
                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border pt-3 text-xs text-secondary">
                   <span>
-                    {T("action.source")}: {item.recommendation_id || T("action.legacyRec")}
+                    {T("action.source")}: {T("action.sourceRecommendation")}
                     {" · "}
                     {isDemo ? (
-                      <span className="font-medium text-accent">{T("action.fromRun", { id: item.source_run_id })}</span>
+                      <span className="font-medium text-accent" title={`${item.recommendation_id ?? ""} · #${item.source_run_id}`}>{T("action.viewOriginalAnalysis")}</span>
                     ) : (
-                      <Link href={`/project/${projectId}/report/${item.source_run_id}`} className="font-medium text-accent hover:underline">
-                        {T("action.fromRun", { id: item.source_run_id })}
+                      <Link href={`/project/${projectId}/report/${item.source_run_id}`} className="font-medium text-accent hover:underline" title={`${item.recommendation_id ?? ""} · #${item.source_run_id}`}>
+                        {T("action.viewOriginalAnalysis")}
                       </Link>
                     )}
                   </span>

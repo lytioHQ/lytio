@@ -32,8 +32,8 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
   // Single source of truth: the same demo snapshot used by /demo (generated
   // from the real production pipeline). No hand-written mock numbers.
   const latest = demoLatestPeriod();
-  const previewInsights = buildDemoInsights(T).slice(0, 2);
-  const previewRecs = buildDemoRecs(T).slice(0, 2);
+  const previewInsights = buildDemoInsights(latest, T).slice(0, 2);
+  const previewRecs = buildDemoRecs(latest, T).slice(0, 2);
   return (
     <main className="min-h-screen overflow-x-clip bg-canvas">
       {/* === HERO === */}
@@ -205,8 +205,8 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
           <div className="mt-12 space-y-8">
             <BusinessHealthCard data={buildDemoHealthCard(latest, T)} lang={lang} />
             <MetricGrid metrics={buildDemoMetricGrid(latest, T)} lang={lang} />
-            <InsightList insights={buildDemoInsights(T)} lang={lang} />
-            <RecommendationList recs={buildDemoRecs(T)} lang={lang} />
+            <InsightList insights={buildDemoInsights(latest, T)} lang={lang} />
+            <RecommendationList recs={buildDemoRecs(latest, T)} lang={lang} />
             <div className="flex justify-center pt-2">
               <Button onClick={() => router.push("/demo")} className="px-8">
                 {T("landing.tryDemo")}
@@ -236,7 +236,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === SECURITY === */}
-      <section className="border-b border-border bg-muted">
+      <section className="border-b border-border bg-canvas">
         <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.securityLabel")}</p>

@@ -260,7 +260,7 @@ export default function BusinessMemoryCard({
               <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
                 {lastHealth?.score != null ? String(lastHealth.score) : "–"}
               </p>
-              {lastHealth?.level && <p className="mt-0.5 text-xs text-secondary">{lastHealth.level}</p>}
+              {lastHealth?.level && <p className="mt-0.5 text-xs text-secondary">{T(`health.level.${lastHealth.level}`) ?? lastHealth.level}</p>}
             </div>
             <div className="rounded-control border border-border bg-canvas p-4">
               <p className="text-caption text-secondary">{T("memory.salesTrend")}</p>
@@ -283,7 +283,7 @@ export default function BusinessMemoryCard({
             <div className="rounded-control border border-border bg-canvas p-4">
               <p className="text-caption text-secondary">{T("memory.openLoops")}</p>
               <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">{loops.length}</p>
-              <p className="mt-0.5 text-xs text-secondary">{T("memory.engineVersion")}</p>
+              <p className="mt-0.5 text-xs text-secondary">{(trends?.periods_used ?? 0) > 0 ? T("memory.periodsReferenced", { n: trends?.periods_used ?? 0 }) : "–"}</p>
             </div>
           </div>
 
@@ -315,7 +315,7 @@ export default function BusinessMemoryCard({
                   </p>
                   <p className="mt-0.5 text-xs text-secondary">
                     {healthTrend?.delta != null ? `${healthTrend.delta > 0 ? "+" : ""}${healthTrend.delta}` : "–"}
-                    {healthTrend?.latest_level ? ` · ${healthTrend.latest_level}` : ""}
+                    {healthTrend?.latest_level ? ` · ${T(`health.level.${healthTrend.latest_level}`) ?? healthTrend.latest_level}` : ""}
                   </p>
                 </div>
                 <div className="rounded-control border border-border bg-canvas p-3">
@@ -336,7 +336,7 @@ export default function BusinessMemoryCard({
                       : "–"}
                   </p>
                   <p className="mt-0.5 text-xs text-secondary">
-                    {verificationTrend?.latest_reliability ?? ""}
+                    {verificationTrend?.latest_reliability ? T(`verifyReport.reliability.${verificationTrend.latest_reliability}`) ?? verificationTrend.latest_reliability : ""}
                     {verificationTrend?.latest_confidence
                       ? ` · ${T(`verifyReport.confidence.${verificationTrend.latest_confidence}`)}`
                       : ""}
@@ -430,7 +430,7 @@ export default function BusinessMemoryCard({
                   <p className="mt-0.5 text-xs text-secondary">
                     {Object.entries(intelRates.verification.unable_reasons)
                       .filter(([, v]) => (v as number) > 0)
-                      .map(([k, v]) => `${k}:${String(v)}`)
+                      .map(([k, v]) => `${T(`memory.intel.unable_reason.${k}`) ?? k}: ${String(v)}`)
                       .join(" · ") || "–"}
                   </p>
                 </div>
