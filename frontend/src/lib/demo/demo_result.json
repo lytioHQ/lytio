@@ -3,10 +3,10 @@
     "schema_version": "canonical_sales_v1",
     "engine_version": "metric_engine_v1",
     "health_score_engine": "health_score_v1",
-    "generated_at": "2026-08-24T05:30:19.151112+00:00",
-    "source_commit": "03db6e8",
+    "generated_at": "2026-08-25T05:04:16.934300+00:00",
+    "source_commit": "04af2b0",
     "sample_file": "backend/demo/sample_sales_data.xlsx",
-    "data_md5": "1fa3f1117935ca720f918c3d8274f7f0"
+    "data_md5": "9937732909c23ab8d2e0f169a8586b1f"
   },
   "supported_metrics": [
     "average_order_value",
@@ -2086,11 +2086,11 @@
         "version": "demo_fixture",
         "periods_used": 3,
         "latest_run_id": 303,
-        "generated_at": "2026-08-24T05:30:19.151080+00:00",
+        "generated_at": "2026-08-25T05:04:16.934277+00:00",
         "length_chars": 0,
         "injected": false
       },
-      "updated_at": "2026-08-24T05:30:19.151089+00:00",
+      "updated_at": "2026-08-25T05:04:16.934283+00:00",
       "ready": true
     },
     "timeline": [
