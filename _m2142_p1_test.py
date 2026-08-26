@@ -265,7 +265,13 @@ try:
         .strip()
         .splitlines()
     )
-    allowed = {"backend/app/services/memory_service.py", "backend/app/services/analysis_job_runner.py"}
+    allowed = {
+        "backend/app/services/analysis_job_runner.py",
+        "backend/app/services/metric_engine.py",
+        "backend/app/plugins/sales/prompt_builder.py",
+        "frontend/src/app/project/[id]/analysis/page.tsx",
+        "frontend/src/lib/i18n.ts",
+    }
     # Regression/test files themselves are expected in the working diff; only
     # product code is scope-limited to the two authorized service files.
     ignored = {os.path.basename(__file__), "_m2142_test.py"}

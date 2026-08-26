@@ -42,6 +42,8 @@ function jobErrorKey(job: AnalysisJob | null): string | null {
       return "analysis.error.invalid_data";
     case "missing_file":
       return "analysis.error.missing_file";
+    case "DATA_SERIALIZATION_ERROR":
+      return "analysis.error.dataError";
     default:
       return "analysis.error.unknown";
   }

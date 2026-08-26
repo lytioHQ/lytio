@@ -17,6 +17,24 @@ import re
 from collections import Counter
 from datetime import date, datetime
 from typing import Any
+from decimal import Decimal
+
+
+def _json_safe(value: Any) -> Any:
+    """Normalize a cell value to a JSON-serializable primitive.
+
+    Evidence snapshots keep the original cell value, but openpyxl returns
+    ``datetime`` objects for real date-formatted cells and numeric cells can
+    be ``Decimal``. Those must become stable strings/numbers before the value
+    ever enters result_json / prompt JSON (M2.14.2 UAT P0).
+    """
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    return value
 
 from app.services.canonical_schema import CANONICAL_BY_KEY
 from app.services.schema_mapper import AVAILABLE, UNAVAILABLE
@@ -71,7 +89,7 @@ def _num_values(rows: list[list], idx: int | None) -> list[tuple[int, float]]:
 def _row_dict(rows: list[list], headers: list[str], row_index: int) -> dict[str, Any]:
     """Snapshot one row as {header: value} for evidence display."""
     row = rows[row_index]
-    return {headers[j]: row[j] for j in range(len(headers)) if j < len(row)}
+    return {headers[j]: _json_safe(row[j]) for j in range(len(headers)) if j < len(row)}
 
 
 def _top_rows(rows: list[list], headers: list[str], idx: int, limit: int = 5) -> list[dict]:

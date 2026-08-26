@@ -78,8 +78,21 @@ def _build_result_json(
     return json.dumps(data, ensure_ascii=False)
 
 
-async def _fail(job_id: int, error_code: str, message: str, started_at: float) -> None:
-    """Mark a known failure. Safe for both queued and running jobs."""
+async def _fail(
+    job_id: int, error_code: str, message: str, started_at: float,
+    exc: Exception | None = None,
+) -> None:
+    """Mark a known failure. Safe for both queued and running jobs.
+
+    When ``exc`` is provided the full traceback is written to logs so a
+    failed job stays diagnosable even after log rotation (M2.14.2 UAT P0).
+    """
+    if exc is not None:
+        logger.error(
+            "analysis_job_failed",
+            extra={"event": "analysis_job", "job_id": job_id, "error_code": error_code},
+            exc_info=exc,
+        )
     async with async_session() as db:
         job = await db.get(AnalysisJob, job_id)
         if not job or job.status not in ("queued", "running"):
@@ -240,7 +253,8 @@ async def _execute_job(job_id: int, started_at: float) -> None:
         await _fail(job_id, "invalid_data", str(exc), started_at)
         return
     except Exception as exc:
-        await _fail(job_id, "unknown", f"{type(exc).__name__}: {exc}", started_at)
+        code = "DATA_SERIALIZATION_ERROR" if isinstance(exc, TypeError) else "unknown"
+        await _fail(job_id, code, f"{type(exc).__name__}: {exc}", started_at, exc=exc)
         return
 
     analysis_type = analysis_type_for(direction)
@@ -282,6 +296,11 @@ async def _execute_job(job_id: int, started_at: float) -> None:
             except Exception as mem_exc:
                 memory_service.log_memory_failure({"job_id": job_id, "run_id": run.id}, mem_exc)
         except Exception as exc:
+            logger.error(
+                "analysis_job_persist_failed",
+                extra={"event": "analysis_job", "job_id": job_id, "error_code": "unknown"},
+                exc_info=exc,
+            )
             await analysis_job_service.mark_failed(
                 db, job, "unknown",
                 f"Failed to persist analysis result: {type(exc).__name__}: {exc}",
@@ -414,7 +433,8 @@ async def _run_verification(job_id: int, started_at: float) -> None:
             await _fail(job_id, "invalid_data", str(exc), started_at)
             return
         except Exception as exc:
-            await _fail(job_id, "unknown", f"{type(exc).__name__}: {exc}", started_at)
+            code = "DATA_SERIALIZATION_ERROR" if isinstance(exc, TypeError) else "unknown"
+            await _fail(job_id, code, f"{type(exc).__name__}: {exc}", started_at, exc=exc)
             return
         if verification_parser.is_usable_comparison(response.summary):
             break

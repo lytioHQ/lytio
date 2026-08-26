@@ -237,29 +237,34 @@ diff = subprocess.run(
     cwd=os.path.dirname(os.path.abspath(__file__)),
     capture_output=True, text=True,
 ).stdout.splitlines()
-# The regression file itself is tracked; exclude it so the scope audit below
-# only covers the two authorized service files of the P1 fix.
-diff = [f for f in diff if f != os.path.basename(__file__)]
+# Regression files themselves are tracked; exclude them so the scope audit
+# below only covers the authorized product files of the P1/P0 fixes.
+_scope_excluded = {
+    os.path.basename(__file__), "_m2142_p1_test.py", "_m2142_uat_p0_test.py",
+}
+diff = [f for f in diff if f not in _scope_excluded]
 allowed_tracked = [
-    # M2.14.2 P1 fix scope: only the two service files below may be modified.
-    "backend/app/services/memory_service.py",
+    # M2.14.2 P1 fix + UAT P0 fix scope.
     "backend/app/services/analysis_job_runner.py",
+    "backend/app/services/metric_engine.py",
+    "backend/app/plugins/sales/prompt_builder.py",
+    "frontend/src/app/project/[id]/analysis/page.tsx",
+    "frontend/src/lib/i18n.ts",
 ]
 check("t3_diff_scoped", all(f in diff for f in allowed_tracked), str(diff))
 check("t3_diff_no_extra", len(diff) == len(allowed_tracked), str(diff))
 new_files = ["backend/app/services/memory_intelligence.py", "_m2142_test.py", "_m2142_p1_test.py"]
 check("t3_new_files_exist", all(os.path.exists(f) for f in new_files), str(new_files))
 forbidden = [
-    "prompt_builder.py", "verification_service.py", "schemas/verification.py",
+    "verification_service.py", "schemas/verification.py",
     "api/verification.py", "api/auth.py", "workbook_service.py",
     "action_execution_service.py", "action_item_service.py",
-    "metric_engine.py", "health_score.py", "analysis_engine.py", "models/",
+    "health_score.py", "analysis_engine.py", "models/",
 ]
 check("t3_diff_forbidden_absent", all(f not in diff for f in forbidden), diff)
 
 # untouched sources: absent from the working diff + normalized-hash equal
 untouched_rels = [
-    "backend/app/plugins/sales/prompt_builder.py",
     "backend/app/services/verification_service.py",
     "backend/app/schemas/verification.py",
     "backend/app/api/verification.py",

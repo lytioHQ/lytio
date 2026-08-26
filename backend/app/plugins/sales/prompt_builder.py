@@ -11,6 +11,25 @@ import json
 PROMPT_DIR = Path(__file__).parent.parent.parent.parent / "prompts" / "sales"
 DEFAULT_VERSION = "v1"
 
+
+def _json_default(value):
+    """JSON fallback for non-primitive values (datetime/date/Decimal).
+
+    Defensive backstop for values that reach prompt/result JSON without
+    being normalized upstream. Dates become ISO strings; Decimal becomes
+    a float. Anything else degrades to str() so a serialization bug can
+    never fail the whole analysis job (M2.14.2 UAT P0).
+    """
+    from datetime import date, datetime
+    from decimal import Decimal
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    return str(value)
+
 LANG_INSTRUCTIONS = {
     "zh": "Respond in Chinese (\u4e2d\u6587).",
     "en": "Respond in English.",
@@ -142,7 +161,7 @@ def build(
             "The following metrics were computed by the system from the dataset. "
             "AI must reference these numbers directly and must NOT recompute or modify any value. "
             "A metric with availability 'unavailable' means the required field is missing - do not fabricate it.\n"
-            + json.dumps(computed_metrics, ensure_ascii=False)
+            + json.dumps(computed_metrics, ensure_ascii=False, default=_json_default)
         )
         prompt = prompt.replace("## Rules", metrics_section + "\n\n## Rules", 1)
 
@@ -155,7 +174,7 @@ def build(
             "AI must explain why each dimension is high or low and how to improve it, "
             "but must NOT modify or recompute any value. "
             "A dimension with availability 'unavailable' means the required field is missing - do not fabricate it.\n"
-            + json.dumps(health_score, ensure_ascii=False)
+            + json.dumps(health_score, ensure_ascii=False, default=_json_default)
         )
         prompt = prompt.replace("## Rules", health_section + "\n\n## Rules", 1)
 
@@ -168,7 +187,7 @@ def build(
             "AI must not judge whether the mapping is correct. "
             "A confirmation_status of 'pending' or 'skipped' means the mapping was not "
             "user-confirmed - do not describe it as confirmed.\n"
-            + json.dumps(schema_meta, ensure_ascii=False)
+            + json.dumps(schema_meta, ensure_ascii=False, default=_json_default)
         )
         prompt = prompt.replace("## Rules", schema_section + "\n\n## Rules", 1)
 
