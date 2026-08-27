@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Card, { type CardVariant } from "./Card";
+import { metricValueClasses } from "@/lib/formatNumber";
 
 export type MetricTrend = "positive" | "negative" | "neutral";
 
@@ -35,9 +36,14 @@ export default function MetricCard({
   return (
     <Card padding="md" variant={variant} className={className}>
       <div className="min-w-0">
-        <p className="text-caption text-secondary">{label}</p>
+        <p className="truncate text-caption text-secondary" title={label}>
+          {label}
+        </p>
         <div className="mt-2 flex min-w-0 items-baseline gap-2">
-          <span className="max-w-full text-[clamp(1.125rem,4.2vw,2rem)] font-semibold leading-tight text-ink tabular-nums">
+          <span
+            className={metricValueClasses}
+            title={typeof value === "string" ? value : undefined}
+          >
             {value}
           </span>
           {trend ? (
@@ -51,7 +57,9 @@ export default function MetricCard({
         </div>
       </div>
       {description ? (
-        <p className="mt-2 text-caption text-secondary">{description}</p>
+        <p className="mt-2 truncate text-caption text-secondary" title={description}>
+          {description}
+        </p>
       ) : null}
     </Card>
   );

@@ -1,4 +1,5 @@
 import { t, UILanguage } from "@/lib/i18n";
+import ProvenanceBadge from "./ProvenanceBadge";
 
 interface HealthData { score: number; level: string; summary: string; }
 
@@ -20,7 +21,13 @@ export default function BusinessHealthCard({ data, lang }: { data: HealthData; l
         <div className="min-w-0 flex-1">
           <p className="text-caption font-medium text-secondary">{T("landing.diff.businessHealth")}</p>
           <p className="mt-1 text-h3 font-semibold">{T(`health.level.${data.level}`) ?? data.level}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <ProvenanceBadge variant="computed" lang={lang} />
+          </div>
+          <div className="mt-2 flex flex-wrap items-start gap-2">
+            <ProvenanceBadge variant="aiExplain" lang={lang} className="mt-1" />
           <p className="mt-2 max-w-[680px] text-body leading-relaxed text-ink/80">{data.summary}</p>
+          </div>
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
 import BusinessActions from "@/components/business/BusinessActions";
 import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
+import ProvenanceBadge from "@/components/business/ProvenanceBadge";
 import { Card, MetricCard } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 import { useUiLang } from "@/lib/useUiLang";
@@ -155,6 +156,13 @@ export default function DemoPage() {
       </header>
 
       <div className="mx-auto max-w-5xl space-y-12 px-4 py-10 md:px-8">
+        {/* M2.14.3 Phase 1 (P2): data/AI boundary legend */}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-control border border-border bg-surface px-4 py-3">
+          <span className="text-caption font-medium text-secondary">{T("badge.legend")}</span>
+          <ProvenanceBadge variant="computed" lang={uiLang} />
+          <ProvenanceBadge variant="aiExplain" lang={uiLang} />
+          <ProvenanceBadge variant="aiEstimate" lang={uiLang} />
+        </div>
         {/* Period navigation + explainer (customer-facing definition) */}
         <div className="rounded-card border border-border bg-surface p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">

@@ -1,5 +1,6 @@
 import { t, UILanguage } from "@/lib/i18n";
 import EvidenceCard, { EvidenceData } from "./EvidenceCard";
+import ProvenanceBadge from "./ProvenanceBadge";
 
 interface InsightData { title: string; description: string; confidence: string; evidence?: EvidenceData | null; }
 
@@ -12,7 +13,10 @@ export default function InsightList({ insights, lang }: { insights: InsightData[
   if (!insights.length) return null;
   return (
     <div>
-      <p className="mb-4 text-h3 text-ink">{T("biz.findingsTitle", { n: insights.length })}</p>
+      <div className="mb-4 flex items-center gap-3">
+        <p className="text-h3 text-ink">{T("biz.findingsTitle", { n: insights.length })}</p>
+        <ProvenanceBadge variant="aiExplain" lang={lang} />
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
         {insights.map((item, i) => (
           <div key={i} className="rounded-card border border-border bg-surface p-5 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]">

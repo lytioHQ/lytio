@@ -49,6 +49,16 @@ const DIM_ORDER = [
 function DimensionUnavailableNote({ dim, T }: { dim: HealthScoreDimension; T: TFunc }) {
   const note = dim.note || "";
   if (note.startsWith("missing field:")) {
+    // M2.14.3 Phase 1 (P4): pipeline stage is a CRM-specific concept. When it
+    // is absent, explain it in customer language instead of "missing field".
+    if (dim.name === "pipeline_health") {
+      return (
+        <>
+          <p className="mt-0.5 text-caption text-secondary">{T("healthscore.pipelineUnavailableTitle")}</p>
+          <p className="mt-0.5 text-caption text-secondary opacity-80">{T("healthscore.pipelineUnavailableHint")}</p>
+        </>
+      );
+    }
     const field = T(`healthscore.dimField.${dim.name}`) || dim.name;
     return (
       <>

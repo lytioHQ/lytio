@@ -21,6 +21,7 @@ import type { UILanguage } from "@/lib/i18n";
 import type { HealthScoreData } from "@/components/business/HealthScoreBreakdown";
 import type { DemoActionItem } from "@/components/business/BusinessActions";
 import type { BusinessMemoryData } from "@/components/business/BusinessMemoryCard";
+import { formatCurrencyCN } from "@/lib/formatNumber";
 
 // ---------------------------------------------------------------------------
 // Snapshot types (mirror of generate_demo_fixture.py output)
@@ -197,8 +198,9 @@ export function formatMetricValue(m: DemoComputedMetric, T: TFunc): string {
   if (m.metric_name === "customer_concentration") {
     return `${T("metric.top1")} ${(Number(m.value) * 100).toFixed(1)}%`;
   }
+  // M2.14.3 Phase 1 (P3): currency metrics use the unified 万/亿 format.
   if (m.metric_name === "total_sales" || m.metric_name === "average_order_value") {
-    return Number(m.value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    return formatCurrencyCN(Number(m.value));
   }
   return String(m.value);
 }

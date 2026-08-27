@@ -220,6 +220,12 @@ export default function BusinessMemoryCard({
   const lastSales = salesPoints.length > 0 ? salesPoints[salesPoints.length - 1] : null;
   const summary = memory?.action_summary ?? { total: 0, pending: 0, completed: 0, cancelled: 0, verified: 0 };
   const loops = memory?.open_loops ?? [];
+  // M2.14.3 Phase 1 (P5): split open loops into business actions vs. data
+  // enhancement suggestions so customers do not feel their data is "broken".
+  const actionLoops = loops.filter(
+    (l) => l.type === "pending_action" || l.type === "not_executed_action" || l.type === "long_open_issue"
+  );
+  const dataLoops = loops.filter((l) => l.type === "unavailable_metric");
   const verificationPoints = memory?.verification_history ?? [];
   const lastVerification =
     verificationPoints.length > 0 ? verificationPoints[verificationPoints.length - 1] : null;
@@ -349,35 +355,55 @@ export default function BusinessMemoryCard({
           {loops.length > 0 && (
             <div className="mt-5">
               <p className="text-caption font-medium text-secondary">{T("memory.openLoops")}</p>
-              <ul className="mt-2 space-y-2">
-                {loops.slice(0, 3).map((loop, i) => (
-                  <li
-                    key={i}
-                    className={`rounded-control border border-border border-l-4 bg-canvas px-3 py-2 text-sm text-ink ${LOOP_ACCENT[loop.type] || "border-l-muted"}`}
-                  >
-                    {loop.type === "pending_action" ? (
-                      <span>
-                        {T("memory.pendingAction")} · {loop.description_key ? T(loop.description_key) : (loop.description ?? "–")}
-                        {loop.priority ? ` (${T(`action.priority.${loop.priority}`)})` : ""}
-                      </span>
-                    ) : loop.type === "not_executed_action" ? (
-                      <span>
-                        {T("memory.loop.notExecuted")} · {loop.description_key ? T(loop.description_key) : (loop.description ?? "–")}
-                        {loop.priority ? ` (${T(`action.priority.${loop.priority}`)})` : ""}
-                      </span>
-                    ) : loop.type === "long_open_issue" ? (
-                      <span>
-                        {T("memory.loop.longOpen")} · {loop.description_key ? T(loop.description_key) : (loop.title ?? "–")}
-                        {loop.priority ? ` (${T(`action.priority.${loop.priority}`)})` : ""}
-                      </span>
-                    ) : (
-                      <span>
-                        {T("memory.unavailableMetric")} · {loop.metric ?? "–"}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
+              {actionLoops.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-caption font-medium text-secondary">{T("memory.loopActions")}</p>
+                  <ul className="mt-2 space-y-2">
+                    {actionLoops.slice(0, 3).map((loop, i) => (
+                      <li
+                        key={i}
+                        className={`rounded-control border border-border border-l-4 bg-canvas px-3 py-2 text-sm text-ink ${LOOP_ACCENT[loop.type] || "border-l-muted"}`}
+                      >
+                        {loop.type === "pending_action" ? (
+                          <span>
+                            {T("memory.pendingAction")} · {loop.description_key ? T(loop.description_key) : (loop.description ?? "–")}
+                            {loop.priority ? ` (${T(`action.priority.${loop.priority}`)})` : ""}
+                          </span>
+                        ) : loop.type === "not_executed_action" ? (
+                          <span>
+                            {T("memory.loop.notExecuted")} · {loop.description_key ? T(loop.description_key) : (loop.description ?? "–")}
+                            {loop.priority ? ` (${T(`action.priority.${loop.priority}`)})` : ""}
+                          </span>
+                        ) : (
+                          <span>
+                            {T("memory.loop.longOpen")} · {loop.description_key ? T(loop.description_key) : (loop.title ?? "–")}
+                            {loop.priority ? ` (${T(`action.priority.${loop.priority}`)})` : ""}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {dataLoops.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-caption font-medium text-secondary">{T("memory.loopData")}</p>
+                  <p className="mt-0.5 text-caption text-secondary">{T("memory.loopDataIntro")}</p>
+                  <ul className="mt-2 space-y-2">
+                    {dataLoops.slice(0, 3).map((loop, i) => (
+                      <li
+                        key={i}
+                        className="rounded-control border border-border border-l-4 border-l-muted bg-canvas px-3 py-2 text-sm text-ink"
+                      >
+                        <span>
+                          {T("memory.unavailableMetric")} · {loop.metric ?? "–"}
+                          {loop.note ? ` · ${loop.note}` : ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 

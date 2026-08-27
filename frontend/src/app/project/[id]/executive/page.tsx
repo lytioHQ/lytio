@@ -18,6 +18,8 @@ import BusinessActions from "@/components/business/BusinessActions";
 import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
 import { localeForLang, t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
+import ProvenanceBadge from "@/components/business/ProvenanceBadge";
+import { formatCurrencyCN } from "@/lib/formatNumber";
 
 interface ExecutiveReportData {
   title: string;
@@ -56,7 +58,8 @@ function formatMetricValue(
     return `${T("metric.top1")} ${(Number(m.value) * 100).toFixed(1)}%`;
   }
   if (m.metric_name === "total_sales" || m.metric_name === "average_order_value") {
-    return Number(m.value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    // M2.14.3 Phase 1 (P3): currency metrics use the unified 万/亿 format.
+    return formatCurrencyCN(Number(m.value));
   }
   return String(m.value);
 }
@@ -175,6 +178,13 @@ export default function ExecutiveReportPage() {
       {/* Report body organized by the Three Screen Rule */}
       <article className="mx-auto max-w-4xl px-4 py-10 md:px-6">
         <div className="space-y-12">
+          {/* M2.14.3 Phase 1 (P2): data/AI boundary legend */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-control border border-border bg-surface px-4 py-3">
+            <span className="text-caption font-medium text-secondary">{T("badge.legend")}</span>
+            <ProvenanceBadge variant="computed" lang={uiLang} />
+            <ProvenanceBadge variant="aiExplain" lang={uiLang} />
+            <ProvenanceBadge variant="aiEstimate" lang={uiLang} />
+          </div>
           <section aria-label={T("exec.screen1")}>
             <ScreenHeading index="1" title={T("exec.screen1")} />
             <div className="mt-6 space-y-8">

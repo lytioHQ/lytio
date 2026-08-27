@@ -1,5 +1,6 @@
 import { t, UILanguage } from "@/lib/i18n";
 import EvidenceCard, { EvidenceData } from "./EvidenceCard";
+import ProvenanceBadge from "./ProvenanceBadge";
 
 interface RiskData { title: string; description: string; severity: string; evidence?: EvidenceData | null; }
 
@@ -12,7 +13,10 @@ export default function RiskList({ risks, lang }: { risks: RiskData[]; lang: UIL
   if (!risks.length) return null;
   return (
     <div>
-      <p className="mb-4 text-h3 text-ink">{T("biz.risksTitle", { n: risks.length })}</p>
+      <div className="mb-4 flex items-center gap-3">
+        <p className="text-h3 text-ink">{T("biz.risksTitle", { n: risks.length })}</p>
+        <ProvenanceBadge variant="aiExplain" lang={lang} />
+      </div>
       <div className="space-y-3">
         {risks.map((item, i) => (
           <div key={i} className={`rounded-card border ${SEV_COLORS[item.severity] || "border-border bg-surface"} p-5`}>

@@ -15,9 +15,11 @@ export default function MetricGrid({ metrics, lang }: { metrics: MetricData[]; l
       <p className="mb-4 text-h3 text-ink">{T("biz.keyMetrics")}</p>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {metrics.map((m, i) => (
-          <div key={i} className={`rounded-control border p-4 ${TREND_BG[m.trend] || "border-border bg-surface"}`}>
-            <p className="text-caption text-secondary">{m.name}</p>
-            <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">{m.value}</p>
+          <div key={i} className={`min-w-0 rounded-control border p-4 ${TREND_BG[m.trend] || "border-border bg-surface"}`}>
+            <p className="truncate text-caption text-secondary" title={m.name}>{m.name}</p>
+            <p className="mt-1 block max-w-full truncate text-2xl font-semibold leading-tight text-ink tabular-nums" title={m.value}>
+              {m.value}
+            </p>
             <span className={`text-sm font-medium ${TREND_COLORS[m.trend] || "text-secondary"}`}>
               {TREND_ICONS[m.trend] || ""} {TREND_KEYS[m.trend] ? T(TREND_KEYS[m.trend]) : m.trend}
             </span>
