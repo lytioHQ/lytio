@@ -421,7 +421,7 @@ export default function ProjectDashboard() {
         </Card>
 
         {/* Dataset */}
-        <Card>
+        <Card id="dataset">
           <h2 className="text-h3 text-ink">{T("proj.dataset")}</h2>
           {hasFile ? (
             <div className="mt-4 rounded-control border border-border bg-muted p-4">

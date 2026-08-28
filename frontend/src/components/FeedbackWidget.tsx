@@ -1,23 +1,58 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { isUILanguage, resolveInitialUiLang, t, UILanguage } from "@/lib/i18n";
+import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui";
 
-type FeedbackType = "bug" | "feature" | "suggestion";
+type FeedbackType = "page" | "data" | "feature" | "other";
 
-const FEEDBACK_TYPES: FeedbackType[] = ["bug", "feature", "suggestion"];
+const FEEDBACK_TYPES: FeedbackType[] = ["page", "data", "feature", "other"];
+
+const STORAGE_KEY = "lytio.feedback.v1";
+
+interface FeedbackRecord {
+  id: string;
+  type: FeedbackType;
+  desc: string;
+  created_at: string;
+  page: string;
+  project: string | null;
+  user: string | null;
+  status: "pending" | "processing" | "done";
+}
 
 const inputClasses =
   "w-full rounded-control border border-border bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40";
+
+function readRecords(): FeedbackRecord[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRecords(records: FeedbackRecord[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  } catch {
+    // Storage may be unavailable (private mode); fail silently.
+  }
+}
 
 export default function FeedbackWidget() {
   const [lang, setLang] = useState<UILanguage>(() => resolveInitialUiLang());
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<FeedbackType | null>(null);
-  const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const pathname = usePathname();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Keep the widget language in sync with <html lang>, which persistUiLang
@@ -39,7 +74,6 @@ export default function FeedbackWidget() {
 
   function selectType(fb: FeedbackType) {
     setType(fb);
-    setTitle(T(`feedback.${fb}`));
     setDesc("");
     setSubmitted(false);
   }
@@ -47,24 +81,28 @@ export default function FeedbackWidget() {
   function reset() {
     setOpen(false);
     setType(null);
-    setTitle("");
     setDesc("");
     setSubmitted(false);
   }
 
   function submit() {
-    if (!type || !title.trim()) return;
-    const recipient = "feedback@lytio.co";
-    const subject = `[${T(`feedback.${type}`)}] ${title.trim()}`;
-    const body = [
-      `Category: ${T(`feedback.${type}`)}`,
-      `Page: ${window.location.href}`,
-      `Browser: ${navigator.userAgent}`,
-      "",
-      desc.trim(),
-    ].join("\n");
-    const url = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = url;
+    if (!type || !desc.trim()) return;
+    const now = new Date();
+    const record: FeedbackRecord = {
+      id: `fb_${now.getTime()}_${Math.random().toString(36).slice(2, 8)}`,
+      type,
+      desc: desc.trim(),
+      created_at: now.toISOString(),
+      page: window.location.href,
+      project: null,
+      user: user ? user.email || user.name : null,
+      status: "pending",
+    };
+    const m = pathname?.match(/^\/project\/([^/]+)/);
+    if (m) record.project = m[1];
+    const records = readRecords();
+    records.unshift(record);
+    writeRecords(records);
     setSubmitted(true);
   }
 
@@ -85,6 +123,7 @@ export default function FeedbackWidget() {
             {submitted ? (
               <div className="space-y-4 text-center">
                 <h3 className="text-h3 text-ink">{T("feedback.thanks")}</h3>
+                <p className="text-sm text-secondary">{T("feedback.saved")}</p>
                 <Button variant="secondary" onClick={reset}>{T("feedback.cancel")}</Button>
               </div>
             ) : !type ? (
@@ -102,8 +141,8 @@ export default function FeedbackWidget() {
                       className="flex w-full items-center justify-between rounded-control border border-border bg-surface px-4 py-3 text-left transition-colors hover:border-accent/40 hover:bg-canvas"
                     >
                       <span>
-                        <span className="block text-[15px] font-medium text-ink">{T(`feedback.${fb}`)}</span>
-                        <span className="mt-0.5 block text-sm text-secondary">{T(`feedback.${fb}Desc`)}</span>
+                        <span className="block text-[15px] font-medium text-ink">{T(`feedback.type.${fb}`)}</span>
+                        <span className="mt-0.5 block text-sm text-secondary">{T(`feedback.type.${fb}Desc`)}</span>
                       </span>
                       <span className="text-secondary/50">&rarr;</span>
                     </button>
@@ -114,7 +153,7 @@ export default function FeedbackWidget() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-h3 text-ink">{T(`feedback.${type}`)}</h3>
+                    <h3 className="text-h3 text-ink">{T(`feedback.type.${type}`)}</h3>
                     <p className="mt-0.5 text-sm text-secondary">{T("feedback.subtitle")}</p>
                   </div>
                   <button
@@ -124,17 +163,6 @@ export default function FeedbackWidget() {
                   >
                     &larr; {T("feedback.back")}
                   </button>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-ink">{T("feedback.titleLabel")}</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className={inputClasses}
-                    placeholder={T("feedback.titlePlaceholder")}
-                  />
                 </div>
 
                 <div>
@@ -152,7 +180,7 @@ export default function FeedbackWidget() {
 
                 <div className="flex justify-end gap-3">
                   <Button variant="secondary" onClick={reset}>{T("feedback.cancel")}</Button>
-                  <Button onClick={submit} disabled={!title.trim()}>{T("feedback.submit")}</Button>
+                  <Button onClick={submit} disabled={!desc.trim()}>{T("feedback.submit")}</Button>
                 </div>
               </div>
             )}

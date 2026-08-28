@@ -18,10 +18,10 @@ import ContinueAnalysisPanel, { ContinueDirection } from "@/components/ContinueA
 import AnalysisHistoryPanel from "@/components/AnalysisHistoryPanel";
 
 const WORKSPACE_LABELS: Record<string, { title: string; subtitle: string }> = {
-  zh: { title: "Lytio", subtitle: "\u9500\u552e\u5206\u6790\u5de5\u4f5c\u53f0" },
-  en: { title: "Lytio", subtitle: "Sales Analysis Workspace" },
-  ja: { title: "Lytio", subtitle: "\u58f2\u4e0a\u5206\u6790\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9" },
-  de: { title: "Lytio", subtitle: "Vertriebsanalyse-Arbeitsbereich" },
+  zh: { title: "Lytio", subtitle: "\u7ecf\u8425\u5206\u6790\u5de5\u4f5c\u53f0" },
+  en: { title: "Lytio", subtitle: "Business Analytics Workspace" },
+  ja: { title: "Lytio", subtitle: "\u7d4c\u55b6\u5206\u6790\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9" },
+  de: { title: "Lytio", subtitle: "Gesch\u00e4ftsanalyse-Arbeitsbereich" },
 };
 
 export default function WorkspacePage() {

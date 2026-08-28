@@ -11,7 +11,6 @@ import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
 import BusinessActions from "@/components/business/BusinessActions";
 import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
-import ProvenanceBadge from "@/components/business/ProvenanceBadge";
 import { Card, MetricCard } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 import { useUiLang } from "@/lib/useUiLang";
@@ -132,7 +131,7 @@ export default function DemoPage() {
   return (
     <main className="min-h-screen bg-canvas">
       {/* Demo Banner: sample data notice, no conversion CTA */}
-      <div className="border-b border-warning/20 bg-warning-soft px-4 py-3 text-center md:px-6">
+      <div className="border-b border-warning/20 bg-gradient-to-r from-warning-soft via-warning-soft/70 to-success-soft/40 px-4 py-3 text-center md:px-6">
         <p className="text-sm leading-relaxed text-ink">&#x1f3ac; {T("demo.banner")}</p>
       </div>
 
@@ -156,12 +155,10 @@ export default function DemoPage() {
       </header>
 
       <div className="mx-auto max-w-5xl space-y-12 px-4 py-10 md:px-8">
-        {/* M2.14.3 Phase 1 (P2): data/AI boundary legend */}
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-control border border-border bg-surface px-4 py-3">
+        {/* M2.14.3 Phase 2 (P1): one-time explanation (no per-card labels) */}
+        <div className="flex items-center gap-2 rounded-control border border-border bg-surface px-4 py-3">
+          <span aria-hidden className="text-accent">{"\u2139\ufe0f"}</span>
           <span className="text-caption font-medium text-secondary">{T("badge.legend")}</span>
-          <ProvenanceBadge variant="computed" lang={uiLang} />
-          <ProvenanceBadge variant="aiExplain" lang={uiLang} />
-          <ProvenanceBadge variant="aiEstimate" lang={uiLang} />
         </div>
         {/* Period navigation + explainer (customer-facing definition) */}
         <div className="rounded-card border border-border bg-surface p-5">
@@ -358,7 +355,7 @@ export default function DemoPage() {
         </section>
 
         {/* CTA Footer: primary = register with own data; secondary = back home */}
-        <Card variant="highlighted" className="p-8 text-center md:p-12">
+        <Card variant="highlighted" className="card-hover p-8 text-center md:p-12">
           <h2 className="text-h2 text-ink">{T("demo.ctaTitle")}</h2>
           <p className="mx-auto mt-2 max-w-[640px] text-body leading-relaxed text-secondary">{T("demo.ctaDesc")}</p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">

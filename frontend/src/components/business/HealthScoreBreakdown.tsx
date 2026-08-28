@@ -160,14 +160,38 @@ export default function HealthScoreBreakdown({ data, lang }: { data: HealthScore
               {DIM_ORDER.map((dimName) => {
                 const dim = data.dimensions.find((d) => d.name === dimName);
                 if (!dim) return null;
+                const explain = T(`healthscore.dimExplain.${dimName}`);
+                const hasExplain = explain !== `healthscore.dimExplain.${dimName}`;
+                const businessNote = dim.availability === "available"
+                  ? hasExplain
+                    ? explain
+                    : T("healthscore.dimNote.computed")
+                  : dim.name === "pipeline_health"
+                    ? T("healthscore.pipelineUnavailableTitle")
+                    : T(`healthscore.dimField.${dimName}`);
                 return (
                   <p key={dimName}>
-                    {T(`healthscore.dim.${dimName}`)}: {dim.formula}
-                    {dim.note ? ` · ${dim.note}` : ""}
+                    <span className="font-medium text-ink">{T(`healthscore.dim.${dimName}`)}</span>
+: {businessNote}
                   </p>
                 );
               })}
-              <p className="mt-2">{T("healthscore.engineVersion")}: {data.engine_version}</p>
+              <details className="mt-2 rounded-control border border-border bg-canvas/60 p-2">
+                <summary className="cursor-pointer text-caption font-medium text-secondary">{T("healthscore.techDetail")}</summary>
+                <div className="mt-1.5 space-y-1">
+                  {DIM_ORDER.map((dimName) => {
+                    const dim = data.dimensions.find((d) => d.name === dimName);
+                    if (!dim) return null;
+                    return (
+                      <p key={dimName}>
+                        {T(`healthscore.dim.${dimName}`)}: {dim.formula}
+                        {dim.note ? ` · ${dim.note}` : ""}
+                      </p>
+                    );
+                  })}
+                  <p className="mt-2">{T("healthscore.engineVersion")}: {data.engine_version}</p>
+                </div>
+              </details>
             </div>
           </details>
         </div>

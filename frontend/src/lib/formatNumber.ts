@@ -48,4 +48,4 @@ export function formatPercent(
 
 /** Default truncation classes for any metric value inside a card. */
 export const metricValueClasses =
-  "block max-w-full truncate text-[clamp(1.125rem,4.2vw,2rem)] font-semibold leading-tight text-ink tabular-nums";
+  "block w-full overflow-hidden whitespace-nowrap text-[clamp(1rem,3.4vw,1.75rem)] font-semibold leading-tight text-ink tabular-nums [text-overflow:clip]";

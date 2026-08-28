@@ -146,6 +146,7 @@ export default function WorkspacePage() {
             <div className="flex items-center gap-5">
               <LanguageSelector lang={uiLang} onChange={handleUiLangChange} />
               <Link href="/login" className="text-sm text-secondary transition-colors hover:text-ink">{T("home.login")}</Link>
+              <Link href="/admin/feedback" className="text-sm text-secondary transition-colors hover:text-ink">{T("feedback.button")}</Link>
               <Link href="/register" className="inline-flex h-9 items-center rounded-control bg-ink px-4 text-sm font-medium text-white transition-colors hover:bg-ink-hover">{T("home.signup")}</Link>
             </div>
           </div>
@@ -179,6 +180,7 @@ export default function WorkspacePage() {
               </span>
             )}
             <Link href="/settings" className="text-sm text-secondary transition-colors hover:text-ink">{T("home.settings")}</Link>
+            <Link href="/admin/feedback" className="text-sm text-secondary transition-colors hover:text-ink">{T("feedback.button")}</Link>
             {user && <span className="hidden text-sm font-medium text-ink sm:inline">{user.name}</span>}
             <button onClick={logout} className="text-sm text-secondary transition-colors hover:text-ink">{T("home.logout")}</button>
           </div>
@@ -245,8 +247,11 @@ export default function WorkspacePage() {
                   </div>
                   <p className="mt-2 truncate text-sm text-secondary">{p.original_filename || T("home.noFile")}</p>
                   <div className="mt-auto flex items-center justify-between pt-4">
-                    <span className="text-caption text-secondary">{timeAgo(p.last_opened_at, uiLang)}</span>
-                    <span className="text-sm font-medium text-accent">{T("home.continue")} →</span>
+                    <span className="flex flex-col gap-0.5">
+                      <span className="text-caption text-secondary">{T("home.recentAnalysis")}</span>
+                      <span className="text-caption font-medium text-ink">{timeAgo(p.last_opened_at, uiLang)}</span>
+                    </span>
+                    <span className="inline-flex h-9 items-center rounded-control bg-ink px-3.5 text-sm font-medium text-white transition-colors group-hover:bg-ink-hover">{T("home.continue")}</span>
                   </div>
                 </Card>
               </Link>

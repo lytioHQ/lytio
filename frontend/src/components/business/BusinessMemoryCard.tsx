@@ -169,6 +169,17 @@ const LOOP_ACCENT: Record<string, string> = {
   long_open_issue: "border-l-danger",
 };
 
+/**
+ * M2.14.3 Phase 2 (P6): data enhancement suggestions use customer-language
+ * metric names instead of raw technical keys; formula notes are not shown.
+ */
+function dataLoopMetricName(metric: string | null | undefined, T: (key: string) => string): string {
+  if (!metric) return "–";
+  const key = `metric.name.${metric}`;
+  const translated = T(key);
+  return translated !== key ? translated : metric;
+}
+
 function formatValue(value: unknown, lang: UILanguage): string {
   if (typeof value === "number") {
     return new Intl.NumberFormat(localeForLang(lang), { maximumFractionDigits: 2 }).format(value);
@@ -396,8 +407,7 @@ export default function BusinessMemoryCard({
                         className="rounded-control border border-border border-l-4 border-l-muted bg-canvas px-3 py-2 text-sm text-ink"
                       >
                         <span>
-                          {T("memory.unavailableMetric")} · {loop.metric ?? "–"}
-                          {loop.note ? ` · ${loop.note}` : ""}
+                          {T("memory.unavailableMetric")} · {dataLoopMetricName(loop.metric, T)}
                         </span>
                       </li>
                     ))}

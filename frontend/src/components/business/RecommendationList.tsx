@@ -1,7 +1,6 @@
 import { t, UILanguage } from "@/lib/i18n";
 import EvidenceCard, { EvidenceData } from "./EvidenceCard";
 import ImpactCard, { ImpactData } from "./ImpactCard";
-import ProvenanceBadge from "./ProvenanceBadge";
 
 interface RecData {
   title: string;
@@ -21,11 +20,10 @@ export default function RecommendationList({ recs, lang }: { recs: RecData[]; la
     <div>
       <div className="mb-4 flex items-center gap-3">
         <p className="text-h3 text-ink">{T("biz.recsTitle", { n: recs.length })}</p>
-        <ProvenanceBadge variant="aiExplain" lang={lang} />
       </div>
       <div className="space-y-3">
         {recs.map((item, i) => (
-          <div key={i} className={`rounded-card border border-border border-l-4 bg-surface p-5 ${PRI_ACCENT[item.priority] || "border-l-ink"}`}>
+          <div key={i} className={`rounded-card border border-border border-l-4 bg-surface p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-150 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] ${PRI_ACCENT[item.priority] || "border-l-ink"}`}>
             <div className="flex gap-4">
               <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-control ${PRI_COLORS[item.priority] || "bg-ink"} text-xs font-bold text-white`}>{i + 1}</span>
               <div className="flex-1">

@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import { t, UILanguage } from "@/lib/i18n";
 
 export interface EvidenceData {
@@ -12,73 +9,60 @@ export interface EvidenceData {
   confidence: string;
 }
 
-const CONF_COLORS: Record<string, string> = {
-  high: "bg-success/10 text-success",
-  medium: "bg-warning/10 text-warning",
-  low: "bg-danger/10 text-danger",
-};
-
-const CONF_KEYS: Record<string, string> = {
-  high: "biz.level.high",
-  medium: "biz.level.medium",
-  low: "biz.level.low",
-};
-
+/**
+ * M2.14.3 Phase 2 (P2): recommendation cards answer "why this suggestion?"
+ *
+ * The evidence reason is shown directly in customer language; the underlying
+ * source references (sheet / range / columns / rows) stay available under a
+ * small "view data source" toggle for users who want to audit the numbers.
+ */
 export default function EvidenceCard({ evidence, lang }: { evidence: EvidenceData; lang: UILanguage }) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
-  const [open, setOpen] = useState(false);
 
   const hasContent = evidence.reason || evidence.source_sheet || evidence.source_range;
 
   if (!hasContent) return null;
 
   return (
-    <div className="mt-2">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-caption font-medium text-secondary transition-colors hover:text-ink"
-      >
-        <span className={`transition-transform ${open ? "rotate-90" : ""}`}>&#9654;</span>
-        {T("biz.whyConclusion")}
-        {evidence.confidence && (
-          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-xs font-medium ${CONF_COLORS[evidence.confidence] || "bg-canvas text-secondary"}`}>
-            {CONF_KEYS[evidence.confidence] ? T(CONF_KEYS[evidence.confidence]) : evidence.confidence}
-          </span>
-        )}
-      </button>
-      {open && (
-        <div className="mt-2 space-y-2 rounded-control border border-border bg-canvas p-3.5">
-          {evidence.source_sheet && (
-            <div className="flex gap-2 text-caption">
-              <span className="shrink-0 font-medium text-secondary">{T("biz.sheet")}</span>
-              <span className="text-ink">{evidence.source_sheet}</span>
-            </div>
-          )}
-          {evidence.source_range && (
-            <div className="flex gap-2 text-caption">
-              <span className="shrink-0 font-medium text-secondary">{T("biz.range")}</span>
-              <span className="font-mono text-ink">{evidence.source_range}</span>
-            </div>
-          )}
-          {evidence.source_columns && evidence.source_columns.length > 0 && (
-            <div className="flex gap-2 text-caption">
-              <span className="shrink-0 font-medium text-secondary">{T("biz.columns")}</span>
-              <span className="text-ink">{evidence.source_columns.join(", ")}</span>
-            </div>
-          )}
-          {evidence.source_rows && (
-            <div className="flex gap-2 text-caption">
-              <span className="shrink-0 font-medium text-secondary">{T("biz.rows")}</span>
-              <span className="text-ink">{evidence.source_rows}</span>
-            </div>
-          )}
-          {evidence.reason && (
-            <div className="flex gap-2 text-caption">
-              <span className="shrink-0 font-medium text-secondary">{T("biz.reason")}</span>
-              <span className="text-ink">{evidence.reason}</span>
-            </div>
-          )}
-        </div>
+    <div className="mt-2 rounded-control border border-border bg-canvas/60 p-3">
+      {evidence.reason && (
+        <p className="text-caption leading-relaxed text-secondary">
+          <span className="font-medium text-ink">{T("biz.evidenceTitle")}：</span>
+          {evidence.reason}
+        </p>
+      )}
+      {(evidence.source_sheet || evidence.source_range) && (
+        <details className="mt-1.5">
+          <summary className="cursor-pointer text-caption font-medium text-secondary transition-colors hover:text-ink">
+            {T("biz.sourceDetail")}
+          </summary>
+          <div className="mt-1.5 space-y-1 text-caption text-secondary">
+            {evidence.source_sheet && (
+              <div className="flex gap-2">
+                <span className="shrink-0 font-medium text-secondary">{T("biz.sheet")}</span>
+                <span className="text-ink">{evidence.source_sheet}</span>
+              </div>
+            )}
+            {evidence.source_range && (
+              <div className="flex gap-2">
+                <span className="shrink-0 font-medium text-secondary">{T("biz.range")}</span>
+                <span className="font-mono text-ink">{evidence.source_range}</span>
+              </div>
+            )}
+            {evidence.source_columns && evidence.source_columns.length > 0 && (
+              <div className="flex gap-2">
+                <span className="shrink-0 font-medium text-secondary">{T("biz.columns")}</span>
+                <span className="text-ink">{evidence.source_columns.join(", ")}</span>
+              </div>
+            )}
+            {evidence.source_rows && (
+              <div className="flex gap-2">
+                <span className="shrink-0 font-medium text-secondary">{T("biz.rows")}</span>
+                <span className="text-ink">{evidence.source_rows}</span>
+              </div>
+            )}
+          </div>
+        </details>
       )}
     </div>
   );

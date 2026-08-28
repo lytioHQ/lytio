@@ -366,7 +366,7 @@ export default function BusinessActions({
                   </span>
                   {alignment && (
                     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${ALIGNMENT_STYLES[alignment] || "bg-canvas text-secondary"}`}>
-                      {T(`action.alignment.${alignment}`)} · {T("action.alignment.source")}
+                      {T(`action.alignment.${alignment}`)}
                     </span>
                   )}
                   {!alignment && !item.target_metric_name && (

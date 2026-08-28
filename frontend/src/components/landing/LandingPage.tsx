@@ -13,7 +13,10 @@ import {
   buildDemoInsights,
   buildDemoMetricGrid,
   buildDemoRecs,
+  DEMO_PERIOD_COUNT,
   demoLatestPeriod,
+  demoPeriodAt,
+  formatMetricValue,
 } from "@/lib/demo";
 
 const sectionLabel = "text-caption font-semibold uppercase tracking-wider text-secondary";
@@ -37,7 +40,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
   return (
     <main className="min-h-screen overflow-x-clip bg-canvas">
       {/* === HERO === */}
-      <section className="relative overflow-hidden border-b border-border">
+      <section className="hero-glow relative overflow-hidden border-b border-border">
         <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-accent-soft/70 blur-[110px]" />
         <div aria-hidden className="pointer-events-none absolute top-24 right-[-140px] h-[300px] w-[300px] rounded-full bg-success-soft/60 blur-[100px]" />
         <div className="relative mx-auto max-w-5xl px-4 pt-16 pb-20 text-center md:px-6 md:pt-24 md:pb-28">
@@ -82,7 +85,33 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
             </div>
           </div>
 
-          {/* Real report preview: rendered by the same production components as /demo */}
+          {/* Real sales trend strip: three periods straight from the production demo fixture */}
+          <div className="relative mx-auto mt-12 grid max-w-3xl gap-3 sm:grid-cols-3">
+            {Array.from({ length: DEMO_PERIOD_COUNT }, (_, i) => i).map((idx) => {
+              const p = demoPeriodAt(idx);
+              const sales = p.computed_metrics.find((m) => m.metric_name === "total_sales");
+              const salesVal =
+                sales && sales.availability === "available" && sales.value != null
+                  ? formatMetricValue(sales, T)
+                  : "—";
+              return (
+                <div
+                  key={idx}
+                  className="card-hover rounded-card border border-border bg-surface/85 p-4 text-left shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
+                >
+                  <p className="text-caption font-semibold uppercase tracking-wider text-secondary">
+                    {T("demo.period.label", { n: idx + 1 })}
+                  </p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-ink">{p.health_score.health_score}</p>
+                  <p className="text-caption text-secondary">{T("landing.diff.businessHealth")}</p>
+                  <p className="mt-2 truncate text-sm font-semibold text-ink">{salesVal}</p>
+                  <p className="text-caption text-secondary">{T("metric.name.total_sales")}</p>
+                </div>
+              );
+            })}
+          </div>
+
+{/* Real report preview: rendered by the same production components as /demo */}
           <div className="relative mx-auto mt-14 max-w-3xl">
             <div aria-hidden className="absolute -inset-6 rounded-card bg-accent-soft/70 blur-2xl" />
             <Card className="relative overflow-hidden p-0 shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
@@ -163,7 +192,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === PRODUCT DIFFERENTIATION === */}
-      <section className="border-b border-border bg-accent-soft">
+      <section className="section-gradient border-b border-border">
         <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.diffLabel")}</p>

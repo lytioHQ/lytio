@@ -18,7 +18,7 @@ import BusinessActions from "@/components/business/BusinessActions";
 import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
 import { localeForLang, t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
-import ProvenanceBadge from "@/components/business/ProvenanceBadge";
+import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 import { formatCurrencyCN } from "@/lib/formatNumber";
 
 interface ExecutiveReportData {
@@ -149,10 +149,10 @@ export default function ExecutiveReportPage() {
             <Link href={`/project/${id}`} className="inline-flex items-center gap-2 text-sm font-medium text-secondary transition-colors hover:text-ink">
               <span aria-hidden>{"\u2190"}</span>{T("nav.backDashboard")}
             </Link>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Lytio Business Report</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Lytio</p>
           </div>
           <div className="mt-3">
-            <h1 className="text-xl font-semibold tracking-tight text-ink md:text-2xl">{report.title}</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-ink md:text-2xl">{T("report.title")}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-secondary">
               <span>{report.project_name}</span>
               {generatedDate && (
@@ -178,12 +178,20 @@ export default function ExecutiveReportPage() {
       {/* Report body organized by the Three Screen Rule */}
       <article className="mx-auto max-w-4xl px-4 py-10 md:px-6">
         <div className="space-y-12">
-          {/* M2.14.3 Phase 1 (P2): data/AI boundary legend */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-control border border-border bg-surface px-4 py-3">
+          {/* M2.14.3 Phase 2 (P7/P10): next-period entry - top */}
+          <div className="flex flex-col items-start gap-4 rounded-card border border-accent/25 bg-gradient-to-br from-surface to-accent-soft/30 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-base font-semibold text-ink">{T("report.nextPeriodCta")}</p>
+              <p className="mt-1 text-sm leading-relaxed text-secondary">{T("report.nextPeriodDesc")}</p>
+            </div>
+            <Link href={`/project/${id}#dataset`} className={`${buttonBaseClasses} ${buttonVariantClasses.primary} shrink-0`}>
+              {T("report.nextPeriodCta")}
+            </Link>
+          </div>
+          {/* M2.14.3 Phase 2 (P1): one-time report explanation (no per-card labels) */}
+          <div className="flex items-center gap-2 rounded-control border border-border bg-surface px-4 py-3">
+            <span aria-hidden className="text-accent">{"\u2139\ufe0f"}</span>
             <span className="text-caption font-medium text-secondary">{T("badge.legend")}</span>
-            <ProvenanceBadge variant="computed" lang={uiLang} />
-            <ProvenanceBadge variant="aiExplain" lang={uiLang} />
-            <ProvenanceBadge variant="aiEstimate" lang={uiLang} />
           </div>
           <section aria-label={T("exec.screen1")}>
             <ScreenHeading index="1" title={T("exec.screen1")} />
@@ -252,6 +260,16 @@ export default function ExecutiveReportPage() {
         </div>
 
         {/* Footer */}
+        {/* M2.14.3 Phase 2 (P7/P10): next-period entry - bottom */}
+        <div className="mt-12 flex flex-col items-start gap-4 rounded-card border border-accent/25 bg-gradient-to-br from-surface to-accent-soft/30 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-base font-semibold text-ink">{T("report.nextPeriodCta")}</p>
+            <p className="mt-1 text-sm leading-relaxed text-secondary">{T("report.nextPeriodDesc")}</p>
+          </div>
+          <Link href={`/project/${id}#dataset`} className={`${buttonBaseClasses} ${buttonVariantClasses.primary} shrink-0`}>
+            {T("report.nextPeriodCta")}
+          </Link>
+        </div>
         <footer className="mt-16 border-t border-border pt-6">
           <div className="flex flex-col items-center gap-1">
             <p className="text-sm text-secondary/70">{T("exec.brand")}</p>
