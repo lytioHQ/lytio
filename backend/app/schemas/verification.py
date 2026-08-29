@@ -28,7 +28,10 @@ METRIC_DIRECTIONS: tuple[str, ...] = ("improved", "declined", "unchanged", "unav
 
 class VerificationCreate(BaseModel):
     parent_run_id: int | None = None
-    purpose: str = Field(..., description="Finite verification purpose")
+    # M2.14.4: purpose is now an optional focus area; the full two-period
+    # comparison always runs regardless of the selected focus. The API layer
+    # defaults None to "general_verification".
+    purpose: str | None = Field(default=None, description="Optional focus area")
     saved_filename: str = Field(..., min_length=1, description="New uploaded workbook filename")
     original_filename: str | None = None
     idempotency_key: str | None = None

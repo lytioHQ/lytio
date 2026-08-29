@@ -1,4 +1,4 @@
-﻿import json
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -53,11 +53,12 @@ async def create_verification_job(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if not is_valid_purpose(data.purpose):
+    purpose = data.purpose or "general_verification"
+    if not is_valid_purpose(purpose):
         allowed = ", ".join(VERIFICATION_PURPOSES)
         raise HTTPException(
             status_code=400,
-            detail=f"Unknown verification purpose '{data.purpose}'. Must be one of: {allowed}.",
+            detail=f"Unknown verification purpose '{purpose}'. Must be one of: {allowed}.",
         )
 
     project = await project_service.get_project(db, project_id, user.id)
@@ -77,7 +78,7 @@ async def create_verification_job(
         )
 
     idempotency_key = data.idempotency_key or (
-        f"verification:{project_id}:{parent.id}:{data.purpose}:{data.saved_filename}"
+        f"verification:{project_id}:{parent.id}:{purpose}:{data.saved_filename}"
     )
 
     existing = await analysis_job_service.get_job_by_idempotency(db, idempotency_key)
@@ -89,7 +90,7 @@ async def create_verification_job(
     request_json = json.dumps(
         {
             "analysis_type": "verification",
-            "purpose": data.purpose,
+            "purpose": purpose,
             "parent_run_id": parent.id,
             "saved_filename": data.saved_filename,
             "original_filename": data.original_filename,
@@ -121,7 +122,7 @@ async def create_verification_job(
             "project_id": project_id,
             "user_id": user.id,
             "parent_run_id": parent.id,
-            "purpose": data.purpose,
+            "purpose": purpose,
         },
     )
     schedule_job(job.id)

@@ -7,6 +7,8 @@ export type MetricTrend = "positive" | "negative" | "neutral";
 export interface MetricCardProps {
   label: string;
   value: ReactNode;
+  /** M2.14.4 P0: optional exact value shown in the native tooltip. */
+  fullValue?: string;
   description?: string;
   trend?: MetricTrend;
   variant?: CardVariant;
@@ -28,6 +30,7 @@ const trendGlyphs: Record<MetricTrend, string> = {
 export default function MetricCard({
   label,
   value,
+  fullValue,
   description,
   trend,
   variant,
@@ -42,7 +45,7 @@ export default function MetricCard({
         <div className="mt-2 flex min-w-0 items-baseline gap-2">
           <span
             className={metricValueClasses}
-            title={typeof value === "string" ? value : undefined}
+            title={fullValue ?? (typeof value === "string" ? value : undefined)}
           >
             {value}
           </span>

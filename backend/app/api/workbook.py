@@ -320,7 +320,7 @@ def detect_fields(req: InspectRequest, user: User = Depends(get_current_user)):
 
     try:
         dataset = extract_canonical_dataset(user.id, req.saved_filename)
-        detection = detect_schema(dataset["headers"], dataset["column_types"])
+        detection = detect_schema(dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200])
     except Exception as exc:
         raise HTTPException(
             status_code=500, detail=f"Failed to detect fields: {exc}"

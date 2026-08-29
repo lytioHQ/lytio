@@ -226,7 +226,7 @@ async def get_project_schema_mapping(
     elif project.saved_filename:
         try:
             dataset = extract_canonical_dataset(user.id, project.saved_filename)
-            mapping = detect_schema(dataset["headers"], dataset["column_types"]).to_dict()
+            mapping = detect_schema(dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200], industry_hint=project.industry).to_dict()
             persisted = False
         except Exception:
             raise HTTPException(
@@ -269,7 +269,8 @@ async def save_project_schema_mapping(
         headers = dataset["headers"]
         if payload.actions:
             base = project.schema_mapping or detect_schema(
-                headers, dataset["column_types"]
+                headers, dataset["column_types"], rows_sample=dataset["rows"][:200],
+                industry_hint=project.industry,
             ).to_dict()
             actions = [a.model_dump() for a in payload.actions]
             mapping = apply_confirmation_actions(base, actions, headers, user_id=user.id)
@@ -306,7 +307,8 @@ async def get_project_metrics(
     try:
         dataset = extract_canonical_dataset(user.id, project.saved_filename)
         mapping = project.schema_mapping or detect_schema(
-            dataset["headers"], dataset["column_types"]
+            dataset["headers"], dataset["column_types"],
+            rows_sample=dataset["rows"][:200], industry_hint=project.industry,
         ).to_dict()
         computed = compute_metrics(dataset, mapping)
     except Exception:

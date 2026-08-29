@@ -262,21 +262,27 @@ export default function ProjectDashboard() {
           </Card>
         )}
 
-        {/* Analysis Direction */}
+        {/* Analysis Direction (M2.14.4: focused insight for completed projects) */}
         {hasFile && (
           <Card>
-            <h2 className="text-h3 text-ink">{T("analysis.selectDirection")}</h2>
-            <p className="mt-1 text-sm text-secondary">{T("analysis.selectDirectionDesc")}</p>
+            <h2 className="text-h3 text-ink">{T(completed ? "analysis.focusTitle" : "analysis.selectDirection")}</h2>
+            <p className="mt-1 text-sm text-secondary">{completed ? T("analysis.focusHint") : T("analysis.selectDirectionDesc")}</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {ANALYSIS_DIRECTIONS.map((d) => (
-                <Link key={d} href={`/project/${id}/analysis?direction=${d}`} className="block h-full">
-                  <div className="flex h-full flex-col gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:border-accent/40 hover:bg-canvas">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-control bg-canvas text-sm font-bold text-secondary">{ANALYSIS_DIRECTION_ICONS[d]}</span>
-                    <span className="text-sm font-semibold leading-snug text-ink">{T(`analysis.dir.${d}`)}</span>
-                    <span className="text-caption leading-relaxed text-secondary">{T(`analysis.dir.${d}.desc`)}</span>
-                  </div>
-                </Link>
-              ))}
+              {ANALYSIS_DIRECTIONS.map((d) => {
+                const latestFullRun = timeline.find((item) => item.analysis_type === "health_scan" || item.analysis_type === "deep_analysis");
+                const href = completed && latestFullRun
+                  ? `/project/${id}/focused-insight?topic=${d}&parent_run_id=${latestFullRun.id}`
+                  : `/project/${id}/analysis?direction=${d}`;
+                return (
+                  <Link key={d} href={href} className="block h-full">
+                    <div className="flex h-full flex-col gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:border-accent/40 hover:bg-canvas">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-control bg-canvas text-sm font-bold text-secondary">{ANALYSIS_DIRECTION_ICONS[d]}</span>
+                      <span className="text-sm font-semibold leading-snug text-ink">{T(`analysis.dir.${d}`)}</span>
+                      <span className="text-caption leading-relaxed text-secondary">{completed ? T("analysis.focusCta") : T(`analysis.dir.${d}.desc`)}</span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </Card>
         )}
@@ -393,9 +399,11 @@ export default function ProjectDashboard() {
                 const isVerification = item.analysis_type === "verification";
                 const typeLabel = isVerification
                   ? T("proj.timeline.verification")
-                  : item.analysis_type === "health_scan"
-                    ? T("proj.timeline.healthScan")
-                    : T(`analysis.dir.${item.analysis_direction ?? "growth_opportunity"}`);
+                  : item.analysis_type === "focused_insight"
+                    ? T("proj.timeline.focusedInsight")
+                    : item.analysis_type === "health_scan"
+                      ? T("proj.timeline.healthScan")
+                      : T(`analysis.dir.${item.analysis_direction ?? "growth_opportunity"}`);
                 const reportHref = isVerification
                   ? `/project/${id}/verification/${item.id}`
                   : `/project/${id}/report/${item.id}`;
@@ -478,9 +486,14 @@ export default function ProjectDashboard() {
               </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   {completed && (
-                    <Link href={`/project/${id}/verify`} className="inline-flex h-9 items-center justify-center rounded-control bg-ink px-4 text-sm font-medium text-white transition-colors hover:bg-ink-hover">
-                      {T("proj.verifyOptimization")}
-                    </Link>
+                    <>
+                      <Link href={`/project/${id}/verify`} className="inline-flex h-9 items-center justify-center rounded-control bg-ink px-4 text-sm font-medium text-white transition-colors hover:bg-ink-hover">
+                        {T("proj.verifyOptimization")}
+                      </Link>
+                      <Link href={`/project/${id}/analysis`} className="inline-flex h-9 items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-canvas">
+                        {T("proj.reanalyzeData")}
+                      </Link>
+                    </>
                   )}
                   <label className="inline-flex h-9 cursor-pointer items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-canvas">
                     {uploading ? T("proj.uploading") : T("proj.reuploadData")}

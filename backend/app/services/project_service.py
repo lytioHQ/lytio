@@ -62,7 +62,7 @@ async def ensure_schema_mapping(
         from app.services.schema_mapper import detect_schema
         from app.services.workbook_service import extract_canonical_dataset
         dataset = extract_canonical_dataset(user_id, project.saved_filename)
-        detection = detect_schema(dataset["headers"], dataset["column_types"])
+        detection = detect_schema(dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200], industry_hint=project.industry)
         mapping = detection.to_dict()
         project.schema_mapping = mapping
         project.updated_at = datetime.now(timezone.utc)

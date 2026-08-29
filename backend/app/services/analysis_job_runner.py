@@ -33,6 +33,7 @@ from app.services.workbook_service import WorkbookAccessError, extract_canonical
 from app.services.metric_engine import compute_metrics
 from app.services.health_score import compute_health_score
 from app.services.schema_mapper import derive_schema_meta, detect_schema
+from app.services import focused_insight_service
 from app.services import memory_service
 from app.services import memory_context as memory_context_service
 
@@ -161,6 +162,12 @@ async def _execute_job(job_id: int, started_at: float) -> None:
 
         await analysis_job_service.mark_running(db, job)
 
+        if job.analysis_type == "focused_insight":
+            # M2.14.4: specialized follow-up using the parent run only. It
+            # never re-reads the Excel file and never creates a full run.
+            await _run_focused_insight(job_id, started_at)
+            return
+
         if job.analysis_type == "verification":
             # The new dataset filename lives in request_json, never in
             # project.saved_filename (which must keep pointing at baseline).
@@ -195,7 +202,7 @@ async def _execute_job(job_id: int, started_at: float) -> None:
     computed_metrics: list[dict] | None = None
     health_score: dict | None = None
     try:
-        mapping = schema_mapping or detect_schema(dataset["headers"], dataset["column_types"]).to_dict()
+        mapping = schema_mapping or detect_schema(dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200], industry_hint=project.industry).to_dict()
         computed_metrics = compute_metrics(dataset, mapping)
     except Exception:
         computed_metrics = None
@@ -308,6 +315,131 @@ async def _execute_job(job_id: int, started_at: float) -> None:
             )
             return
 
+
+async def _run_focused_insight(job_id: int, started_at: float) -> None:
+    """Execute a focused-insight job from the parent run only (M2.14.4).
+
+    Cost control: compact context JSON + small max_tokens; no workbook
+    rows, no full prompt, no full pipeline. The persisted run is
+    analysis_type=focused_insight with parent_run_id set.
+    """
+    async with async_session() as db:
+        job = await db.get(AnalysisJob, job_id)
+        if not job or job.status != "running":
+            return
+
+        project = await db.get(Project, job.project_id)
+        if not project or project.owner_id != job.user_id:
+            await analysis_job_service.mark_failed(
+                db, job, "invalid_project", "Project not found",
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+
+        try:
+            request_data = json.loads(job.request_json or "{}")
+        except json.JSONDecodeError:
+            request_data = {}
+
+        topic = str(request_data.get("topic") or "").strip()
+        parent_run_id = request_data.get("parent_run_id")
+        report_language = project.language or "zh"
+
+        if not topic:
+            await analysis_job_service.mark_failed(
+                db, job, "invalid_focused_insight_request", "Topic is missing.",
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+
+        parent = await analysis_run_service.get_run(db, int(parent_run_id)) if parent_run_id else None
+        if parent is None or parent.project_id != job.project_id:
+            await analysis_job_service.mark_failed(
+                db, job, "invalid_parent",
+                "No completed analysis is available for this topic.",
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+
+        try:
+            context = focused_insight_service.extract_focused_context(parent)
+            prompt = focused_insight_service.build_focused_prompt(context, topic, report_language)
+        except Exception as exc:
+            await analysis_job_service.mark_failed(
+                db, job, "invalid_focused_insight_request", str(exc),
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+
+        user_id = job.user_id
+        parent_id = parent.id
+
+    engine = AnalysisEngine()
+    engine.set_provider(DeepSeekProvider(timeout=RUNNER_PROVIDER_TIMEOUT, max_retries=0))
+
+    try:
+        request = AnalysisEngine.build_request(
+            workbook_name="focused_insight",
+            sheet_name="focused_insight",
+            headers=["topic"],
+            column_types={"topic": "text"},
+            rows=[["focused_insight"]],
+            analysis_type="focused_insight",
+            plugin_name="sales",
+            language=report_language,
+            parameters={
+                "system_prompt": prompt,
+                "max_tokens": 900,
+            },
+        )
+        response = await engine.analyze(request)
+    except TimeoutError as exc:
+        await _fail(job_id, "provider_timeout", str(exc), started_at)
+        return
+    except ValueError as exc:
+        await _fail(job_id, "invalid_data", str(exc), started_at)
+        return
+    except Exception as exc:
+        code = "DATA_SERIALIZATION_ERROR" if isinstance(exc, TypeError) else "unknown"
+        await _fail(job_id, code, f"{type(exc).__name__}: {exc}", started_at, exc=exc)
+        return
+
+    card = focused_insight_service.parse_focused_output(
+        response.summary, topic, report_language
+    )
+    result_json = focused_insight_service.focused_result_json(
+        card, topic, parent_id, context
+    )
+    summary = card.get("finding") or card.get("title") or "Focused insight completed."
+
+    async with async_session() as db:
+        job = await db.get(AnalysisJob, job_id)
+        if not job or job.status != "running":
+            return
+        try:
+            run = await analysis_run_service.create_run(
+                db, job.project_id, summary, result_json, is_legacy=False,
+                analysis_type="focused_insight",
+                analysis_direction="topic",
+                parent_run_id=parent_id,
+                status="completed",
+            )
+            elapsed_ms = int((time.monotonic() - started_at) * 1000)
+            await analysis_job_service.mark_completed(db, job, run.id, elapsed_ms)
+        except Exception as exc:
+            await analysis_job_service.mark_failed(
+                db, job, "unknown",
+                f"Failed to persist focused insight result: {type(exc).__name__}: {exc}",
+                int((time.monotonic() - started_at) * 1000),
+            )
+            return
+
+    logger.info(
+        "focused_insight_job_finished",
+        extra={"event": "analysis_job", "job_id": job_id, "elapsed_ms": int((time.monotonic() - started_at) * 1000)},
+    )
+
+
     logger.info(
         "analysis_job_finished",
         extra={"event": "analysis_job", "job_id": job_id, "elapsed_ms": int((time.monotonic() - started_at) * 1000)},
@@ -385,7 +517,8 @@ async def _run_verification(job_id: int, started_at: float) -> None:
     # no computed evidence and behaves exactly like the pre-M2.13 path.
     try:
         schema_mapping = project_schema_mapping or detect_schema(
-            dataset["headers"], dataset["column_types"]
+            dataset["headers"], dataset["column_types"],
+            rows_sample=dataset["rows"][:200], industry_hint=project.industry,
         ).to_dict()
         computed_changes = verification_metrics.compute_before_after_changes(
             parent_result_json, dataset, schema_mapping

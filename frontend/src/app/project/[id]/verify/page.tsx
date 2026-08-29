@@ -114,8 +114,14 @@ export default function VerifyPage() {
     [timeline],
   );
 
-  // Load recommendation/metric counts for candidate runs so users can pick a
-  // recommendation-bearing baseline with confidence.
+  // M2.14.4: default to the most recent full analysis as comparison baseline.
+  useEffect(() => {
+    if (candidates.length > 0 && parentRunId === null) {
+      setParentRunId(candidates[0].id);
+    }
+  }, [candidates, parentRunId]);
+
+  // Load recommendation/metric counts for candidate runs.
   useEffect(() => {
     if (candidates.length === 0) return;
     let cancelled = false;
@@ -164,14 +170,15 @@ export default function VerifyPage() {
   }
 
   async function startVerification() {
-    if (!purpose || !newFile) return;
+    if (!newFile) return;
     setPageError(null);
+    const effectivePurpose = purpose ?? "general_verification";
     const created = await jobFlow.create({
       parent_run_id: parentRunId,
-      purpose,
+      purpose: effectivePurpose,
       saved_filename: newFile.saved_filename,
       original_filename: newFile.original_filename,
-      idempotency_key: `verify:${projectId}:${parentRunId ?? "auto"}:${purpose}:${newFile.saved_filename}`,
+      idempotency_key: `verify:${projectId}:${parentRunId ?? "auto"}:${effectivePurpose}:${newFile.saved_filename}`,
     });
     if (created?.job_id) {
       router.replace(`/project/${projectId}/verify?job_id=${created.job_id}`, { scroll: false });
@@ -256,56 +263,53 @@ export default function VerifyPage() {
 
         {!job && !jobFlow.creating && !initialJobId && (
           <>
-            {!purpose && (
-              <PurposeSelector
-                selected={purpose}
-                onSelect={(p) => setPurpose(p)}
-                T={T}
-              />
-            )}
+            {/* Step 1: upload next-period data (never blocked by purpose) */}
+            <Card>
+              <h2 className="text-h3 text-ink">{T("verify.uploadNewTitle")}</h2>
+              <p className="mt-1 text-sm leading-relaxed text-secondary">{T("verify.uploadNewDesc")}</p>
+              {newFile ? (
+                <div className="mt-4 rounded-control border border-border bg-muted p-4">
+                  <p className="text-[15px] font-medium text-ink">{newFile.original_filename}</p>
+                  <p className="mt-1 text-sm text-secondary">{T("verify.newDataReady")}</p>
+                </div>
+              ) : (
+                <label className="mt-4 inline-flex h-11 cursor-pointer items-center justify-center rounded-control bg-ink px-5 text-sm font-medium text-white transition-colors hover:bg-ink-hover">
+                  {uploading ? T("verify.uploading") : T("verify.uploadNewCta")}
+                  <input type="file" accept=".xlsx,.xls" onChange={handleUpload} className="hidden" disabled={uploading} />
+                </label>
+              )}
+            </Card>
 
-            {purpose && (
-              <>
-                <ParentRunSelector
-                  candidates={candidates}
-                  runMeta={runMeta}
-                  selected={parentRunId}
-                  onSelect={setParentRunId}
-                  T={T}
-                />
+            {/* Optional focus areas */}
+            <PurposeSelector
+              selected={purpose}
+              onSelect={setPurpose}
+              T={T}
+            />
 
-                <Card>
-                  <h2 className="text-h3 text-ink">{T("verify.uploadNewTitle")}</h2>
-                  <p className="mt-1 text-sm leading-relaxed text-secondary">{T("verify.uploadNewDesc")}</p>
-                  {newFile ? (
-                    <div className="mt-4 rounded-control border border-border bg-muted p-4">
-                      <p className="text-[15px] font-medium text-ink">{newFile.original_filename}</p>
-                      <p className="mt-1 text-sm text-secondary">{T("verify.newDataReady")}</p>
-                    </div>
-                  ) : (
-                    <label className="mt-4 inline-flex h-11 cursor-pointer items-center justify-center rounded-control bg-ink px-5 text-sm font-medium text-white transition-colors hover:bg-ink-hover">
-                      {uploading ? T("verify.uploading") : T("verify.uploadNewCta")}
-                      <input type="file" accept=".xlsx,.xls" onChange={handleUpload} className="hidden" disabled={uploading} />
-                    </label>
-                  )}
-                </Card>
+            {/* Baseline selection (defaults to the latest full analysis) */}
+            <ParentRunSelector
+              candidates={candidates}
+              runMeta={runMeta}
+              selected={parentRunId}
+              onSelect={setParentRunId}
+              T={T}
+            />
 
-                {newFile && (
-                  <Card variant="highlighted">
-                    <h2 className="text-h3 text-ink">{T("verify.confirmTitle")}</h2>
-                    <p className="mt-1 text-sm leading-relaxed text-secondary">{T("verify.confirmDesc")}</p>
-                    <div className="mt-4 space-y-2 text-sm text-ink">
-                      <p>{T("verify.confirmPurpose", { purpose: T(`verify.purpose.${purpose}`) })}</p>
-                      <p>{T("verify.confirmNewData", { name: newFile.original_filename })}</p>
-                    </div>
-                    {pageError && <p className="mt-3 text-sm text-danger">{pageError}</p>}
-                    <div className="mt-6 flex flex-wrap justify-end gap-3">
-                      <button type="button" onClick={() => { setNewFile(null); setPageError(null); }} className={SECONDARY}>{T("verify.changeData")}</button>
-                      <button type="button" onClick={startVerification} className={PRIMARY}>{T("verify.startVerification")}</button>
-                    </div>
-                  </Card>
-                )}
-              </>
+            {newFile && (
+              <Card variant="highlighted">
+                <h2 className="text-h3 text-ink">{T("verify.confirmTitle")}</h2>
+                <p className="mt-1 text-sm leading-relaxed text-secondary">{T("verify.confirmDesc")}</p>
+                <div className="mt-4 space-y-2 text-sm text-ink">
+                  <p>{T("verify.confirmPurpose", { purpose: purpose ? T(`verify.purpose.${purpose}`) : T("verify.purpose.general_verification") })}</p>
+                  <p>{T("verify.confirmNewData", { name: newFile.original_filename })}</p>
+                </div>
+                {pageError && <p className="mt-3 text-sm text-danger">{pageError}</p>}
+                <div className="mt-6 flex flex-wrap justify-end gap-3">
+                  <button type="button" onClick={() => { setNewFile(null); setPageError(null); }} className={SECONDARY}>{T("verify.changeData")}</button>
+                  <button type="button" onClick={startVerification} className={PRIMARY}>{T("verify.startVerification")}</button>
+                </div>
+              </Card>
             )}
           </>
         )}
@@ -316,7 +320,7 @@ export default function VerifyPage() {
 
 function PurposeSelector({ selected, onSelect, T }: {
   selected: VerificationPurpose | null;
-  onSelect: (p: VerificationPurpose) => void;
+  onSelect: (p: VerificationPurpose | null) => void;
   T: (key: string, params?: Record<string, string | number>) => string;
 }) {
   return (
@@ -324,7 +328,7 @@ function PurposeSelector({ selected, onSelect, T }: {
       <h2 className="text-h3 text-ink">{T("verify.purposeTitle")}</h2>
       <p className="mt-1 text-sm leading-relaxed text-secondary">{T("verify.purposeDesc")}</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {VERIFICATION_PURPOSES.map((p) => (
+        {VERIFICATION_PURPOSES.filter((p) => p !== "general_verification").map((p) => (
           <button
             key={p}
             type="button"
@@ -338,6 +342,17 @@ function PurposeSelector({ selected, onSelect, T }: {
             </span>
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => onSelect(null)}
+          className={`flex items-start gap-3 rounded-card border p-4 text-left transition-colors ${selected === null ? "border-accent bg-accent-soft" : "border-border bg-surface hover:border-accent/40 hover:bg-canvas"}`}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-canvas text-sm font-bold text-secondary">◎</span>
+          <span>
+            <span className="block text-sm font-semibold text-ink">{T("verify.purpose.general_verification")}</span>
+            <span className="mt-0.5 block text-caption leading-relaxed text-secondary">{T("verify.purpose.general_verification.desc")}</span>
+          </span>
+        </button>
       </div>
     </Card>
   );

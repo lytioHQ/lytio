@@ -1,11 +1,28 @@
 """Map raw workbook headers to canonical sales fields.
 
-Detection strategy (v2):
+Detection strategy (v3, M2.14.4):
 1. exact synonym match after normalization          -> confidence 0.97
 2. exact match after stripping common prefixes      -> confidence 0.92
-3. type-aware heuristic for numeric/date columns    -> confidence 0.60-0.70
+3. candidate scoring: name semantics + units +
+   value distribution + cross-field relationship   -> confidence 0.55-0.90
 
-M2.13.1 adds the confirmation layer on top of v1 detection:
+The old v2 keyword-matching flow made two dangerous mistakes on real
+customer files:
+- 销售单价 (unit price) was heuristically classified as sales_amount
+  because "价" ended with an amount suffix;
+- 库存周转天数 was classified as a quantity because "数" was a quantity
+  suffix.
+
+v3 therefore:
+- treats 单价 / unit price as its own canonical field;
+- treats 库存周转天数 as its own canonical field;
+- scores every candidate field for every header and only keeps the
+  highest-confidence candidate per canonical key;
+- validates the relationship 数量 × 单价 ≈ 金额 when all three exist;
+- emits field_mapping_confidence + needs_confirmation so the UI asks the
+  user to confirm ambiguous mappings instead of silently computing with them.
+
+M2.13.1 keeps the confirmation layer on top of detection:
 - match_method / required / example_values / confirmation_status / conflicts
 - append-only audit history inside the schema_mapping JSONB (no migration)
 - per-run provenance via derive_schema_meta() -> result_json.schema_meta
@@ -20,7 +37,7 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Iterable
 
 from app.services.canonical_schema import (
     CANONICAL_BY_KEY,
@@ -28,7 +45,9 @@ from app.services.canonical_schema import (
     COMMON_PREFIXES,
     _AMOUNT_SUFFIXES,
     _DATE_HINTS,
+    _PRICE_SUFFIXES,
     _QUANTITY_SUFFIXES,
+    _TURNOVER_SUFFIXES,
     normalize_header,
 )
 
@@ -37,6 +56,23 @@ PREFIX_STRIP_CONFIDENCE = 0.92
 HEURISTIC_AMOUNT_CONFIDENCE = 0.60
 HEURISTIC_QUANTITY_CONFIDENCE = 0.60
 HEURISTIC_DATE_CONFIDENCE = 0.70
+
+# M2.14.4: candidate-scoring weights. A single weak signal can never reach
+# the auto-accept threshold by itself.
+SCORE_EXACT_SYNONYM = 68.0
+SCORE_PREFIX_SYNONYM = 56.0
+SCORE_SUBSTRING = 32.0
+SCORE_SUFFIX = 16.0
+SCORE_TYPE_MATCH = 12.0
+SCORE_VALUE_DISTRIBUTION = 10.0
+SCORE_INDUSTRY = 6.0
+SCORE_RELATIONSHIP = 8.0
+SCORE_MAX = 100.0
+MIN_ACCEPT_CONFIDENCE = 0.55
+# M2.14.4: below this threshold the UI must ask the user to confirm instead
+# of treating the mapping as authoritative.
+NEEDS_CONFIRMATION_THRESHOLD = 0.75
+RELATIONSHIP_TOLERANCE = 0.15
 
 AVAILABLE = "available"
 UNAVAILABLE = "unavailable"
@@ -64,6 +100,26 @@ SOURCE_AUTO_ACCEPT = "auto_accept"
 
 _CORE_KEYS = ("sales_amount", "sales_quantity")
 
+# Industry hints that change a candidate's prior. Unknown industries add
+# nothing; the scoring stays conservative.
+_INDUSTRY_HINTS: dict[str, tuple[str, ...]] = {
+    "retail": ("零售", "门店", "retail"),
+    "b2b": ("b2b", "企业客户", "批发"),
+    "ecommerce": ("电商", "电子商务", "线上", "ecommerce", "网店"),
+    "channel": ("渠道", "分销", "经销商", "channel"),
+    "manufacturing": ("制造", "工厂", "生产", "manufacturing", "工业"),
+    "saas": ("saas", "软件", "订阅", "云服务"),
+}
+
+_INDUSTRY_FIELD_BOOSTS: dict[str, dict[str, float]] = {
+    "ecommerce": {"unit_price": 1.0, "sales_quantity": 0.6, "order_id": 0.5},
+    "retail": {"unit_price": 0.8, "sales_quantity": 0.6, "customer_name": 0.4},
+    "b2b": {"customer_name": 0.8, "pipeline_stage": 0.5, "unit_price": 0.4},
+    "channel": {"region": 0.8, "customer_name": 0.4},
+    "manufacturing": {"inventory_turnover_days": 1.0, "unit_price": 0.4},
+    "saas": {"customer_name": 0.8, "order_id": 0.4, "product_name": 0.4},
+}
+
 
 def _field_required(key: str) -> bool:
     field_def = CANONICAL_BY_KEY.get(key)
@@ -89,6 +145,9 @@ class FieldMapping:
     confirmation_source: str = SOURCE_SYSTEM
     confirmed_mapping: dict[str, Any] | None = None
     confirmed_at: str | None = None
+    # M2.14.4: scoring provenance (additive; older mappings simply lack it).
+    field_mapping_confidence: dict[str, Any] | None = None
+    needs_confirmation: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -103,6 +162,10 @@ class FieldMapping:
             "confirmation_status": self.confirmation_status,
             "confirmation_source": self.confirmation_source,
         }
+        if self.field_mapping_confidence is not None:
+            data["field_mapping_confidence"] = copy.deepcopy(self.field_mapping_confidence)
+        if self.needs_confirmation:
+            data["needs_confirmation"] = True
         if self.confirmed_mapping is not None:
             data["confirmed_mapping"] = copy.deepcopy(self.confirmed_mapping)
         if self.confirmed_at is not None:
@@ -119,6 +182,9 @@ class SchemaDetection:
     sales_core_available: bool = False
     conflicts: list[dict[str, Any]] = field(default_factory=list)
     detected_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    # M2.14.4: additive scoring detail for diagnostics/UI.
+    candidate_scores: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict)
+    ambiguous_columns: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         mapping_dicts = [m.to_dict() for m in self.mappings]
@@ -129,7 +195,7 @@ class SchemaDetection:
             "schema_version": SCHEMA_VERSION,
             "history": [],
         }
-        return {
+        data: dict[str, Any] = {
             "version": MAPPING_VERSION,
             "schema_version": SCHEMA_VERSION,
             "source_headers": list(self.source_headers),
@@ -141,6 +207,11 @@ class SchemaDetection:
             "detected_at": self.detected_at,
             "audit": audit,
         }
+        if self.candidate_scores:
+            data["candidate_scores"] = copy.deepcopy(self.candidate_scores)
+        if self.ambiguous_columns:
+            data["ambiguous_columns"] = copy.deepcopy(self.ambiguous_columns)
+        return data
 
 
 def _exact_match(norm: str) -> tuple[str, float, str] | None:
@@ -171,6 +242,8 @@ def _heuristic_match(norm: str, column_type: str) -> tuple[str, float, str] | No
             return "sales_amount", HEURISTIC_AMOUNT_CONFIDENCE, MATCH_HEURISTIC
         if norm.endswith(_QUANTITY_SUFFIXES):
             return "sales_quantity", HEURISTIC_QUANTITY_CONFIDENCE, MATCH_HEURISTIC
+        if norm.endswith(_PRICE_SUFFIXES):
+            return "unit_price", 0.66, MATCH_HEURISTIC
     return None
 
 
@@ -187,43 +260,441 @@ def _match_header(header: str, column_type: str) -> tuple[str, float, str] | Non
     return hit
 
 
-def detect_schema(headers: list[str], column_types: dict[str, str] | None = None) -> SchemaDetection:
-    """Detect canonical field mappings for a list of headers (v2 suggestions)."""
-    column_types = column_types or {}
-    mappings: list[FieldMapping] = []
-    matched_columns: set[str] = set()
+def _col_matches_field_type(col_type: str, field_type: str) -> bool:
+    if col_type in ("", "unknown", "empty"):
+        return False
+    if field_type == "number":
+        return col_type == "number"
+    if field_type == "date":
+        return col_type == "date" or (col_type == "text" and bool(
+            any(h in col_type.lower() for h in _DATE_HINTS)
+        ))
+    return col_type in ("text", "boolean")
 
+
+def _unit_score(norm: str, field_key: str) -> float:
+    """Score a unit/domain marker embedded in the header name."""
+    if field_key == "sales_amount":
+        return 1.0 if norm.endswith(_AMOUNT_SUFFIXES) else 0.0
+    if field_key == "sales_quantity":
+        return 1.0 if norm.endswith(_QUANTITY_SUFFIXES) else 0.0
+    if field_key == "unit_price":
+        return 1.0 if any(norm.endswith(s) for s in _PRICE_SUFFIXES) else 0.0
+    if field_key == "inventory_turnover_days":
+        return 1.0 if any(norm.endswith(s) for s in _TURNOVER_SUFFIXES) else 0.0
+    return 0.0
+
+
+def _substring_score(norm: str, field_key: str) -> float:
+    """Best synonym substring score for a header.
+
+    Exact synonyms are handled by _exact_match; this catches partial names
+    such as 成交单价 / 销售单价 / unit price.
+    """
+    field_def = CANONICAL_BY_KEY.get(field_key)
+    if field_def is None or not norm:
+        return 0.0
+    best = 0.0
+    for synonym in field_def.normalized_synonyms():
+        if len(synonym) < 2:
+            continue
+        if synonym in norm:
+            best = max(best, min(1.0, len(synonym) / max(4, len(norm))))
+        elif norm in synonym:
+            best = max(best, 0.5)
+    return best
+
+
+def _numeric_stats(sample_rows: Iterable[list[Any]], col_index: int) -> dict[str, Any]:
+    values: list[float] = []
+    non_numeric = 0
+    total = 0
+    for row in sample_rows:
+        if col_index >= len(row):
+            continue
+        v = row[col_index]
+        if v is None or v == "" or v == "None":
+            continue
+        total += 1
+        try:
+            values.append(float(v))
+        except (TypeError, ValueError):
+            non_numeric += 1
+    if not values:
+        return {"count": 0}
+    integer_ratio = sum(1 for v in values if v == int(v)) / len(values)
+    abs_values = [abs(v) for v in values if v != 0]
+    return {
+        "count": len(values),
+        "integer_ratio": integer_ratio,
+        "mean": sum(values) / len(values),
+        "min": min(values),
+        "max": max(values),
+        "median_abs": sorted(abs_values)[len(abs_values) // 2] if abs_values else 0.0,
+        "non_numeric": non_numeric,
+    }
+
+
+def _value_distribution_score(stats: dict[str, Any] | None, field_key: str) -> float:
+    """Score numeric value shape for quantity/unit-price/turnover candidates."""
+    if not stats or stats.get("count", 0) < 3:
+        return 0.0
+    integer_ratio = stats.get("integer_ratio", 0.0)
+    median_abs = stats.get("median_abs", 0.0) or 0.0
+    if field_key == "sales_quantity":
+        if integer_ratio >= 0.9 and median_abs < 1_000_000:
+            return 1.0
+        if integer_ratio >= 0.6:
+            return 0.5
+        return 0.0
+    if field_key == "unit_price":
+        if 0 < median_abs < 1_000_000:
+            return 0.8
+        return 0.2
+    if field_key == "inventory_turnover_days":
+        if 0 < median_abs < 10_000:
+            return 0.6
+        return 0.1
+    if field_key == "sales_amount":
+        if median_abs >= 100:
+            return 0.4
+        return 0.1
+    return 0.0
+
+
+def _industry_key(industry_hint: str | None) -> str | None:
+    if not industry_hint:
+        return None
+    low = industry_hint.strip().lower()
+    for key, terms in _INDUSTRY_HINTS.items():
+        if any(term in low for term in terms):
+            return key
+    return low if low in _INDUSTRY_FIELD_BOOSTS else None
+
+
+def _industry_score(industry_hint: str | None, field_key: str) -> float:
+    key = _industry_key(industry_hint)
+    if not key:
+        return 0.0
+    return _INDUSTRY_FIELD_BOOSTS.get(key, {}).get(field_key, 0.0)
+
+
+def _normalize_confidence(raw: float) -> float:
+    """Map a heuristic raw score to a stable 0..1 confidence.
+
+    Exact/prefix synonym candidates bypass this mapping and keep their high
+    confidence constants (0.97 / 0.92).
+    """
+    if raw <= 0:
+        return 0.0
+    return round(min(0.9, max(0.0, 0.55 + (raw / SCORE_MAX) * 0.35)), 3)
+
+
+def _quantity_header_terms() -> tuple[str, ...]:
+    field_def = CANONICAL_BY_KEY["sales_quantity"]
+    return field_def.normalized_synonyms()
+
+
+def _price_header_terms() -> tuple[str, ...]:
+    field_def = CANONICAL_BY_KEY["unit_price"]
+    return field_def.normalized_synonyms()
+
+
+def _amount_header_terms() -> tuple[str, ...]:
+    field_def = CANONICAL_BY_KEY["sales_amount"]
+    return field_def.normalized_synonyms()
+
+
+def _relationship_signals(
+    sample_rows: list[list[Any]],
+    headers: list[str],
+) -> dict[str, Any]:
+    """Return quantity × unit_price ≈ amount evidence (pure code).
+
+    Uses only non-empty numeric rows; returns {} when the evidence is too
+    thin to make any claim.
+    """
+    normalized_headers = {h: normalize_header(h) for h in headers}
+    qty_header = next(
+        (h for h, n in normalized_headers.items() if n in _quantity_header_terms()),
+        None,
+    )
+    price_header = next(
+        (h for h, n in normalized_headers.items() if n in _price_header_terms()),
+        None,
+    )
+    amount_header = next(
+        (h for h, n in normalized_headers.items() if n in _amount_header_terms()),
+        None,
+    )
+    if not qty_header or not price_header:
+        return {}
+    header_index = {h: i for i, h in enumerate(headers)}
+    qty_idx = header_index[qty_header]
+    price_idx = header_index[price_header]
+    amount_idx = header_index.get(amount_header) if amount_header else None
+
+    pairs = 0
+    consistent = 0
+    with_amount = 0
+    for row in sample_rows:
+        if max(qty_idx, price_idx) >= len(row):
+            continue
+        try:
+            q = float(row[qty_idx])
+            p = float(row[price_idx])
+        except (TypeError, ValueError):
+            continue
+        if q == 0 or p == 0:
+            continue
+        pairs += 1
+        if amount_idx is not None and amount_idx < len(row):
+            try:
+                amount = float(row[amount_idx])
+            except (TypeError, ValueError):
+                continue
+            if abs(amount) <= 0:
+                continue
+            with_amount += 1
+            if abs(q * p - amount) / max(abs(amount), 1) <= RELATIONSHIP_TOLERANCE:
+                consistent += 1
+    if not pairs:
+        return {}
+    return {
+        "pairs": pairs,
+        "consistent": consistent,
+        "with_amount": with_amount,
+    }
+
+
+def _score_header_for_field(
+    header: str,
+    norm: str,
+    field_key: str,
+    column_type: str,
+    sample_rows: list[list[Any]] | None,
+    column_by_header: dict[str, int],
+    industry_hint: str | None,
+    exact: tuple[str, float, str] | None,
+    prefix: tuple[str, float, str] | None,
+) -> dict[str, Any]:
+    """Score one header against one canonical field (pure code)."""
+    reasons: list[str] = []
+    raw = 0.0
+    matched_by_exact = exact is not None and exact[0] == field_key
+    matched_by_prefix = not matched_by_exact and prefix is not None and prefix[0] == field_key
+
+    if matched_by_exact:
+        raw += SCORE_EXACT_SYNONYM
+        reasons.append("exact_synonym")
+    elif matched_by_prefix:
+        raw += SCORE_PREFIX_SYNONYM
+        reasons.append("prefix_synonym")
+    else:
+        substring = _substring_score(norm, field_key)
+        if substring > 0:
+            raw += SCORE_SUBSTRING * substring
+            reasons.append(f"name_substring:{substring:.2f}")
+        unit = _unit_score(norm, field_key)
+        if unit > 0:
+            raw += SCORE_SUFFIX * unit
+            reasons.append("unit_suffix")
+
+    if column_type and _col_matches_field_type(column_type, _field_value_type(field_key)):
+        raw += SCORE_TYPE_MATCH
+        reasons.append("type_match")
+
+    stats = None
+    if sample_rows and column_by_header.get(header) is not None:
+        idx = column_by_header[header]
+        stats = _numeric_stats(sample_rows, idx)
+        dist = _value_distribution_score(stats, field_key)
+        if dist > 0:
+            raw += SCORE_VALUE_DISTRIBUTION * dist
+            reasons.append(f"value_distribution:{dist:.2f}")
+
+    industry = _industry_score(industry_hint, field_key)
+    if industry > 0:
+        raw += SCORE_INDUSTRY * industry
+        reasons.append("industry_hint")
+
+    confidence = EXACT_CONFIDENCE if matched_by_exact else (
+        PREFIX_STRIP_CONFIDENCE if matched_by_prefix else _normalize_confidence(raw)
+    )
+    return {
+        "field": field_key,
+        "confidence": confidence,
+        "raw_score": round(raw, 2),
+        "reasons": reasons,
+        "needs_confirmation": confidence < NEEDS_CONFIRMATION_THRESHOLD,
+    }
+
+
+def detect_schema(
+    headers: list[str],
+    column_types: dict[str, str] | None = None,
+    rows_sample: list[list[Any]] | None = None,
+    industry_hint: str | None = None,
+) -> SchemaDetection:
+    """Detect canonical field mappings for a list of headers (v3 scoring).
+
+    ``rows_sample`` and ``industry_hint`` are optional refinements; without
+    them detection degrades to the v2 name/type behavior (plus the v3
+    candidate vocabulary). ``rows_sample`` is never stored.
+    """
+    column_types = column_types or {}
+    sample_rows = rows_sample or []
+    column_by_header = {h: i for i, h in enumerate(headers)}
+    exact_by_header: dict[str, tuple[str, float, str] | None] = {}
+    prefix_by_header: dict[str, tuple[str, float, str] | None] = {}
+
+    # Score every header against every canonical field.
+    scored: dict[str, list[dict[str, Any]]] = {}
+    normalized = {h: normalize_header(h) for h in headers}
     for header in headers:
+        norm = normalized[header]
+        if not norm:
+            continue
+        exact = _exact_match(norm)
+        prefix = _prefix_strip_match(norm)
+        exact_by_header[header] = exact
+        prefix_by_header[header] = prefix
         col_type = column_types.get(header, "unknown")
         if col_type == "empty":
             continue
-        hit = _match_header(header, col_type)
-        if hit is None:
+        candidates: list[dict[str, Any]] = []
+        for field_def in CANONICAL_FIELDS:
+            score = _score_header_for_field(
+                header, norm, field_def.key, col_type, sample_rows,
+                column_by_header, industry_hint, exact, prefix,
+            )
+            if score["confidence"] >= MIN_ACCEPT_CONFIDENCE:
+                candidates.append(score)
+        candidates.sort(key=lambda c: (c["confidence"], c["raw_score"]), reverse=True)
+        scored[header] = candidates
+
+    candidate_scores = {
+        h: {c["field"]: {k: c[k] for k in ("confidence", "raw_score", "reasons", "needs_confirmation")} for c in cands}
+        for h, cands in scored.items()
+    }
+
+    # Relationship validation (M2.14.4): when 数量 and 单价 exist, check
+    # 数量 × 单价 ≈ 金额 and boost the amount candidate.
+    rel_evidence: dict[str, Any] = {}
+    if sample_rows:
+        rel_evidence = _relationship_signals(sample_rows, headers)
+    if rel_evidence.get("pairs", 0) >= 3 and rel_evidence.get("with_amount", 0) >= 3:
+        threshold = max(1, int(rel_evidence["pairs"] * 0.7))
+        if rel_evidence.get("consistent", 0) >= threshold:
+            for header, cands in scored.items():
+                for c in cands:
+                    if c["field"] == "sales_amount":
+                        c["confidence"] = round(min(0.99, c["confidence"] + 0.06), 3)
+                        c["reasons"].append("relationship:quantity_x_unit_price")
+                        c["needs_confirmation"] = c["confidence"] < NEEDS_CONFIRMATION_THRESHOLD
+
+    # Select the best candidate per canonical key; exact/prefix matches win
+    # because they carry the strongest name signal.
+    mappings: list[FieldMapping] = []
+    for field_def in CANONICAL_FIELDS:
+        best: dict[str, Any] | None = None
+        best_source: str | None = None
+        for header in headers:
+            cands = scored.get(header) or []
+            candidate = next((c for c in cands if c["field"] == field_def.key), None)
+            if candidate is None:
+                continue
+            if best is None or (candidate["confidence"], candidate["raw_score"]) > (best["confidence"], best["raw_score"]):
+                best = candidate
+                best_source = header
+        if best is None:
             continue
-        canonical_key, confidence, method = hit
-        field_def = CANONICAL_BY_KEY[canonical_key]
-        # Small confidence penalty when the column type contradicts the field type.
-        if col_type not in ("unknown",) and field_def.value_type != col_type:
-            confidence = max(0.5, confidence - 0.1)
+        field_def_obj = CANONICAL_BY_KEY[best["field"]]
         mappings.append(
             FieldMapping(
-                canonical_key=canonical_key,
-                source_column=header,
-                confidence=round(confidence, 2),
-                value_type=field_def.value_type,
+                canonical_key=best["field"],
+                source_column=best_source,
+                confidence=round(best["confidence"], 3),
+                value_type=field_def_obj.value_type,
                 availability=AVAILABLE,
-                match_method=method,
-                required=field_def.required,
+                match_method=_match_method_for_confidence(best["confidence"]),
+                required=field_def_obj.required,
                 confirmation_status=STATUS_PENDING,
                 confirmation_source=SOURCE_SYSTEM,
+                field_mapping_confidence={
+                    "confidence": round(best["confidence"], 3),
+                    "raw_score": best.get("raw_score"),
+                    "reasons": best.get("reasons", []),
+                    "needs_confirmation": best.get("needs_confirmation", False),
+                },
+                needs_confirmation=bool(best.get("needs_confirmation", False)),
             )
         )
-        matched_columns.add(header)
+
+    # A header maps to exactly one canonical field. If two fields select the
+    # same source column, keep the higher-confidence mapping.
+    used_columns: set[str] = set()
+    filtered: list[FieldMapping] = []
+    for m in sorted(mappings, key=lambda x: x.confidence, reverse=True):
+        if m.source_column in used_columns:
+            continue
+        used_columns.add(m.source_column)
+        filtered.append(m)
+    mappings = filtered
 
     mapped_keys = {m.canonical_key for m in mappings}
     missing = [f.key for f in CANONICAL_FIELDS if f.key not in mapped_keys]
-    unmapped = [h for h in headers if h not in matched_columns]
+    unmapped = [h for h in headers if h not in used_columns]
+
+    # M2.14.4: infer sales_amount from 数量 × 单价 when no amount column is
+    # present and the relationship evidence is strong. Never fabricate when
+    # the evidence is weak.
+    if "sales_amount" not in mapped_keys and rel_evidence.get("pairs", 0) >= 3 and (rel_evidence.get("consistent", 0) >= 1 or rel_evidence.get("with_amount", 0) == 0):
+        qty_m = next((m for m in mappings if m.canonical_key == "sales_quantity"), None)
+        price_m = next((m for m in mappings if m.canonical_key == "unit_price"), None)
+        if qty_m and price_m:
+            inferred_source = f"{qty_m.source_column} × {price_m.source_column}"
+            mappings.append(
+                FieldMapping(
+                    canonical_key="sales_amount",
+                    source_column=inferred_source,
+                    confidence=0.62,
+                    value_type="number",
+                    availability=AVAILABLE,
+                    match_method=MATCH_HEURISTIC,
+                    required=True,
+                    confirmation_status=STATUS_PENDING,
+                    confirmation_source=SOURCE_SYSTEM,
+                    field_mapping_confidence={
+                        "confidence": 0.62,
+                        "reasons": ["relationship:quantity_x_unit_price_inferred"],
+                        "needs_confirmation": True,
+                    },
+                    needs_confirmation=True,
+                )
+            )
+            mapped_keys.add("sales_amount")
+            missing = [f.key for f in CANONICAL_FIELDS if f.key not in mapped_keys]
+
     conflicts = detect_conflicts([m.to_dict() for m in mappings])
+
+    # M2.14.4: explicit ambiguity list for the UI confirmation copy.
+    ambiguous_columns: list[dict[str, Any]] = []
+    for header in headers:
+        cands = scored.get(header) or []
+        if len(cands) >= 2:
+            top = cands[0]
+            second = cands[1]
+            if second["confidence"] >= 0.55 and second["confidence"] >= top["confidence"] - 0.12:
+                ambiguous_columns.append(
+                    {
+                        "source_column": header,
+                        "top_candidate": top["field"],
+                        "top_confidence": top["confidence"],
+                        "alternate_candidate": second["field"],
+                        "alternate_confidence": second["confidence"],
+                    }
+                )
 
     return SchemaDetection(
         source_headers=list(headers),
@@ -232,6 +703,8 @@ def detect_schema(headers: list[str], column_types: dict[str, str] | None = None
         missing=missing,
         sales_core_available=any(k in mapped_keys for k in _CORE_KEYS),
         conflicts=conflicts,
+        candidate_scores=candidate_scores,
+        ambiguous_columns=ambiguous_columns,
     )
 
 

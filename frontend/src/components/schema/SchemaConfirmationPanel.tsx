@@ -113,6 +113,12 @@ export default function SchemaConfirmationPanel({
             </div>
           )}
 
+          {available.some((m) => (m.needs_confirmation ?? (m.confidence ?? 1) < 0.9)) && (
+            <div className="mt-3 rounded-control border border-warning/20 bg-warning/5 px-3 py-2">
+              <p className="text-xs font-medium text-warning">{T("schema.confirm.lowConfidenceHint")}</p>
+            </div>
+          )}
+
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"

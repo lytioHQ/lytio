@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
 import { localeForLang, t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
-import { formatCurrencyCN } from "@/lib/formatNumber";
+import { formatCurrencyCNFull } from "@/lib/formatNumber";
 
 interface ExecutiveReportData {
   title: string;
@@ -52,16 +52,19 @@ const DISPLAY_METRICS = ["total_sales", "order_count", "average_order_value", "c
 function formatMetricValue(
   m: ComputedMetricData,
   T: (key: string, params?: Record<string, string | number>) => string,
-): string {
-  if (m.availability !== "available" || m.value == null) return "—";
+): { display: string; full: string } {
+  if (m.availability !== "available" || m.value == null) {
+    return { display: "—", full: "—" };
+  }
   if (m.metric_name === "customer_concentration") {
-    return `${T("metric.top1")} ${(Number(m.value) * 100).toFixed(1)}%`;
+    const value = `${T("metric.top1")} ${(Number(m.value) * 100).toFixed(1)}%`;
+    return { display: value, full: value };
   }
   if (m.metric_name === "total_sales" || m.metric_name === "average_order_value") {
-    // M2.14.3 Phase 1 (P3): currency metrics use the unified 万/亿 format.
-    return formatCurrencyCN(Number(m.value));
+    // M2.14.3 Phase 1 (P3): compact 万/亿 display; M2.14.4 P0 keeps full value.
+    return formatCurrencyCNFull(Number(m.value));
   }
-  return String(m.value);
+  return { display: String(m.value), full: String(m.value) };
 }
 
 function ScreenHeading({ index, title }: { index: string; title: string }) {
@@ -184,7 +187,7 @@ export default function ExecutiveReportPage() {
               <p className="text-base font-semibold text-ink">{T("report.nextPeriodCta")}</p>
               <p className="mt-1 text-sm leading-relaxed text-secondary">{T("report.nextPeriodDesc")}</p>
             </div>
-            <Link href={`/project/${id}#dataset`} className={`${buttonBaseClasses} ${buttonVariantClasses.primary} shrink-0`}>
+            <Link href={`/project/${id}/verify`} className={`${buttonBaseClasses} ${buttonVariantClasses.primary} shrink-0`}>
               {T("report.nextPeriodCta")}
             </Link>
           </div>
@@ -226,7 +229,8 @@ export default function ExecutiveReportPage() {
                       if (!m) return null;
                       const available = m.availability === "available" && m.value != null;
                       const estimated = name === "order_count" && (m.assumptions ?? []).length > 0;
-                      const value = available ? formatMetricValue(m, T) : "—";
+                      const formatted = available ? formatMetricValue(m, T) : null;
+                      const value = formatted?.display ?? "—";
                       const description = available
                         ? (estimated ? T("metric.estimated") : T("metric.subtitle"))
                         : T("metric.unavailable");
@@ -235,6 +239,7 @@ export default function ExecutiveReportPage() {
                           key={name}
                           label={T(`metric.name.${name}`)}
                           value={value}
+                          fullValue={formatted?.full}
                           description={description}
                         />
                       );
@@ -266,7 +271,7 @@ export default function ExecutiveReportPage() {
             <p className="text-base font-semibold text-ink">{T("report.nextPeriodCta")}</p>
             <p className="mt-1 text-sm leading-relaxed text-secondary">{T("report.nextPeriodDesc")}</p>
           </div>
-          <Link href={`/project/${id}#dataset`} className={`${buttonBaseClasses} ${buttonVariantClasses.primary} shrink-0`}>
+          <Link href={`/project/${id}/verify`} className={`${buttonBaseClasses} ${buttonVariantClasses.primary} shrink-0`}>
             {T("report.nextPeriodCta")}
           </Link>
         </div>

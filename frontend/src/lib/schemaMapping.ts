@@ -2,6 +2,9 @@
  * M2.12.0 Schema Layer — canonical field display metadata for the frontend.
  * Mirrors backend/app/services/canonical_schema.py keys. Display text lives
  * in i18n.ts (schema.field.*); this module only maps key -> icon + label key.
+ *
+ * M2.14.4 adds unit_price and inventory_turnover_days so the confirmation
+ * panel can surface the two fields that previously caused wrong mappings.
  */
 
 export interface SchemaFieldMeta {
@@ -13,6 +16,8 @@ export const SCHEMA_FIELD_META: Record<string, SchemaFieldMeta> = {
   order_date: { icon: "📅", labelKey: "schema.field.order_date" },
   sales_amount: { icon: "💰", labelKey: "schema.field.sales_amount" },
   sales_quantity: { icon: "🔢", labelKey: "schema.field.sales_quantity" },
+  unit_price: { icon: "🏷️", labelKey: "schema.field.unit_price" },
+  inventory_turnover_days: { icon: "🔄", labelKey: "schema.field.inventory_turnover_days" },
   product_name: { icon: "📦", labelKey: "schema.field.product_name" },
   region: { icon: "🗺️", labelKey: "schema.field.region" },
   customer_name: { icon: "👥", labelKey: "schema.field.customer_name" },
@@ -41,6 +46,15 @@ export interface SchemaFieldMapping {
   confirmation_status?: string;
   /** system_detection | user_confirmed | auto_accept */
   confirmation_source?: string;
+  /** M2.14.4: scoring provenance emitted by the v3 mapper. */
+  field_mapping_confidence?: {
+    confidence?: number;
+    raw_score?: number;
+    reasons?: string[];
+    needs_confirmation?: boolean;
+  };
+  /** M2.14.4: ambiguous mappings must be confirmed before auto-computing. */
+  needs_confirmation?: boolean;
 }
 
 export interface SchemaMapping {
@@ -54,6 +68,16 @@ export interface SchemaMapping {
   schema_version?: string;
   conflicts?: SchemaConflict[];
   audit?: SchemaMappingAudit;
+  /** M2.14.4: per-header candidate scores (diagnostics). */
+  candidate_scores?: Record<string, Record<string, { confidence: number; raw_score?: number; reasons?: string[]; needs_confirmation?: boolean }>>;
+  /** M2.14.4: headers with close alternate candidates. */
+  ambiguous_columns?: Array<{
+    source_column: string;
+    top_candidate: string;
+    top_confidence: number;
+    alternate_candidate: string;
+    alternate_confidence: number;
+  }>;
 }
 
 export interface SchemaConflict {

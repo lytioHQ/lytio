@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
 import { localeForLang, t, UILanguage } from "@/lib/i18n";
+import { formatCurrencyCNFull } from "@/lib/formatNumber";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
@@ -189,6 +190,11 @@ function formatValue(value: unknown, lang: UILanguage): string {
   return JSON.stringify(value);
 }
 
+function currencyDisplayPair(value: unknown) {
+  if (typeof value !== "number") return null;
+  return formatCurrencyCNFull(value);
+}
+
 /**
  * M2.12.4: read-only Business Memory block.
  * Shows the project's accumulated operating knowledge: current health & sales
@@ -229,6 +235,9 @@ export default function BusinessMemoryCard({
   const lastHealth = healthPoints.length > 0 ? healthPoints[healthPoints.length - 1] : null;
   const salesPoints = memory?.metric_history?.["total_sales"] ?? [];
   const lastSales = salesPoints.length > 0 ? salesPoints[salesPoints.length - 1] : null;
+  const salesPair = currencyDisplayPair(lastSales?.value);
+  const salesDisplay = salesPair?.display ?? formatValue(lastSales?.value, lang);
+  const salesFull = salesPair?.full ?? salesDisplay;
   const summary = memory?.action_summary ?? { total: 0, pending: 0, completed: 0, cancelled: 0, verified: 0 };
   const loops = memory?.open_loops ?? [];
   // M2.14.3 Phase 1 (P5): split open loops into business actions vs. data
@@ -281,8 +290,8 @@ export default function BusinessMemoryCard({
             </div>
             <div className="rounded-control border border-border bg-canvas p-4">
               <p className="text-caption text-secondary">{T("memory.salesTrend")}</p>
-              <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
-                {lastSales ? formatValue(lastSales.value, lang) : "–"}
+              <p className="mt-1 text-2xl font-semibold text-ink tabular-nums" title={salesFull}>
+                {lastSales ? salesDisplay : "–"}
               </p>
               {lastSales?.period?.max && (
                 <p className="mt-0.5 text-xs text-secondary">≤ {lastSales.period.max}</p>
@@ -313,8 +322,8 @@ export default function BusinessMemoryCard({
               <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <div className="rounded-control border border-border bg-canvas p-3">
                   <p className="text-caption text-secondary">{T("memory.salesTrend")}</p>
-                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
-                    {salesTrend ? formatValue(salesTrend.latest, lang) : "–"}
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums" title={salesTrend ? (currencyDisplayPair(salesTrend.latest)?.full ?? formatValue(salesTrend.latest, lang)) : "–"}>
+                    {salesTrend ? (currencyDisplayPair(salesTrend.latest)?.display ?? formatValue(salesTrend.latest, lang)) : "–"}
                     <span className="ml-1">{salesTrend ? trendIcon(salesTrend.direction) : ""}</span>
                   </p>
                   <p className="mt-0.5 text-xs text-secondary">

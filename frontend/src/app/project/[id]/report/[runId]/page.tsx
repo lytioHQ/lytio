@@ -11,6 +11,8 @@ import InsightList from "@/components/business/InsightList";
 import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
 import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
+import Card from "@/components/ui/Card";
+import FocusedInsightCard from "@/components/business/FocusedInsightCard";
 import { localeForLang, t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 
@@ -22,7 +24,7 @@ interface TimelineItem {
 interface RunData {
   id: number; project_id: number; created_at: string | null;
   business_health_score: number | null; summary: string | null;
-  result_json: string | null; is_legacy: boolean;
+  result_json: string | null; is_legacy: boolean; analysis_type: string | null;
 }
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
@@ -85,7 +87,20 @@ export default function ReportPage() {
           <div className="rounded-control border border-warning/20 bg-warning/5 px-5 py-3"><p className="text-sm text-warning">{T("reportPage.legacy")}</p></div>
         )}
 
-        {resultData ? (
+        {run.analysis_type === "focused_insight" && resultData?.focused_insight ? (
+          <>
+            <FocusedInsightCard data={resultData.focused_insight} lang={uiLang} />
+            {resultData.focused_topic && (
+              <p className="text-sm text-secondary">{T("focus.card.topic")}: {resultData.focused_topic}</p>
+            )}
+            {run.summary && (
+              <Card>
+                <p className="mb-3 text-h3 text-ink">{T("report.execSummary")}</p>
+                <p className="max-w-[680px] whitespace-pre-line text-body leading-relaxed text-secondary">{run.summary}</p>
+              </Card>
+            )}
+          </>
+        ) : resultData ? (
           <>
             {resultData.business_health && <BusinessHealthCard data={resultData.business_health} lang={uiLang} />}
             {resultData.metrics?.length > 0 && <MetricGrid metrics={resultData.metrics} lang={uiLang} />}

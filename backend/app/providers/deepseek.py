@@ -45,6 +45,12 @@ class DeepSeekProvider(BaseAIProvider):
         system_prompt = self._build_system_prompt(request)
         user_prompt = self._build_user_prompt(request)
 
+        max_tokens = 16384
+        if isinstance(request.parameters, dict):
+            override = request.parameters.get("max_tokens")
+            if isinstance(override, int) and override > 0:
+                max_tokens = override
+
         payload = {
             "model": self._model,
             "messages": [
@@ -52,7 +58,7 @@ class DeepSeekProvider(BaseAIProvider):
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": 0.3,
-            "max_tokens": 16384,
+            "max_tokens": max_tokens,
         }
 
         raw_response: dict[str, Any] = {}

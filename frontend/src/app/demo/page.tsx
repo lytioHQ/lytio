@@ -213,6 +213,7 @@ export default function DemoPage() {
                   const available = m.availability === "available" && m.value != null;
                   const estimated = name === "order_count" && (m.assumptions ?? []).length > 0;
                   const value = available ? formatMetricValue(m, T) : "—";
+                  const fullValue = available && m.value != null ? String(m.value) : undefined;
                   const description = available
                     ? estimated
                       ? T("metric.estimated")
@@ -223,6 +224,7 @@ export default function DemoPage() {
                       key={name}
                       label={T(`metric.name.${name}`)}
                       value={value}
+                      fullValue={fullValue}
                       description={description}
                     />
                   );

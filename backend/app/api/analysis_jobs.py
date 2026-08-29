@@ -46,6 +46,98 @@ def _to_response(job) -> AnalysisJobResponse:
     )
 
 
+class FocusedInsightCreate(BaseModel):
+    parent_run_id: int
+    topic: str
+    idempotency_key: str | None = None
+
+
+@router.post("/{project_id}/focused-insight", response_model=AnalysisJobResponse, status_code=202)
+async def create_focused_insight_job(
+    project_id: int,
+    payload: FocusedInsightCreate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """M2.14.4: create a focused follow-up job for an existing analysis run.
+
+    The job only consumes the parent run's compact context; it never reads
+    the Excel file and never runs a full analysis.
+    """
+    topic = (payload.topic or "").strip()
+    if not topic:
+        raise HTTPException(status_code=422, detail="Topic must not be empty.")
+
+    project = await project_service.get_project(db, project_id, user.id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    from app.services import analysis_run_service
+
+    parent = await analysis_run_service.get_run(db, payload.parent_run_id)
+    if parent is None or parent.project_id != project_id:
+        raise HTTPException(status_code=404, detail="Parent analysis run not found")
+    if parent.analysis_type not in ("health_scan", "deep_analysis", "overview"):
+        raise HTTPException(
+            status_code=400,
+            detail="Focused insight requires a completed full analysis as parent.",
+        )
+
+    idempotency_key = payload.idempotency_key or (
+        f"focused-insight:{project_id}:{payload.parent_run_id}:{topic}"
+    )
+
+    existing = await analysis_job_service.get_job_by_idempotency(db, idempotency_key)
+    if existing is not None:
+        if existing.user_id == user.id and existing.project_id == project_id:
+            return _to_response(existing)
+        raise HTTPException(status_code=409, detail="Focused insight job conflict")
+
+    request_json = json.dumps(
+        {
+            "analysis_type": "focused_insight",
+            "parent_run_id": payload.parent_run_id,
+            "topic": topic,
+            "report_language": project.language or "zh",
+        },
+        ensure_ascii=False,
+    )
+    job = await analysis_job_service.insert_job(
+        db,
+        user_id=user.id,
+        project_id=project_id,
+        idempotency_key=idempotency_key,
+        analysis_type="focused_insight",
+        analysis_direction="topic",
+        request_json=request_json,
+    )
+    if job is None:
+        raced = await analysis_job_service.get_job_by_idempotency(db, idempotency_key)
+        if raced is not None and raced.user_id == user.id and raced.project_id == project_id:
+            return _to_response(raced)
+        raise HTTPException(status_code=409, detail="Focused insight job conflict")
+
+    schedule_job(job.id)
+    return _to_response(job)
+
+
+@router.get("/{project_id}/focused-insight/{job_id}", response_model=AnalysisJobResponse)
+async def get_focused_insight_job(
+    project_id: int,
+    job_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Poll the focused-insight job (same response contract as analysis jobs)."""
+    project = await project_service.get_project(db, project_id, user.id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    job = await analysis_job_service.get_job(db, project_id, user.id, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Focused insight job not found")
+    return _to_response(job)
+
+
 @router.post("/{project_id}/analysis", response_model=AnalysisJobResponse, status_code=202)
 async def create_analysis_job(
     project_id: int,

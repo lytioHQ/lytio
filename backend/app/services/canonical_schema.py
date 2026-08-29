@@ -20,8 +20,12 @@ COMMON_PREFIXES = ("本月", "当月", "上月", "实际", "年度", "季度", "
 _UNIT_SUFFIXES = ("元", "￥", "$", "¥", "rmb", "usd", "cny")
 
 # Fallback heuristics for numeric/date columns with unknown names.
-_AMOUNT_SUFFIXES = ("额", "金额", "收入", "营收", "价", "款")
+# "价" is intentionally NOT an amount suffix: "销售单价 / 单价" is a unit
+# price, not a sales amount (M2.14.4 field-intelligence fix).
+_AMOUNT_SUFFIXES = ("额", "金额", "收入", "营收", "款")
 _QUANTITY_SUFFIXES = ("量", "数", "件")
+_PRICE_SUFFIXES = ("单价", "价格", "售价", "price", "unitprice", "定价")
+_TURNOVER_SUFFIXES = ("周转天数", "周转率", "天数")
 _DATE_HINTS = ("日期", "时间", "date", "day")
 
 
@@ -73,7 +77,31 @@ CANONICAL_FIELDS: list[CanonicalField] = [
         display_name_ja="数量",
         display_name_de="Menge",
         required=True,
-        synonyms=("数量", "成交数量", "销量", "件数", "quantity", "qty", "count"),
+        synonyms=("数量", "销售数量", "成交数量", "销量", "件数", "quantity", "qty", "count"),
+    ),
+    CanonicalField(
+        key="unit_price",
+        value_type="number",
+        display_name_zh="销售单价",
+        display_name_en="Unit Price",
+        display_name_ja="販売単価",
+        display_name_de="Stückpreis",
+        synonyms=(
+            "销售单价", "单价", "商品单价", "成交单价", "售价", "价格",
+            "unit_price", "unit price", "price",
+        ),
+    ),
+    CanonicalField(
+        key="inventory_turnover_days",
+        value_type="number",
+        display_name_zh="库存周转天数",
+        display_name_en="Inventory Turnover Days",
+        display_name_ja="在庫回転日数",
+        display_name_de="Lagerumschlagstage",
+        synonyms=(
+            "库存周转天数", "周转天数", "库存天数", "存货周转天数", "库存周转率",
+            "inventory_turnover_days", "inventory days", "turnover_days",
+        ),
     ),
     CanonicalField(
         key="order_id",

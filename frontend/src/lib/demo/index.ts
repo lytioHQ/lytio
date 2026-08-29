@@ -256,6 +256,8 @@ export interface DemoMetricGridItem {
   name: string;
   value: string;
   trend: "up" | "down" | "stable";
+  /** M2.14.4 P0: exact value for the tooltip; never displayed with "...". */
+  fullValue?: string;
 }
 
 function compareValues(a: number | string | null | undefined, b: number | string | null | undefined): "up" | "down" | "stable" {
@@ -276,6 +278,7 @@ export function buildDemoMetricGrid(period: DemoPeriod, T: TFunc): DemoMetricGri
     return {
       name: T(`metric.name.${km.metric_name}`),
       value: km.display,
+      fullValue: km.value != null ? String(km.value) : km.display,
       trend: compareValues(km.value, prev?.value),
     };
   });

@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { localeForLang, t, UILanguage } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 import { Card } from "@/components/ui";
+import { formatCurrencyCNFull, formatNumberFull } from "@/lib/formatNumber";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
@@ -79,7 +80,27 @@ function parseComparison(payload: RunPayload | null): ComparisonResult | null {
 
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "\u2014";
+  const num = Number(value);
+  if (!Number.isNaN(num) && value !== "" && typeof value !== "boolean") {
+    return String(num);
+  }
   return String(value);
+}
+
+function formatCell(value: unknown): { display: string; full: string } {
+  if (value === null || value === undefined || value === "") {
+    return { display: "\u2014", full: "\u2014" };
+  }
+  const num = Number(value);
+  if (!Number.isNaN(num) && value !== "" && typeof value !== "boolean") {
+    // Verification values are currency metrics in practice; plain numbers
+    // keep their exact value in the tooltip either way.
+    const currency = formatCurrencyCNFull(num);
+    const plain = formatNumberFull(num);
+    return { display: currency.display, full: currency.full };
+  }
+  const s = String(value);
+  return { display: s, full: s };
 }
 
 function metricLabel(uiLang: UILanguage, name: string): string {
@@ -230,10 +251,10 @@ export default function VerificationReportPage() {
                           {comparison.metric_changes.map((m, i) => (
                             <tr key={i} className="border-b border-border align-top last:border-b-0">
                               <td className="py-3 pr-4 text-ink">{m.metric_name || "\u2014"}</td>
-                              <td className="py-3 pr-4 tabular-nums text-ink">{m.status === "unavailable" ? T("verifyReport.unavailable") : formatValue(m.before)}</td>
-                              <td className="py-3 pr-4 tabular-nums text-ink">{m.status === "unavailable" ? T("verifyReport.unavailable") : formatValue(m.after)}</td>
+                              <td className="py-3 pr-4 tabular-nums text-ink">{m.status === "unavailable" ? T("verifyReport.unavailable") : <CellValue value={m.before} />}</td>
+                              <td className="py-3 pr-4 tabular-nums text-ink">{m.status === "unavailable" ? T("verifyReport.unavailable") : <CellValue value={m.after} />}</td>
                               <td className="py-3 pr-4 tabular-nums text-ink">
-                                {m.status === "unavailable" ? "\u2014" : (m.percentage_change !== null && m.percentage_change !== undefined ? `${m.percentage_change}%` : formatValue(m.absolute_change))}
+                                {m.status === "unavailable" ? "\u2014" : (m.percentage_change !== null && m.percentage_change !== undefined ? `${m.percentage_change}%` : <CellValue value={m.absolute_change} />)}
                               </td>
                               <td className="py-3 text-ink">{m.status === "unavailable" ? T("verifyReport.unavailable") : T(`verifyReport.direction.${m.direction}`)}</td>
                             </tr>
@@ -322,6 +343,11 @@ function ScreenHeading({ index, title }: { index: string; title: string }) {
       <h2 className="text-lg font-semibold text-ink">{title}</h2>
     </div>
   );
+}
+
+function CellValue({ value }: { value: unknown }) {
+  const { display, full } = formatCell(value);
+  return <span className="break-words" title={full}>{display}</span>;
 }
 
 function SummaryTile({ label, value }: { label: string; value: number }) {
