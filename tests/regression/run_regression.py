@@ -185,6 +185,13 @@ def overflow_regression() -> None:
 # ---------------------------------------------------------------------------
 # 4. Focused Insight Regression
 # ---------------------------------------------------------------------------
+
+def migration_idempotency_regression() -> None:
+    """Re-running migrations must never overwrite app-persisted run types."""
+    migration = (ROOT / "backend" / "migrations" / "001_analysis_run_verification.sql").read_text(encoding="utf-8")
+    assert "AND analysis_type = 'health_scan'" in migration
+    assert "AND analysis_direction = 'overview'" in migration
+
 def focused_insight_regression() -> None:
     from app.services import focused_insight_service
     from app.services import analysis_job_runner
@@ -226,6 +233,7 @@ def main() -> None:
     check("ui_text_regression", ui_text_regression)
     check("overflow_regression", overflow_regression)
     check("focused_insight_regression", focused_insight_regression)
+    check("migration_idempotency_regression", migration_idempotency_regression)
     if FAILED:
         print(f"\n{len(FAILED)} regression gate(s) failed: {', '.join(FAILED)}")
         sys.exit(1)
