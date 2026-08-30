@@ -227,11 +227,29 @@ def focused_insight_regression() -> None:
     assert nested["title"] == "Nested" and nested["finding"] == "F3"
     assert nested["evidence"] == "E3" and nested["action"] == "A3"
 
+def focused_ui_text_regression() -> None:
+    card = (FRONTEND_SRC / "components" / "business" / "FocusedInsightCard.tsx").read_text(encoding="utf-8")
+    report = (FRONTEND_SRC / "app" / "project" / "[id]" / "report" / "[runId]" / "page.tsx").read_text(encoding="utf-8")
+
+    assert "<pre" not in card, "focused card must not render a raw code block"
+    assert "JSON.stringify" not in card, "focused card must not serialize the result as JSON"
+
+    focused_branch = report.split('=== "focused_insight" && resultData?.focused_insight', 1)[1].split(") : resultData", 1)[0]
+    assert "report.execSummary" not in focused_branch, "focused page must not duplicate the finding as an executive summary"
+
+    visible_text = "".join(re.findall(r">([^<{]*?)\s*<", card + focused_branch))
+    for banned in ("title:", "finding:", "evidence:", "explanation:", "action:"):
+        assert banned not in visible_text, f"customer-visible field label {banned!r} must not appear"
+
+    for key in ("focus.card.finding", "focus.card.evidence", "focus.card.explanation", "focus.card.action"):
+        assert f'"{key}"' in card, f"focused card is missing i18n section {key}"
+
 def main() -> None:
     check("schema_regression", schema_regression)
     check("report_regression", report_regression)
     check("ui_text_regression", ui_text_regression)
     check("overflow_regression", overflow_regression)
+    check("focused_ui_text_regression", focused_ui_text_regression)
     check("focused_insight_regression", focused_insight_regression)
     check("migration_idempotency_regression", migration_idempotency_regression)
     if FAILED:

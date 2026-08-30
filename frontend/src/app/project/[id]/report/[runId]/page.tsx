@@ -11,7 +11,6 @@ import InsightList from "@/components/business/InsightList";
 import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
 import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
-import Card from "@/components/ui/Card";
 import FocusedInsightCard from "@/components/business/FocusedInsightCard";
 import { localeForLang, t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
@@ -92,12 +91,6 @@ export default function ReportPage() {
             <FocusedInsightCard data={resultData.focused_insight} lang={uiLang} />
             {resultData.focused_topic && (
               <p className="text-sm text-secondary">{T("focus.card.topic")}: {resultData.focused_topic}</p>
-            )}
-            {run.summary && (
-              <Card>
-                <p className="mb-3 text-h3 text-ink">{T("report.execSummary")}</p>
-                <p className="max-w-[680px] whitespace-pre-line text-body leading-relaxed text-secondary">{run.summary}</p>
-              </Card>
             )}
           </>
         ) : resultData ? (
