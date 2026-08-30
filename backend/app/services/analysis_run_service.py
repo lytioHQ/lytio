@@ -3,6 +3,36 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.analysis_run import AnalysisRun
 
+FULL_ANALYSIS_TYPES = ("health_scan", "deep_analysis", "overview")
+
+
+def parse_metrics_snapshot(result_json: str | None) -> dict | None:
+    """Extract code-computed metrics from a completed full-analysis snapshot.
+
+    Used as a read-only fallback when the uploaded workbook is temporarily
+    unavailable (M2.14.5 Phase 1.1). Never recomputes or mutates anything.
+    """
+    if not result_json:
+        return None
+    try:
+        data = json.loads(result_json)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    computed = data.get("computed_metrics")
+    if not isinstance(computed, list) or not computed:
+        return None
+    return {"computed_metrics": computed, "health_score": data.get("health_score")}
+
+
+async def latest_full_run(db: AsyncSession, project_id: int) -> AnalysisRun | None:
+    """Return the newest completed full analysis run for a project."""
+    for run in await list_runs(db, project_id):
+        if run.analysis_type in FULL_ANALYSIS_TYPES and run.status == "completed":
+            return run
+    return None
+
 
 async def create_run(
     db: AsyncSession, project_id: int, summary: str,

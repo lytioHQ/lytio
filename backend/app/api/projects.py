@@ -335,9 +335,21 @@ async def get_project_metrics(
         )).to_dict()
         computed = compute_metrics(dataset, mapping)
     except Exception:
-        raise HTTPException(
-            status_code=500, detail="Failed to compute metrics. Please try again."
-        )
+        # M2.14.5 Phase 1.1: if the uploaded workbook is temporarily unavailable,
+        # serve the code-computed snapshot persisted by the last full analysis
+        # instead of failing the project dashboard.
+        run = await analysis_run_service.latest_full_run(db, project_id)
+        snapshot = analysis_run_service.parse_metrics_snapshot(run.result_json if run else None)
+        if snapshot is None:
+            raise HTTPException(
+                status_code=500, detail="Failed to compute metrics. Please try again."
+            )
+        return {
+            "project_id": project.id,
+            "computed_metrics": snapshot["computed_metrics"],
+            "health_score": snapshot["health_score"],
+            "source": "analysis_run_snapshot",
+        }
     # M2.12.2: code-computed health score (read-only). Never fails the request;
     # degrade to null when the engine cannot produce a score.
     health_score = None
@@ -349,4 +361,5 @@ async def get_project_metrics(
         "project_id": project.id,
         "computed_metrics": computed,
         "health_score": health_score,
+        "source": "live",
     }

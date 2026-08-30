@@ -20,6 +20,7 @@ from app.services.focused_insight_service import (
     parse_focused_output,
 )
 from app.services.schema_mapper import detect_schema
+from app.services.analysis_run_service import parse_metrics_snapshot
 
 
 class FakeRun:
@@ -135,3 +136,23 @@ def test_verification_purpose_optional():
     assert payload.purpose is None  # API layer defaults it to general_verification
     payload2 = VerificationCreate(saved_filename="x.xlsx", purpose=None)
     assert payload2.purpose is None
+
+
+def test_metrics_snapshot_fallback_returns_dashboard_metrics():
+    import json
+
+    result = {
+        "computed_metrics": [
+            {"metric_name": "total_sales", "value": 107040, "availability": "available"},
+            {"metric_name": "date_range", "value": {"min": "2026-01", "max": "2026-06"}, "availability": "available"},
+        ],
+        "health_score": {"health_score": 69.8, "health_level": "Fair"},
+    }
+    snapshot = parse_metrics_snapshot(json.dumps(result))
+    assert snapshot is not None
+    assert snapshot["computed_metrics"][1]["metric_name"] == "date_range"
+    assert snapshot["health_score"]["health_score"] == 69.8
+
+    assert parse_metrics_snapshot(None) is None
+    assert parse_metrics_snapshot("not json") is None
+    assert parse_metrics_snapshot("{}") is None
