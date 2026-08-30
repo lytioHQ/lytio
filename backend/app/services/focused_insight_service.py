@@ -128,7 +128,25 @@ def parse_focused_output(content: str, topic: str, language: str = "zh") -> dict
             cleaned = cleaned.split("```", 2)[1] if cleaned.count("```") >= 2 else cleaned.strip("`")
         try:
             data = json.loads(cleaned)
+            # Some models double-encode the whole card as a JSON string.
+            if isinstance(data, str):
+                try:
+                    data = json.loads(data)
+                except (json.JSONDecodeError, TypeError):
+                    data = {}
             if isinstance(data, dict):
+                # Some models nest the card object inside "finding" instead of
+                # returning the five top-level keys (Phase 1.1 hardening).
+                nested = data.get("finding")
+                if isinstance(nested, str) and nested.strip().startswith("{"):
+                    try:
+                        nested_data = json.loads(nested)
+                        if isinstance(nested_data, dict):
+                            for k in OUTPUT_KEYS:
+                                if nested_data.get(k):
+                                    data[k] = nested_data[k]
+                    except (json.JSONDecodeError, TypeError):
+                        pass
                 missing = [k for k in OUTPUT_KEYS if not data.get(k)]
                 if not missing:
                     return data

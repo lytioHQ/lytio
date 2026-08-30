@@ -180,11 +180,45 @@ def overflow_regression() -> None:
     assert "OVERFLOW REGRESSION PASS" in result.stdout
 
 
+
+
+# ---------------------------------------------------------------------------
+# 4. Focused Insight Regression
+# ---------------------------------------------------------------------------
+def focused_insight_regression() -> None:
+    from app.services import focused_insight_service
+
+    normal = focused_insight_service.parse_focused_output(
+        '{"title": "T", "finding": "F", "evidence": "E", "explanation": "X", "action": "A"}',
+        "growth_opportunity", "zh",
+    )
+    assert normal["title"] == "T" and normal["evidence"] == "E" and normal["action"] == "A"
+
+    double_encoded = focused_insight_service.parse_focused_output(
+        '{"title": "T2", "finding": "F2", "evidence": "E2", "explanation": "X2", "action": "A2"}',
+        "growth_opportunity", "zh",
+    )
+    assert double_encoded["title"] == "T2" and double_encoded["evidence"] == "E2"
+    assert double_encoded["action"] == "A2"
+
+    nested_payload = json.dumps(
+        {"finding": json.dumps(
+            {"title": "Nested", "finding": "F3", "evidence": "E3",
+             "explanation": "X3", "action": "A3"}
+        )}
+    )
+    nested = focused_insight_service.parse_focused_output(
+        nested_payload, "growth_opportunity", "zh",
+    )
+    assert nested["title"] == "Nested" and nested["finding"] == "F3"
+    assert nested["evidence"] == "E3" and nested["action"] == "A3"
+
 def main() -> None:
     check("schema_regression", schema_regression)
     check("report_regression", report_regression)
     check("ui_text_regression", ui_text_regression)
     check("overflow_regression", overflow_regression)
+    check("focused_insight_regression", focused_insight_regression)
     if FAILED:
         print(f"\n{len(FAILED)} regression gate(s) failed: {', '.join(FAILED)}")
         sys.exit(1)
