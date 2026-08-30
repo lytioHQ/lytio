@@ -100,9 +100,34 @@ def test_focused_insight_never_runs_full_analysis():
     assert "metrics" not in data  # full analysis sections must not leak
 
     # API-cost guardrail: the compact prompt must be far smaller than a full
-    # analysis prompt with raw rows, and max_tokens stays at 900 in the runner.
+    # analysis prompt with raw rows; the runner uses a compact focused budget.
     assert len(prompt) < 4000
     assert "max_tokens" not in result
+
+
+def test_focused_insight_provider_options_stay_out_of_user_prompt():
+    from app.providers.deepseek import DeepSeekProvider
+    from app.services.analysis_engine import AnalysisEngine
+
+    provider = DeepSeekProvider(api_key="x")
+    request = AnalysisEngine.build_request(
+        workbook_name="focused_insight",
+        sheet_name="focused_insight",
+        headers=["topic"],
+        column_types={"topic": "text"},
+        rows=[["focused_insight"]],
+        analysis_type="focused_insight",
+        plugin_name="sales",
+        language="zh",
+        parameters={
+            "system_prompt": "sys",
+            "max_tokens": 1600,
+            "thinking": {"type": "disabled"},
+        },
+    )
+    user_prompt = provider._build_user_prompt(request)
+    assert "thinking" not in user_prompt
+    assert "max_tokens" not in user_prompt
 
 
 def test_verification_purpose_optional():

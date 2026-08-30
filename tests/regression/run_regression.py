@@ -187,6 +187,13 @@ def overflow_regression() -> None:
 # ---------------------------------------------------------------------------
 def focused_insight_regression() -> None:
     from app.services import focused_insight_service
+    from app.services import analysis_job_runner
+
+    # The provider counts reasoning tokens against max_tokens; 900 truncated the
+    # card and could leave evidence/action empty. Keep the budget high enough to
+    # return a complete five-field JSON card.
+    assert analysis_job_runner.FOCUSED_INSIGHT_MAX_TOKENS >= 1500
+    assert analysis_job_runner.FOCUSED_INSIGHT_THINKING == {"type": "disabled"}
 
     normal = focused_insight_service.parse_focused_output(
         '{"title": "T", "finding": "F", "evidence": "E", "explanation": "X", "action": "A"}',

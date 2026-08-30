@@ -61,6 +61,12 @@ class DeepSeekProvider(BaseAIProvider):
             "max_tokens": max_tokens,
         }
 
+        # Provider-only options (never rendered into the user prompt).
+        if isinstance(request.parameters, dict):
+            for key in ("thinking", "reasoning_effort"):
+                if key in request.parameters and request.parameters[key] is not None:
+                    payload[key] = request.parameters[key]
+
         raw_response: dict[str, Any] = {}
         last_error: str = ""
         started_at = time.monotonic()
@@ -184,7 +190,10 @@ class DeepSeekProvider(BaseAIProvider):
 
         params = ""
         if request.parameters:
-            extra = {k: v for k, v in request.parameters.items() if k != "system_prompt"}
+            extra = {
+                k: v for k, v in request.parameters.items()
+                if k != "system_prompt" and k not in ("max_tokens", "thinking", "reasoning_effort")
+            }
             if extra:
                 params = "\nAdditional requirements:\n" + "\n".join(
                     f"  - {k}: {v}" for k, v in extra.items()

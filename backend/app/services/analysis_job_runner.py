@@ -45,6 +45,15 @@ RUNNER_PROVIDER_TIMEOUT = float(os.getenv("ANALYSIS_JOB_PROVIDER_TIMEOUT", "180"
 # M2.13.0: maximum AI attempts for a verification job (first call + one retry).
 VERIFICATION_MAX_AI_ATTEMPTS = 2
 
+# M2.14.5 Phase 1.1: deepseek-v4-pro counts reasoning tokens against max_tokens.
+# 900 left no room for the JSON card; 1600 completes it and stays far below
+# the full-analysis budget.
+FOCUSED_INSIGHT_MAX_TOKENS = 1600
+# Disable reasoning for the small follow-up card: measured completion is ~250
+# tokens instead of 1000-1900, while 1600 max_tokens leaves headroom if the
+# proxy ignores the option.
+FOCUSED_INSIGHT_THINKING = {"type": "disabled"}
+
 _tasks: set[asyncio.Task] = set()
 
 
@@ -486,7 +495,8 @@ async def _run_focused_insight(job_id: int, started_at: float) -> None:
             language=report_language,
             parameters={
                 "system_prompt": prompt,
-                "max_tokens": 900,
+                "max_tokens": FOCUSED_INSIGHT_MAX_TOKENS,
+                "thinking": FOCUSED_INSIGHT_THINKING,
             },
         )
         response = await engine.analyze(request)
