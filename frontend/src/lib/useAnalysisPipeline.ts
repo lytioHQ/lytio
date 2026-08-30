@@ -170,7 +170,7 @@ export function useAnalysisPipeline(options?: PipelineOptions) {
       });
       const j = await r.json();
       if (!r.ok) {
-        const detail = Array.isArray(j.detail) ? j.detail.map((d: { msg: string }) => d.msg).join("; ") : (j.detail || "Analysis failed");
+        const detail = Array.isArray(j.detail) ? j.detail.map((d: { msg: string }) => d.msg).join("; ") : (j.detail || "Analysis not complete");
         setFailed(true);
         throw new Error(detail);
       }
@@ -221,7 +221,7 @@ export function useAnalysisPipeline(options?: PipelineOptions) {
       }
       setStage("done");
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Analysis failed");
+      setError(e instanceof Error ? e.message : "Analysis not complete");
       setFailed(true);
     } finally { setAnalyzing(false); }
   }

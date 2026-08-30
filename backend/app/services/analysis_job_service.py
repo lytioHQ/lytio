@@ -1,6 +1,7 @@
 """Persistence helpers for AnalysisJob records."""
 
 from datetime import datetime, timezone
+import json
 
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
@@ -12,6 +13,42 @@ from app.models.analysis_job import AnalysisJob
 ACTIVE_STATUSES = ("queued", "running")
 
 
+PIPELINE_STAGES = (
+    "UPLOAD_SUCCESS",
+    "SCHEMA_SUCCESS",
+    "METRIC_SUCCESS",
+    "AI_ANALYSIS_SUCCESS",
+    "REPORT_SUCCESS",
+)
+
+
+
+def get_pipeline_stage(job) -> str | None:
+    """Return the last recorded pipeline stage (stored in request_json)."""
+    if not job or not getattr(job, "request_json", None):
+        return None
+    try:
+        data = json.loads(job.request_json)
+        stage = data.get("pipeline_stage") if isinstance(data, dict) else None
+        return stage if stage in PIPELINE_STAGES else None
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+
+async def set_pipeline_stage(db: AsyncSession, job: AnalysisJob, stage: str) -> None:
+    """Record a pipeline stage without a schema migration (request_json)."""
+    if stage not in PIPELINE_STAGES:
+        raise ValueError(f"unknown pipeline stage: {stage}")
+    try:
+        data = json.loads(job.request_json or "{}")
+    except (json.JSONDecodeError, TypeError):
+        data = {}
+    if not isinstance(data, dict):
+        data = {}
+    data["pipeline_stage"] = stage
+    job.request_json = json.dumps(data, ensure_ascii=False)
+    await db.commit()
+    logger.info("analysis_job_stage", extra=_log_extra(job, pipeline_stage=stage))
 def _log_extra(job: AnalysisJob, **extra):
     return {
         "event": "analysis_job",

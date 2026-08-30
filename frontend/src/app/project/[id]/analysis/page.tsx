@@ -42,6 +42,20 @@ function jobErrorKey(job: AnalysisJob | null): string | null {
       return "analysis.error.invalid_data";
     case "missing_file":
       return "analysis.error.missing_file";
+    case "SCHEMA_CONFIRM_REQUIRED":
+      return "analysis.error.SCHEMA_CONFIRM_REQUIRED";
+    case "AI_OUTPUT_INCOMPLETE":
+      return "analysis.error.AI_OUTPUT_INCOMPLETE";
+    case "provider_error":
+      return "analysis.error.provider_error";
+    case "runner_exception":
+      return "analysis.error.runner_exception";
+    case "unreadable_file":
+    case "unsupported_file":
+    case "empty_workbook":
+      return "analysis.error.empty_workbook";
+    case "missing_file":
+      return "analysis.error.missing_file";
     case "DATA_SERIALIZATION_ERROR":
       return "analysis.error.dataError";
     default:

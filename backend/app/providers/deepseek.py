@@ -139,7 +139,7 @@ class DeepSeekProvider(BaseAIProvider):
 
         if not raw_response:
             return AnalysisResponse(
-                summary=f"Analysis failed: {last_error}",
+                summary=f"PROVIDER_ERROR: {last_error}",
                 metadata={"provider": self.name, "error": last_error, "latency_ms": latency_ms},
             )
 
@@ -223,7 +223,7 @@ class DeepSeekProvider(BaseAIProvider):
 
         if not content or not content.strip():
             return AnalysisResponse(
-                summary="Analysis failed: the model returned an empty response (output limit reached).",
+                summary="PROVIDER_ERROR: empty response (output limit reached).",
                 metadata={"provider": self.name, "error": "empty response", "latency_ms": latency_ms},
             )
 

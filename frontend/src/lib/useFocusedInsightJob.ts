@@ -11,6 +11,7 @@ export interface FocusedInsightJob {
   error_code: string | null;
   error_message: string | null;
   result_run_id: number | null;
+  pipeline_stage: string | null;
 }
 
 export type FocusedInsightJobError = "network" | "create" | "conflict";

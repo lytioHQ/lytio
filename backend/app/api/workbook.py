@@ -9,6 +9,7 @@ from app.api.deps import get_current_user
 from app.core.logging_config import logger
 from app.models.user import User
 
+from app.services.workbook_service import _detect_type
 router = APIRouter(prefix="/api/workbook", tags=["workbook"])
 
 UPLOAD_DIR = Path("storage/uploads")
@@ -219,30 +220,6 @@ class SemanticResponse(BaseModel):
     tables: list[SemanticSheet]
 
 
-def _detect_type(values: list[Any]) -> str:
-    """Detect the generic type of a column from its non-empty values."""
-    non_empty = [v for v in values if v not in (None, "", "None")]
-    if not non_empty:
-        return "empty"
-
-    types = {type(v) for v in non_empty}
-
-    # All same native type
-    if types == {int} or types == {float} or types == {int, float}:
-        return "number"
-    if types == {str}:
-        return "text"
-    if types == {bool}:
-        return "boolean"
-    if all(hasattr(v, "strftime") for v in non_empty):
-        return "date"
-
-    # Try to detect dates from string patterns
-    if types == {str}:
-        return "text"
-
-    return "unknown"
-
 
 @router.post("/semantic", response_model=SemanticResponse)
 def semantic_dataset(req: InspectRequest, user: User = Depends(get_current_user)):
@@ -309,18 +286,21 @@ class DetectFieldsResponse(BaseModel):
 
 
 @router.post("/detect-fields", response_model=DetectFieldsResponse)
-def detect_fields(req: InspectRequest, user: User = Depends(get_current_user)):
+async def detect_fields(req: InspectRequest, user: User = Depends(get_current_user)):
     """Detect canonical sales field mappings for an uploaded workbook."
     Pure runtime detection - never writes to the database."""
     file_path = _resolve_upload(user.id, req.saved_filename)
     _validate_file(file_path)
 
-    from app.services.schema_mapper import detect_schema
+    from app.services.schema_intelligence import detect_schema_intelligent
     from app.services.workbook_service import extract_canonical_dataset
 
     try:
         dataset = extract_canonical_dataset(user.id, req.saved_filename)
-        detection = detect_schema(dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200])
+        detection = await detect_schema_intelligent(
+            dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200],
+            source_file=req.saved_filename,
+        )
     except Exception as exc:
         raise HTTPException(
             status_code=500, detail=f"Failed to detect fields: {exc}"

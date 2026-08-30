@@ -30,14 +30,14 @@ async def create_run(
         project_id=project_id,
         business_health_score=health_score,
         summary=summary[:5000] if summary else None,
-        result_json=result_json[:30000] if result_json else None,
+        result_json=result_json,
         is_legacy=is_legacy,
         analysis_type=analysis_type,
         analysis_direction=analysis_direction,
         parent_run_id=parent_run_id,
         dataset_version=dataset_version,
         purpose=purpose,
-        comparison_result=comparison_result[:30000] if comparison_result else None,
+        comparison_result=comparison_result,
         status=status,
     )
     db.add(run)

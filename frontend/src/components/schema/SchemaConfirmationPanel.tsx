@@ -8,6 +8,7 @@ import {
   type SchemaAction,
   type SchemaMapping,
 } from "@/lib/schemaMapping";
+import type { SchemaFieldMapping } from "@/lib/schemaMapping";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
@@ -32,6 +33,18 @@ const KNOWN_STATUSES = ["confirmed", "modified", "skipped", "pending", "auto", "
 
 function safeStatus(status: string | undefined): string {
   return status && KNOWN_STATUSES.includes(status) ? status : "auto";
+}
+
+const TIER_BADGE: Record<string, string> = {
+  high: "bg-success-soft text-success",
+  medium: "bg-warning-soft text-warning",
+  low: "bg-danger/10 text-danger",
+};
+
+function tierOf(m: SchemaFieldMapping): "high" | "medium" | "low" {
+  if (m.confidence_tier) return m.confidence_tier;
+  const confidence = m.confidence ?? 1;
+  return confidence >= 0.9 ? "high" : confidence >= 0.75 ? "medium" : "low";
 }
 
 export default function SchemaConfirmationPanel({
@@ -113,9 +126,9 @@ export default function SchemaConfirmationPanel({
             </div>
           )}
 
-          {available.some((m) => (m.needs_confirmation ?? (m.confidence ?? 1) < 0.9)) && (
+          {available.some((m) => tierOf(m) !== "high") && (
             <div className="mt-3 rounded-control border border-warning/20 bg-warning/5 px-3 py-2">
-              <p className="text-xs font-medium text-warning">{T("schema.confirm.lowConfidenceHint")}</p>
+              <p className="text-xs font-medium text-warning">{T("schema.confirm.tierHint")}</p>
             </div>
           )}
 
@@ -154,7 +167,8 @@ export default function SchemaConfirmationPanel({
               const meta = schemaFieldMeta(m.canonical_key);
               const status = safeStatus(m.confirmation_status);
               const conflicted = unresolvedConflicts.some((c) => c.canonical_key === m.canonical_key);
-              const lowConfidence = (m.confidence ?? 1) < 0.9;
+              const tier = tierOf(m);
+              const needsReview = tier !== "high";
               return (
                 <li key={m.canonical_key} className="rounded-control border border-border bg-muted/40 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -176,9 +190,9 @@ export default function SchemaConfirmationPanel({
                           {T("schema.confirm.conflict")}
                         </span>
                       )}
-                      {lowConfidence && (
-                        <span className="inline-flex items-center rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-medium text-warning">
-                          {T("schema.confirm.lowConfidence")}
+                      {needsReview && (
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${TIER_BADGE[tier]}`}>
+                          {T("schema.tier." + tier)}
                         </span>
                       )}
                     </div>
@@ -231,7 +245,7 @@ export default function SchemaConfirmationPanel({
                     </span>
                     <span>
                       {T("schema.confirm.method." + (m.match_method ?? "heuristic_type"))} ·{" "}
-                      {Math.round((m.confidence ?? 0) * 100)}%
+                      {T("schema.tier." + tier)}
                     </span>
                     {m.example_values && m.example_values.length > 0 && (
                       <span>

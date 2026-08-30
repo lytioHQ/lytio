@@ -26,6 +26,8 @@ export const SCHEMA_FIELD_META: Record<string, SchemaFieldMeta> = {
   lost_reason: { icon: "❌", labelKey: "schema.field.lost_reason" },
   discount_rate: { icon: "🏷️", labelKey: "schema.field.discount_rate" },
   profit_amount: { icon: "📈", labelKey: "schema.field.profit_amount" },
+  inventory_quantity: { icon: "📦", labelKey: "schema.field.inventory_quantity" },
+  cost_amount: { icon: "💸", labelKey: "schema.field.cost_amount" },
 };
 
 export function schemaFieldMeta(key: string): SchemaFieldMeta {
@@ -55,6 +57,10 @@ export interface SchemaFieldMapping {
   };
   /** M2.14.4: ambiguous mappings must be confirmed before auto-computing. */
   needs_confirmation?: boolean;
+  /** M2.14.5: customer-facing confidence tier (high | medium | low). */
+  confidence_tier?: "high" | "medium" | "low";
+  auto_confirmed?: boolean;
+  understanding_engine?: string;
 }
 
 export interface SchemaMapping {
@@ -78,12 +84,40 @@ export interface SchemaMapping {
     alternate_candidate: string;
     alternate_confidence: number;
   }>;
+  /** M2.14.5: source provenance and business-understanding summary. */
+  source_file?: string;
+  relationship_evidence?: Record<string, unknown>;
+  schema_understanding?: SchemaUnderstandingSummary;
 }
 
 export interface SchemaConflict {
   canonical_key: string;
   candidates: string[];
   resolved: boolean;
+}
+
+export interface SchemaUnderstandingCoreField {
+  canonical_key: string;
+  source_column: string;
+  confidence_tier: "high" | "medium" | "low";
+  status: "recognized" | "needs_review";
+}
+
+export interface SchemaUnderstandingSummary {
+  status: string;
+  quality_score: number;
+  auto_confirmed_count: number;
+  needs_confirmation_count: number;
+  total_fields: number;
+  core_fields: SchemaUnderstandingCoreField[];
+  risk_fields: Array<{
+    canonical_key: string;
+    source_column: string;
+    confidence_tier: "high" | "medium" | "low";
+  }>;
+  engine: string;
+  agent_reviewed: boolean;
+  relationship_evidence?: Record<string, unknown>;
 }
 
 export interface SchemaMappingAudit {

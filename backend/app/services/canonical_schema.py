@@ -23,10 +23,44 @@ _UNIT_SUFFIXES = ("元", "￥", "$", "¥", "rmb", "usd", "cny")
 # "价" is intentionally NOT an amount suffix: "销售单价 / 单价" is a unit
 # price, not a sales amount (M2.14.4 field-intelligence fix).
 _AMOUNT_SUFFIXES = ("额", "金额", "收入", "营收", "款")
-_QUANTITY_SUFFIXES = ("量", "数", "件")
+_QUANTITY_SUFFIXES = ("量", "件")
 _PRICE_SUFFIXES = ("单价", "价格", "售价", "price", "unitprice", "定价")
 _TURNOVER_SUFFIXES = ("周转天数", "周转率", "天数")
 _DATE_HINTS = ("日期", "时间", "date", "day")
+
+# M2.14.5: semantic component patterns. These are broader than a synonym
+# list: a header is understood as a combination of business components.
+SEMANTIC_COMPONENTS: dict[str, tuple[str, ...]] = {
+    "order_date": ("日期", "时间", "date", "time", "day"),
+    "sales_amount": (
+        "销售金额", "销售额", "销售总额", "总金额", "金额", "营业额", "营收", "收入", "revenue", "amount", "sales", "total",
+    ),
+    "sales_quantity": (
+        "数量", "销量", "购买量", "销售量", "件数", "quantity", "qty", "count", "units",
+    ),
+    "unit_price": ("单价", "售价", "定价", "价格", "unitprice", "unit price", "price"),
+    "inventory_turnover_days": ("库存周转", "周转天数", "库存天数", "turnover", "inventorydays"),
+    "inventory_quantity": ("库存数量", "期末库存", "库存量", "inventoryquantity", "inventoryqty"),
+    "cost_amount": ("成本", "销售成本", "单位成本", "成本总额", "cost", "costamount", "costtotal"),
+    "profit_amount": ("利润", "毛利", "净利润", "profit", "grossprofit"),
+    "product_name": ("产品名称", "商品名称", "产品", "商品", "品名", "product", "item"),
+    "customer_name": ("客户名称", "客户名", "客户", "顾客", "公司名称", "customer", "account"),
+    "region": ("区域", "地区", "市场区域", "渠道名称", "渠道", "region", "area", "channel"),
+    "order_id": ("订单号", "订单编号", "订单id", "orderno", "orderid", "order"),
+    "sales_person": ("销售人员", "销售员", "业务员", "负责人", "salesperson", "salesrep"),
+}
+
+# Currency/unit scale hints parsed from header text (e.g. 销售总额(万元)).
+UNIT_SCALES: dict[str, float] = {
+    "万元": 10000.0,
+    "百万": 1000000.0,
+    "亿元": 100000000.0,
+    "千元": 1000.0,
+    "元": 1.0,
+    "rmb": 1.0,
+    "cny": 1.0,
+    "usd": 1.0,
+}
 
 
 @dataclass(frozen=True)
@@ -102,6 +136,24 @@ CANONICAL_FIELDS: list[CanonicalField] = [
             "库存周转天数", "周转天数", "库存天数", "存货周转天数", "库存周转率",
             "inventory_turnover_days", "inventory days", "turnover_days",
         ),
+    ),
+    CanonicalField(
+        key="inventory_quantity",
+        value_type="number",
+        display_name_zh="库存数量",
+        display_name_en="Inventory Quantity",
+        display_name_ja="在庫数量",
+        display_name_de="Lagerbestand",
+        synonyms=("库存数量", "期末库存", "库存量", "inventory_quantity", "inventory qty"),
+    ),
+    CanonicalField(
+        key="cost_amount",
+        value_type="number",
+        display_name_zh="成本",
+        display_name_en="Cost",
+        display_name_ja="原価",
+        display_name_de="Kosten",
+        synonyms=("成本", "销售成本", "单位成本", "成本金额", "成本总额", "cost", "cost_amount"),
     ),
     CanonicalField(
         key="order_id",

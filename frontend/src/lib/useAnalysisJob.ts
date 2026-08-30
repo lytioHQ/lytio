@@ -13,6 +13,7 @@ export interface AnalysisJob {
   error_code: string | null;
   error_message: string | null;
   result_run_id: number | null;
+  pipeline_stage: string | null;
 }
 
 export type AnalysisJobHookError = "network" | "create" | "conflict";

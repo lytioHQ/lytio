@@ -9,14 +9,14 @@ from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.services import project_service, analysis_run_service, report_builder
 from app.schemas.schema_mapping import SchemaMappingSaveRequest
-from app.services.schema_mapper import build_saved_mapping, detect_schema
+from app.services.schema_mapper import build_saved_mapping
 from app.services.schema_mapper import (
     apply_confirmation_actions,
     attach_examples_to_mapping,
     build_saved_mapping,
-    detect_schema,
     upgrade_mapping,
 )
+from app.services.schema_intelligence import detect_schema_intelligent
 from app.services.workbook_service import extract_canonical_dataset
 from app.services.metric_engine import compute_metrics
 from app.services.health_score import compute_health_score
@@ -146,6 +146,16 @@ async def save_result(
         db, project_id, data.summary, data.result_json,
         is_legacy=data.is_legacy,
     )
+    # Phase 1.1: recommendations become action items immediately (idempotent).
+    try:
+        from app.services import action_item_service
+        await action_item_service.create_actions_from_run(db, project_id, user.id, run.id)
+    except Exception as act_exc:
+        logger.warning(
+            "save_result_action_items_failed",
+            extra={"event": "project_save_result", "project_id": project_id, "run_id": run.id},
+            exc_info=act_exc,
+        )
     return {"status": "ok", "run_id": run.id}
 
 class TimelineItem(BaseModel):
@@ -195,11 +205,21 @@ async def get_executive_report(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
+    result_json = project.latest_result_json
     if not project.latest_result_json:
-        raise HTTPException(status_code=404, detail="No analysis result available. Run an analysis first.")
+        # Phase 1.1 self-heal: older projects whose latest_result_json was
+        # truncated/empty still render from the latest full analysis run.
+        result_json = None
+        runs = await analysis_run_service.list_runs(db, project_id)
+        for r in runs:
+            if r.analysis_type in ("health_scan", "deep_analysis") and r.result_json:
+                result_json = r.result_json
+                break
+        if not result_json:
+            raise HTTPException(status_code=404, detail="No analysis result available. Run an analysis first.")
 
     report = report_builder.build_report_from_json(
-        project.latest_result_json,
+        result_json,
         project_name=project.title,
         title=f"{project.title} \u2014 Executive Report",
     )
@@ -226,7 +246,10 @@ async def get_project_schema_mapping(
     elif project.saved_filename:
         try:
             dataset = extract_canonical_dataset(user.id, project.saved_filename)
-            mapping = detect_schema(dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200], industry_hint=project.industry).to_dict()
+            mapping = (await detect_schema_intelligent(
+                dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200],
+                industry_hint=project.industry, source_file=project.saved_filename,
+            )).to_dict()
             persisted = False
         except Exception:
             raise HTTPException(
@@ -268,10 +291,10 @@ async def save_project_schema_mapping(
         dataset = extract_canonical_dataset(user.id, project.saved_filename)
         headers = dataset["headers"]
         if payload.actions:
-            base = project.schema_mapping or detect_schema(
+            base = project.schema_mapping or (await detect_schema_intelligent(
                 headers, dataset["column_types"], rows_sample=dataset["rows"][:200],
-                industry_hint=project.industry,
-            ).to_dict()
+                industry_hint=project.industry, source_file=project.saved_filename,
+            )).to_dict()
             actions = [a.model_dump() for a in payload.actions]
             mapping = apply_confirmation_actions(base, actions, headers, user_id=user.id)
         else:
@@ -306,10 +329,10 @@ async def get_project_metrics(
         raise HTTPException(status_code=400, detail="No Excel file is linked to this project.")
     try:
         dataset = extract_canonical_dataset(user.id, project.saved_filename)
-        mapping = project.schema_mapping or detect_schema(
-            dataset["headers"], dataset["column_types"],
-            rows_sample=dataset["rows"][:200], industry_hint=project.industry,
-        ).to_dict()
+        mapping = project.schema_mapping or (await detect_schema_intelligent(
+            dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200],
+            industry_hint=project.industry, source_file=project.saved_filename,
+        )).to_dict()
         computed = compute_metrics(dataset, mapping)
     except Exception:
         raise HTTPException(

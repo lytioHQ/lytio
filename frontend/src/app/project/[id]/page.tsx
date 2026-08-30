@@ -62,10 +62,15 @@ export default function ProjectDashboard() {
   const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
   const [project, setProject] = useState<ProjectData | null>(null);
   const [report, setReport] = useState<ReportPreview | null>(null);
+  const [metricsData, setMetricsData] = useState<{
+    computed_metrics: Array<{ metric_name: string; value: unknown; availability: string }>;
+    health_score: { health_score: number; health_level: string } | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const [schemaMapping, setSchemaMapping] = useState<SchemaMapping | null>(null);
+  const schemaSummary = schemaMapping?.schema_understanding ?? null;
   const [loadError, setLoadError] = useState(false);
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
 
@@ -99,6 +104,10 @@ export default function ProjectDashboard() {
       .then(async (r) => { if (!r.ok) return null; return r.json(); })
       .then((data: ReportPreview | null) => setReport(data))
       .catch(() => setReport(null));
+    apiFetch(API + "/api/projects/" + id + "/metrics", { headers: { Authorization: "Bearer " + token } })
+      .then(async (r) => { if (!r.ok) return null; return r.json(); })
+      .then((data: { computed_metrics: Array<{ metric_name: string; value: unknown; availability: string }>; health_score: { health_score: number; health_level: string } | null } | null) => setMetricsData(data))
+      .catch(() => setMetricsData(null));
   }, [token, id]);
 
   async function handleReplaceFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -147,6 +156,22 @@ export default function ProjectDashboard() {
   const riskCount = report?.top_risks?.length ?? 0;
   const recCount = report?.top_recommendations?.length ?? 0;
   const latestVerification = timeline.find((item) => item.analysis_type === "verification") ?? null;
+  const healthFallback = metricsData?.health_score
+    ? { score: metricsData.health_score.health_score, level: metricsData.health_score.health_level }
+    : null;
+  const healthScore = report?.business_health ?? healthFallback;
+  const dateRangeMetric = metricsData?.computed_metrics?.find(
+    (m) => m.metric_name === "date_range" && m.availability === "available",
+  );
+  const dateRangeValue = dateRangeMetric?.value && typeof dateRangeMetric.value === "object"
+    ? (dateRangeMetric.value as { min?: string; max?: string })
+    : null;
+  const dataPeriod = dateRangeValue && (dateRangeValue.min || dateRangeValue.max)
+    ? `${dateRangeValue.min || ""} ~ ${dateRangeValue.max || ""}`
+    : "";
+  const latestFullRun = timeline.find(
+    (item) => item.analysis_type === "health_scan" || item.analysis_type === "deep_analysis",
+  ) ?? null;
 
   return (
     <main className="min-h-screen bg-canvas">
@@ -189,8 +214,8 @@ export default function ProjectDashboard() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <MetricCard
             label={T("landing.diff.businessHealth")}
-            value={report?.business_health ? report.business_health.score : "\u2014"}
-            description={report?.business_health ? report.business_health.level : hasFile ? T("proj.pending") : T("proj.healthNoData")}
+            value={healthScore ? healthScore.score : "\u2014"}
+            description={healthScore ? healthScore.level : hasFile ? T("proj.pending") : T("proj.healthNoData")}
           />
           <MetricCard
             label={T("report.kpi.findings")}
@@ -302,6 +327,12 @@ export default function ProjectDashboard() {
               <p className="mt-1 text-caption text-secondary">
                 {completed ? T("proj.reportReady") : hasFile ? T("proj.uploadedReady") : T("proj.uploadFirst")}
               </p>
+              {latestFullRun?.created_at && (
+                <p className="mt-1 text-caption text-secondary">{T("proj.latestAnalysisAt", { date: formatDate(latestFullRun.created_at, uiLang) })}</p>
+              )}
+              {dataPeriod && (
+                <p className="mt-1 text-caption text-secondary">{T("proj.dataPeriod", { period: dataPeriod })}</p>
+              )}
             </div>
             {completed ? (
               <Link href={`/project/${id}/executive`} className={`${PRIMARY_LINK} shrink-0`}>
@@ -470,6 +501,45 @@ export default function ProjectDashboard() {
                       })}
                     </div>
                     <p className="mt-2 text-caption text-secondary">{T("schema.detectHint")}</p>
+                  </div>
+                )}
+                {schemaSummary && (
+                  <div className="mt-3 rounded-control border border-border bg-muted/40 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-ink">{T("schema.understanding.title")}</p>
+                      <span className="text-xs font-medium text-secondary">
+                        {T("schema.understanding.qualityScore")}: {schemaSummary.quality_score}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-caption font-medium text-secondary">{T("schema.understanding.coreFields")}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {schemaSummary.core_fields.map((f) => {
+                        const meta = schemaFieldMeta(f.canonical_key);
+                        const ok = f.status === "recognized" && f.confidence_tier === "high";
+                        return (
+                          <span
+                            key={f.canonical_key + ":" + f.source_column}
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${ok ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}`}
+                          >
+                            <span aria-hidden>{meta.icon}</span>
+                            {T(meta.labelKey)} · {ok ? T("schema.understanding.status.recognized") : T("schema.understanding.status.needs_review")}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-3 text-caption font-medium text-secondary">{T("schema.understanding.riskFields")}</p>
+                    {schemaSummary.risk_fields.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {schemaSummary.risk_fields.map((f) => (
+                          <span key={f.canonical_key + ":" + f.source_column} className="inline-flex items-center rounded-full bg-warning-soft px-2.5 py-1 text-xs font-medium text-warning">
+                            {schemaFieldMeta(f.canonical_key).labelKey ? T(schemaFieldMeta(f.canonical_key).labelKey) : f.canonical_key}
+                            · {f.source_column}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-caption text-secondary">{T("schema.understanding.noRisk")}</p>
+                    )}
                   </div>
                 )}
                 {schemaMapping && (

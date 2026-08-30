@@ -31,6 +31,7 @@ class AnalysisJobResponse(BaseModel):
     analysis_direction: str
     error_code: str | None = None
     error_message: str | None = None
+    pipeline_stage: str | None = None
     result_run_id: int | None = None
 
 
@@ -42,6 +43,7 @@ def _to_response(job) -> AnalysisJobResponse:
         analysis_direction=job.analysis_direction,
         error_code=job.error_code,
         error_message=job.error_message,
+        pipeline_stage=analysis_job_service.get_pipeline_stage(job),
         result_run_id=job.result_run_id,
     )
 

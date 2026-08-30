@@ -49,6 +49,7 @@ from app.services.canonical_schema import (
     _QUANTITY_SUFFIXES,
     _TURNOVER_SUFFIXES,
     normalize_header,
+    SEMANTIC_COMPONENTS,
 )
 
 EXACT_CONFIDENCE = 0.97
@@ -68,6 +69,8 @@ SCORE_VALUE_DISTRIBUTION = 10.0
 SCORE_INDUSTRY = 6.0
 SCORE_RELATIONSHIP = 8.0
 SCORE_MAX = 100.0
+SEMANTIC_CONFIDENCE = 0.94
+SCORE_SEMANTIC_COMPONENT = 48.0
 MIN_ACCEPT_CONFIDENCE = 0.55
 # M2.14.4: below this threshold the UI must ask the user to confirm instead
 # of treating the mapping as authoritative.
@@ -82,6 +85,7 @@ MATCH_EXACT = "exact_synonym"
 MATCH_PREFIX = "prefix_strip"
 MATCH_HEURISTIC = "heuristic_type"
 MATCH_USER = "user_confirmed"
+MATCH_SEMANTIC = "semantic_component"
 
 STATUS_PENDING = "pending"
 STATUS_CONFIRMED = "confirmed"
@@ -148,6 +152,10 @@ class FieldMapping:
     # M2.14.4: scoring provenance (additive; older mappings simply lack it).
     field_mapping_confidence: dict[str, Any] | None = None
     needs_confirmation: bool = False
+    # M2.14.5: customer-facing confidence tier and understanding provenance.
+    confidence_tier: str = "low"
+    auto_confirmed: bool = False
+    understanding_engine: str = "rules_v3"
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -162,6 +170,9 @@ class FieldMapping:
             "confirmation_status": self.confirmation_status,
             "confirmation_source": self.confirmation_source,
         }
+        data["confidence_tier"] = self.confidence_tier
+        data["auto_confirmed"] = self.auto_confirmed
+        data["understanding_engine"] = self.understanding_engine
         if self.field_mapping_confidence is not None:
             data["field_mapping_confidence"] = copy.deepcopy(self.field_mapping_confidence)
         if self.needs_confirmation:
@@ -185,6 +196,10 @@ class SchemaDetection:
     # M2.14.4: additive scoring detail for diagnostics/UI.
     candidate_scores: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict)
     ambiguous_columns: list[dict[str, Any]] = field(default_factory=list)
+    # M2.14.5: provenance and business-understanding summary.
+    source_file: str | None = None
+    relationship_evidence: dict[str, Any] | None = None
+    understanding_summary: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         mapping_dicts = [m.to_dict() for m in self.mappings]
@@ -211,6 +226,12 @@ class SchemaDetection:
             data["candidate_scores"] = copy.deepcopy(self.candidate_scores)
         if self.ambiguous_columns:
             data["ambiguous_columns"] = copy.deepcopy(self.ambiguous_columns)
+        if self.source_file:
+            data["source_file"] = self.source_file
+        if self.relationship_evidence:
+            data["relationship_evidence"] = copy.deepcopy(self.relationship_evidence)
+        if self.understanding_summary:
+            data["schema_understanding"] = copy.deepcopy(self.understanding_summary)
         return data
 
 
@@ -246,6 +267,27 @@ def _heuristic_match(norm: str, column_type: str) -> tuple[str, float, str] | No
             return "unit_price", 0.66, MATCH_HEURISTIC
     return None
 
+def _semantic_component_match(norm: str, column_type: str) -> tuple[str, float, str] | None:
+    """Match a header through business semantic components (M2.14.5).
+
+    This is not a flat keyword table: a header is understood as a combination
+    of business components such as 金额/数量/单价/日期/库存. The matched
+    component is only accepted when the column type is compatible.
+    """
+    if not norm:
+        return None
+    for field_key, components in SEMANTIC_COMPONENTS.items():
+        if not any(comp in norm for comp in components):
+            continue
+        field_type = _field_value_type(field_key)
+        if field_type == "number" and column_type not in ("number", "unknown", "text"):
+            continue
+        if field_type == "date" and column_type not in ("date", "text", "unknown"):
+            continue
+        if field_type == "text" and column_type not in ("text", "unknown"):
+            continue
+        return field_key, SEMANTIC_CONFIDENCE, MATCH_SEMANTIC
+    return None
 
 def _match_header(header: str, column_type: str) -> tuple[str, float, str] | None:
     norm = normalize_header(header)
@@ -256,7 +298,11 @@ def _match_header(header: str, column_type: str) -> tuple[str, float, str] | Non
     if hit is None:
         hit = _prefix_strip_match(norm)
     if hit is None:
-        hit = _heuristic_match(norm, column_type)
+        semantic = _semantic_component_match(norm, column_type)
+        if semantic is not None:
+            hit = semantic
+        else:
+            hit = _heuristic_match(norm, column_type)
     return hit
 
 
@@ -477,12 +523,14 @@ def _score_header_for_field(
     industry_hint: str | None,
     exact: tuple[str, float, str] | None,
     prefix: tuple[str, float, str] | None,
+    semantic: tuple[str, float, str] | None = None,
 ) -> dict[str, Any]:
     """Score one header against one canonical field (pure code)."""
     reasons: list[str] = []
     raw = 0.0
     matched_by_exact = exact is not None and exact[0] == field_key
     matched_by_prefix = not matched_by_exact and prefix is not None and prefix[0] == field_key
+    matched_by_semantic = not matched_by_prefix and semantic is not None and semantic[0] == field_key
 
     if matched_by_exact:
         raw += SCORE_EXACT_SYNONYM
@@ -490,6 +538,9 @@ def _score_header_for_field(
     elif matched_by_prefix:
         raw += SCORE_PREFIX_SYNONYM
         reasons.append("prefix_synonym")
+    elif matched_by_semantic:
+        raw += SCORE_SEMANTIC_COMPONENT
+        reasons.append("semantic_component")
     else:
         substring = _substring_score(norm, field_key)
         if substring > 0:
@@ -519,7 +570,9 @@ def _score_header_for_field(
         reasons.append("industry_hint")
 
     confidence = EXACT_CONFIDENCE if matched_by_exact else (
-        PREFIX_STRIP_CONFIDENCE if matched_by_prefix else _normalize_confidence(raw)
+        PREFIX_STRIP_CONFIDENCE if matched_by_prefix else (
+            SEMANTIC_CONFIDENCE if matched_by_semantic else _normalize_confidence(raw)
+        )
     )
     return {
         "field": field_key,
@@ -547,6 +600,7 @@ def detect_schema(
     column_by_header = {h: i for i, h in enumerate(headers)}
     exact_by_header: dict[str, tuple[str, float, str] | None] = {}
     prefix_by_header: dict[str, tuple[str, float, str] | None] = {}
+    semantic_by_header: dict[str, tuple[str, float, str] | None] = {}
 
     # Score every header against every canonical field.
     scored: dict[str, list[dict[str, Any]]] = {}
@@ -560,6 +614,8 @@ def detect_schema(
         exact_by_header[header] = exact
         prefix_by_header[header] = prefix
         col_type = column_types.get(header, "unknown")
+        semantic = _semantic_component_match(norm, col_type)
+        semantic_by_header[header] = semantic
         if col_type == "empty":
             continue
         candidates: list[dict[str, Any]] = []
@@ -567,6 +623,7 @@ def detect_schema(
             score = _score_header_for_field(
                 header, norm, field_def.key, col_type, sample_rows,
                 column_by_header, industry_hint, exact, prefix,
+                semantic,
             )
             if score["confidence"] >= MIN_ACCEPT_CONFIDENCE:
                 candidates.append(score)
@@ -729,6 +786,8 @@ def _match_method_for_confidence(confidence: float | None) -> str:
         return MATCH_USER
     if confidence >= 0.95:
         return MATCH_EXACT
+    if confidence == SEMANTIC_CONFIDENCE:
+        return MATCH_SEMANTIC
     if confidence >= 0.9:
         return MATCH_PREFIX
     return MATCH_HEURISTIC

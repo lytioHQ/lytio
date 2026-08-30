@@ -59,10 +59,13 @@ async def ensure_schema_mapping(
     if project.schema_mapping:
         return project.schema_mapping
     try:
-        from app.services.schema_mapper import detect_schema
+        from app.services.schema_intelligence import detect_schema_intelligent
         from app.services.workbook_service import extract_canonical_dataset
         dataset = extract_canonical_dataset(user_id, project.saved_filename)
-        detection = detect_schema(dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200], industry_hint=project.industry)
+        detection = await detect_schema_intelligent(
+            dataset["headers"], dataset["column_types"], rows_sample=dataset["rows"][:200],
+            industry_hint=project.industry, source_file=project.saved_filename,
+        )
         mapping = detection.to_dict()
         project.schema_mapping = mapping
         project.updated_at = datetime.now(timezone.utc)
@@ -109,7 +112,13 @@ async def set_project_file(
     await db.execute(
         update(Project)
         .where(Project.id == project_id, Project.owner_id == user_id)
-        .values(original_filename=original_filename, saved_filename=saved_filename, status="ready")
+        .values(
+            original_filename=original_filename,
+            saved_filename=saved_filename,
+            status="ready",
+            # M2.14.5: a replaced dataset invalidates the previous schema mapping.
+            schema_mapping=None,
+        )
     )
     await db.commit()
 
@@ -156,7 +165,7 @@ async def save_analysis_result(
         .where(Project.id == project_id, Project.owner_id == user_id)
         .values(
             latest_summary=summary[:5000],
-            latest_result_json=result_json[:20000],
+            latest_result_json=result_json,
             status="completed",
             updated_at=datetime.now(timezone.utc),
         )

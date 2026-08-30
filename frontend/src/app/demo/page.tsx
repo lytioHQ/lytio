@@ -47,6 +47,12 @@ function formatDate(d: string, locale: string): string {
   });
 }
 
+function schemaTier(m: { confidence_tier?: "high" | "medium" | "low"; confidence?: number }): "high" | "medium" | "low" {
+  if (m.confidence_tier) return m.confidence_tier;
+  const confidence = m.confidence ?? 1;
+  return confidence >= 0.9 ? "high" : confidence >= 0.75 ? "medium" : "low";
+}
+
 function ScreenHeading({ index, title }: { index: string; title: string }) {
   return (
     <div className="flex items-center gap-3">
@@ -319,7 +325,7 @@ export default function DemoPage() {
                           )}
                         </td>
                         <td className="py-2.5 pr-4 text-secondary">{m.source_column ?? "–"}</td>
-                        <td className="py-2.5 pr-4 text-secondary">{Math.round(m.confidence * 100)}%</td>
+                        <td className="py-2.5 pr-4 text-secondary">{T("schema.tier." + schemaTier(m))}</td>
                         <td className="py-2.5 pr-4 text-secondary">
                           {T(`schema.confirm.method.${m.match_method}`) ?? m.match_method}
                         </td>
