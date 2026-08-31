@@ -1,14 +1,7 @@
 import type { ReactNode } from "react";
 import { t, UILanguage } from "@/lib/i18n";
 import Card from "@/components/ui/Card";
-
-interface FocusedCardData {
-  title: string;
-  finding: string;
-  evidence: string | string[];
-  explanation: string;
-  action: string;
-}
+import type { FocusedInsightDisplay } from "@/lib/focusedInsightDisplay";
 
 function Section({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -21,34 +14,30 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export default function FocusedInsightCard({ data, lang }: { data: FocusedCardData; lang: UILanguage }) {
+export default function FocusedInsightCard({ data, lang }: { data: FocusedInsightDisplay; lang: UILanguage }) {
   const T = (key: string) => t(lang, key);
-  if (!data?.title) return null;
+  if (!data) return null;
 
-  const evidenceItems = Array.isArray(data.evidence)
-    ? data.evidence.filter(Boolean)
-    : data.evidence
-      ? [data.evidence]
-      : [];
+  const headline = data.headline || T("focus.card.label");
 
   return (
     <Card className="overflow-visible">
       <p className="text-sm font-medium text-accent">{T("focus.card.label")}</p>
-      <h2 className="mt-1 text-xl font-semibold tracking-tight text-ink md:text-2xl">{data.title}</h2>
+      <h2 className="mt-1 text-xl font-semibold tracking-tight text-ink md:text-2xl">{headline}</h2>
 
       <div className="mt-6 space-y-6">
         <Section label={T("focus.card.finding")}>
-          {data.finding ? (
-            <p className="whitespace-pre-line">{data.finding}</p>
+          {data.coreFinding ? (
+            <p className="whitespace-pre-line">{data.coreFinding}</p>
           ) : (
             <p>{T("focus.card.missing")}</p>
           )}
         </Section>
 
         <Section label={T("focus.card.evidence")}>
-          {evidenceItems.length > 0 ? (
+          {data.evidencePoints.length > 0 ? (
             <ul className="list-disc space-y-2 pl-5">
-              {evidenceItems.map((item, index) => (
+              {data.evidencePoints.map((item, index) => (
                 <li key={index} className="whitespace-pre-line">{item}</li>
               ))}
             </ul>
@@ -58,16 +47,20 @@ export default function FocusedInsightCard({ data, lang }: { data: FocusedCardDa
         </Section>
 
         <Section label={T("focus.card.explanation")}>
-          {data.explanation ? (
-            <p className="whitespace-pre-line">{data.explanation}</p>
+          {data.causeAnalysis ? (
+            <p className="whitespace-pre-line">{data.causeAnalysis}</p>
           ) : (
             <p>{T("focus.card.missing")}</p>
           )}
         </Section>
 
         <Section label={T("focus.card.action")}>
-          {data.action ? (
-            <p className="whitespace-pre-line">{data.action}</p>
+          {data.actionItems.length > 0 ? (
+            <ul className="list-disc space-y-2 pl-5">
+              {data.actionItems.map((item, index) => (
+                <li key={index} className="whitespace-pre-line">{item}</li>
+              ))}
+            </ul>
           ) : (
             <p>{T("focus.card.missing")}</p>
           )}

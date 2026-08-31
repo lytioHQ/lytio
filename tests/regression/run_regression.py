@@ -233,8 +233,13 @@ def focused_ui_text_regression() -> None:
 
     assert "<pre" not in card, "focused card must not render a raw code block"
     assert "JSON.stringify" not in card, "focused card must not serialize the result as JSON"
+    assert "JSON.stringify" not in report, "report page must not serialize the focused result as JSON"
+    assert "toFocusedInsightDisplay" in report, "report page must convert focused data through the display adapter"
+    assert "FocusedInsightDisplay" in card, "focused card must consume the display structure"
+    raw_field_access = re.search(r"\bdata\.(?:title|finding|evidence|explanation|action)\b", card)
+    assert raw_field_access is None, "focused card must not read raw internal fields directly"
 
-    focused_branch = report.split('=== "focused_insight" && resultData?.focused_insight', 1)[1].split(") : resultData", 1)[0]
+    focused_branch = report.split('=== "focused_insight"', 1)[1].split(") : resultData", 1)[0]
     assert "report.execSummary" not in focused_branch, "focused page must not duplicate the finding as an executive summary"
 
     visible_text = "".join(re.findall(r">([^<{]*?)\s*<", card + focused_branch))
@@ -244,12 +249,27 @@ def focused_ui_text_regression() -> None:
     for key in ("focus.card.finding", "focus.card.evidence", "focus.card.explanation", "focus.card.action"):
         assert f'"{key}"' in card, f"focused card is missing i18n section {key}"
 
+
+def focused_display_regression() -> None:
+    """Run the final rendered-text gate for the focused insight page."""
+    node = "node"
+    script = ROOT / "tests" / "regression" / "focused_display_regression.mjs"
+    result = subprocess.run(
+        [node, "--experimental-strip-types", str(script)],
+        cwd=str(ROOT), capture_output=True, text=True, timeout=60,
+    )
+    if result.returncode != 0:
+        raise AssertionError(result.stdout + result.stderr)
+    assert "FOCUSED DISPLAY REGRESSION PASS" in result.stdout
+
+
 def main() -> None:
     check("schema_regression", schema_regression)
     check("report_regression", report_regression)
     check("ui_text_regression", ui_text_regression)
     check("overflow_regression", overflow_regression)
     check("focused_ui_text_regression", focused_ui_text_regression)
+    check("focused_display_regression", focused_display_regression)
     check("focused_insight_regression", focused_insight_regression)
     check("migration_idempotency_regression", migration_idempotency_regression)
     if FAILED:

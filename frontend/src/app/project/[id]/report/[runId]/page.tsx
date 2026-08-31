@@ -12,6 +12,7 @@ import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
 import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
 import FocusedInsightCard from "@/components/business/FocusedInsightCard";
+import { toFocusedInsightDisplay } from "@/lib/focusedInsightDisplay";
 import { localeForLang, t } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 
@@ -86,9 +87,9 @@ export default function ReportPage() {
           <div className="rounded-control border border-warning/20 bg-warning/5 px-5 py-3"><p className="text-sm text-warning">{T("reportPage.legacy")}</p></div>
         )}
 
-        {run.analysis_type === "focused_insight" && resultData?.focused_insight ? (
+        {run.analysis_type === "focused_insight" && (resultData?.focused_insight || resultData) ? (
           <>
-            <FocusedInsightCard data={resultData.focused_insight} lang={uiLang} />
+            <FocusedInsightCard data={toFocusedInsightDisplay(resultData?.focused_insight ?? resultData)} lang={uiLang} />
             {resultData.focused_topic && (
               <p className="text-sm text-secondary">{T("focus.card.topic")}: {resultData.focused_topic}</p>
             )}
