@@ -134,10 +134,41 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === PROBLEM === */}
-      <section className="relative overflow-hidden border-b border-[#D9B5A6]/80 bg-[linear-gradient(145deg,#FFF8EE_0%,#FAE9D6_22%,#F3D0BE_48%,#E9B3A1_76%,#DBA08E_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),inset_0_-1px_0_rgba(255,255,255,0.35)]">
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(85%_110%_at_18%_-12%,rgba(255,253,247,0.95)_0%,rgba(255,241,222,0.5)_30%,rgba(255,255,255,0)_60%)]" />
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.32)_16%,rgba(255,255,255,0.06)_30%,rgba(255,255,255,0)_46%,rgba(255,255,255,0)_100%)]" />
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_90%_at_90%_110%,rgba(197,133,115,0.32)_0%,rgba(255,255,255,0)_52%)]" />
+      <section
+        className="relative overflow-hidden border-b border-[#D9B5A6]/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),inset_0_-1px_0_rgba(255,255,255,0.38)]"
+        style={{
+          backgroundColor: "#F6DBCB",
+          backgroundImage: `
+            radial-gradient(92% 120% at 16% -18%, rgba(255,255,255,0.96) 0%, rgba(255,246,230,0.58) 22%, rgba(255,241,220,0.12) 46%, rgba(255,255,255,0) 62%),
+            radial-gradient(72% 105% at 88% 118%, rgba(196,127,106,0.42) 0%, rgba(222,161,141,0.16) 34%, rgba(255,255,255,0) 62%),
+            linear-gradient(118deg, rgba(255,255,255,0) 6%, rgba(255,255,255,0.4) 15%, rgba(255,255,255,0.08) 27%, rgba(255,255,255,0) 44%, rgba(255,255,255,0.24) 61%, rgba(255,255,255,0.04) 72%, rgba(255,255,255,0) 86%),
+            repeating-linear-gradient(92deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.012) 1px, rgba(163,98,82,0.02) 2px, transparent 3px, rgba(255,255,255,0.028) 4px, transparent 6px),
+            linear-gradient(145deg, #FFF9F0 0%, #FBEAD8 20%, #F6D7C4 42%, #EFC0AA 66%, #E2A692 86%, #D39A87 100%)
+          `,
+        }}
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 mix-blend-soft-light"
+          style={{
+            backgroundImage: `
+              radial-gradient(58% 78% at 20% -4%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 58%),
+              radial-gradient(76% 88% at 90% 112%, rgba(190,113,93,0.4) 0%, rgba(255,255,255,0) 58%)
+            `,
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-80"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0 0.7px, rgba(255,255,255,0) 1.2px),
+              repeating-linear-gradient(88deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0) 1px, rgba(153,91,76,0.018) 2px, rgba(255,255,255,0) 3px, rgba(255,255,255,0.02) 4px, rgba(255,255,255,0) 6px)
+            `,
+            backgroundSize: "4px 4px, 7px 100%",
+            backgroundPosition: "0 0, 0 0",
+          }}
+        />
         <div className="relative mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.problemLabel")}</p>
