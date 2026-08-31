@@ -30,7 +30,8 @@ interface RunData {
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-const BACK_LINK = `${buttonBaseClasses} ${buttonVariantClasses.primary} min-w-[220px]`;
+const BACK_LINK =
+  "inline-flex h-9 min-w-[220px] items-center justify-center gap-2 rounded-control bg-[#4B5563] px-5 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#5E6B78] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent select-none";
 
 export default function ReportPage() {
   const { id, runId } = useParams<{ id: string; runId: string }>();

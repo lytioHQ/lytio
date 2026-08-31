@@ -15,6 +15,8 @@ import { useFocusedInsightJob } from "@/lib/useFocusedInsightJob";
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 const PRIMARY = `${buttonBaseClasses} ${buttonVariantClasses.primary}`;
 const SECONDARY = `${buttonBaseClasses} ${buttonVariantClasses.secondary}`;
+const BACK_LINK =
+  "inline-flex h-9 min-w-[220px] items-center justify-center gap-2 rounded-control bg-[#4B5563] px-5 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#5E6B78] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent select-none";
 
 interface TimelineItem {
   id: number;
@@ -147,7 +149,7 @@ export default function FocusedInsightPage() {
   return (
     <main className="min-h-screen bg-canvas">
       <div className="mx-auto max-w-2xl px-4 py-12 md:py-16">
-        <Link href={`/project/${id}`} className={`${PRIMARY} min-w-[220px]`}>{T("focus.backProject")}</Link>
+        <Link href={`/project/${id}`} className={BACK_LINK}>{T("focus.backProject")}</Link>
         <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink md:text-3xl">{T(`focus.topic.${topic}`)}</h1>
         <p className="mt-2 text-sm leading-relaxed text-secondary">{T("focus.subtitle")}</p>
 

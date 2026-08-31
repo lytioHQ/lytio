@@ -48,6 +48,8 @@ const STATUS_KEYS: Record<string, string> = {
 };
 
 const PRIMARY_LINK = `${buttonBaseClasses} ${buttonVariantClasses.primary}`;
+const BACK_LINK =
+  "inline-flex h-9 min-w-[220px] items-center justify-center gap-2 rounded-control bg-[#4B5563] px-5 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#5E6B78] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent select-none";
 
 function formatDate(d: string | null, lang: UILanguage): string {
   if (!d) return "-";
@@ -179,7 +181,7 @@ export default function ProjectDashboard() {
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-5xl flex-col gap-5 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-8">
           <div className="min-w-0">
-            <Link href="/" className={`${PRIMARY_LINK} min-w-[220px]`}>{T("proj.backProjectList")}</Link>
+            <Link href="/" className={BACK_LINK}>{T("proj.backProjectList")}</Link>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink md:text-3xl">{project.title}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <span className="text-sm capitalize text-secondary">{project.industry}</span>
