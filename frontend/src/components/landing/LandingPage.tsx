@@ -134,8 +134,10 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === PROBLEM === */}
-      <section className="relative overflow-hidden border-b border-[#D9B5A6]/70 bg-[linear-gradient(135deg,#F7E8DC_0%,#F0CDBE_42%,#E7B3A2_74%,#D8A48F_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(255,255,255,0.2)]">
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(110%_90%_at_50%_-30%,rgba(255,255,255,0.5),rgba(255,255,255,0)_46%)]" />
+      <section className="relative overflow-hidden border-b border-[#D9B5A6]/80 bg-[linear-gradient(145deg,#FFF8EE_0%,#FAE9D6_22%,#F3D0BE_48%,#E9B3A1_76%,#DBA08E_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),inset_0_-1px_0_rgba(255,255,255,0.35)]">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(85%_110%_at_18%_-12%,rgba(255,253,247,0.95)_0%,rgba(255,241,222,0.5)_30%,rgba(255,255,255,0)_60%)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.32)_16%,rgba(255,255,255,0.06)_30%,rgba(255,255,255,0)_46%,rgba(255,255,255,0)_100%)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_90%_at_90%_110%,rgba(197,133,115,0.32)_0%,rgba(255,255,255,0)_52%)]" />
         <div className="relative mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.problemLabel")}</p>
