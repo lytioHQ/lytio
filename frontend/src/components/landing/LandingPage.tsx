@@ -134,8 +134,9 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
       </section>
 
       {/* === PROBLEM === */}
-      <section className="border-b border-border bg-[#FAE9E6]">
-        <div className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
+      <section className="relative overflow-hidden border-b border-[#D9B5A6]/70 bg-[linear-gradient(135deg,#F7E8DC_0%,#F0CDBE_42%,#E7B3A2_74%,#D8A48F_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(255,255,255,0.2)]">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(110%_90%_at_50%_-30%,rgba(255,255,255,0.5),rgba(255,255,255,0)_46%)]" />
+        <div className="relative mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className={sectionLabel}>{T("landing.problemLabel")}</p>
             <h2 className="mt-3 text-h2 text-ink">{T("landing.problemTitle")}</h2>
