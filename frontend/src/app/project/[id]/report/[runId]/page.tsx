@@ -14,6 +14,7 @@ import ExecutiveSummaryCard from "@/components/business/ExecutiveSummaryCard";
 import FocusedInsightCard from "@/components/business/FocusedInsightCard";
 import { toFocusedInsightDisplay } from "@/lib/focusedInsightDisplay";
 import { localeForLang, t } from "@/lib/i18n";
+import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 import { useUiLang } from "@/lib/useUiLang";
 
 interface TimelineItem {
@@ -28,6 +29,8 @@ interface RunData {
 }
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+
+const BACK_LINK = `${buttonBaseClasses} ${buttonVariantClasses.primary} min-w-[220px]`;
 
 export default function ReportPage() {
   const { id, runId } = useParams<{ id: string; runId: string }>();
@@ -69,7 +72,7 @@ export default function ReportPage() {
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between md:px-6">
           <div>
-            <Link href={`/project/${id}`} className="text-sm text-secondary transition-colors hover:text-ink">{T("nav.backDashboard")}</Link>
+            <Link href={`/project/${id}`} className={BACK_LINK}>{T("report.backProject")}</Link>
             <h1 className="mt-1 text-xl font-semibold tracking-tight text-ink md:text-2xl">{T("reportPage.historical")}</h1>
             <p className="mt-0.5 text-sm text-secondary">{dateStr}</p>
           </div>

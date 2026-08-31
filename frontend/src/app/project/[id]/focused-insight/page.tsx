@@ -147,7 +147,7 @@ export default function FocusedInsightPage() {
   return (
     <main className="min-h-screen bg-canvas">
       <div className="mx-auto max-w-2xl px-4 py-12 md:py-16">
-        <Link href={`/project/${id}`} className="text-sm text-secondary transition-colors hover:text-ink">{T("focus.backProject")}</Link>
+        <Link href={`/project/${id}`} className={`${PRIMARY} min-w-[220px]`}>{T("focus.backProject")}</Link>
         <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink md:text-3xl">{T(`focus.topic.${topic}`)}</h1>
         <p className="mt-2 text-sm leading-relaxed text-secondary">{T("focus.subtitle")}</p>
 
