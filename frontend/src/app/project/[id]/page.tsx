@@ -9,7 +9,7 @@ import { localeForLang, t, UILanguage } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 import { Button, Card, MetricCard } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
-import { ANALYSIS_DIRECTIONS, ANALYSIS_DIRECTION_ICONS } from "@/lib/analysisDirections";
+import { ANALYSIS_DIRECTIONS, analysisDirectionIcon } from "@/lib/analysisDirections";
 import { schemaFieldMeta, type SchemaMapping } from "@/lib/schemaMapping";
 import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
 import SchemaConfirmationPanel from "@/components/schema/SchemaConfirmationPanel";
@@ -303,7 +303,7 @@ export default function ProjectDashboard() {
                 return (
                   <Link key={d} href={href} className="block h-full">
                     <div className="flex h-full flex-col gap-2 rounded-card border border-border bg-surface p-4 transition-colors hover:border-accent/40 hover:bg-canvas">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-control bg-canvas text-sm font-bold text-secondary">{ANALYSIS_DIRECTION_ICONS[d]}</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-control bg-canvas text-sm font-bold text-secondary">{analysisDirectionIcon(d, uiLang)}</span>
                       <span className="text-sm font-semibold leading-snug text-ink">{T(`analysis.dir.${d}`)}</span>
                       <span className="text-caption leading-relaxed text-secondary">{completed ? T("analysis.focusCta") : T(`analysis.dir.${d}.desc`)}</span>
                     </div>
