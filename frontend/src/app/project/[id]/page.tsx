@@ -186,7 +186,7 @@ export default function ProjectDashboard() {
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <span className="text-sm capitalize text-secondary">{project.industry}</span>
               <span className="text-border">&middot;</span>
-              <span className="text-sm text-secondary">{project.language === "zh" ? "中文" : project.language === "ja" ? "日本語" : project.language === "de" ? "Deutsch" : "English"}</span>
+              <span className="text-sm text-secondary">{T(`proj.language.${project.language}`)}</span>
               <span className="text-border">&middot;</span>
               <span className="text-sm text-secondary">{T("proj.created", { date: formatDate(project.created_at, uiLang) })}</span>
               <span className="text-border">&middot;</span>
