@@ -1,4 +1,5 @@
 import { t, UILanguage } from "@/lib/i18n";
+import { formatNumber, formatPercent } from "@/lib/formatNumber";
 
 export interface HealthScoreDimension {
   name: string;
@@ -86,7 +87,7 @@ export default function HealthScoreBreakdown({ data, lang }: { data: HealthScore
   const available = score !== null && score !== undefined;
   const color = available ? levelColor(Number(score)) : "warning";
   const confidenceLabel = T(`healthscore.conf.${data.score_confidence}`) || data.score_confidence;
-  const coveragePct = Math.round(Number(data.coverage) * 100);
+  const coverageLabel = formatPercent(data.coverage, 0, lang);
   const levelLabel = T(`health.level.${data.health_level}`) || data.health_level || "—";
 
   return (
@@ -104,13 +105,13 @@ export default function HealthScoreBreakdown({ data, lang }: { data: HealthScore
         <div className="mt-5">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             <div className={`flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-[6px] border-current bg-white/60 ${COLORS[color]}`}>
-              <span className="text-4xl font-semibold leading-none tabular-nums">{score}</span>
+              <span className="text-4xl font-semibold leading-none tabular-nums">{formatNumber(score, lang)}</span>
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-caption font-medium text-secondary">{T("healthscore.score")} / {T("healthscore.level")}</p>
               <p className="mt-1 text-h3 font-semibold text-ink">{levelLabel}</p>
               <p className="mt-2 text-sm text-ink/80">
-                {T("healthscore.coverage")}: {coveragePct}% &middot; {T("healthscore.confidence")}: {confidenceLabel}
+                {T("healthscore.coverage")}: {coverageLabel} &middot; {T("healthscore.confidence")}: {confidenceLabel}
               </p>
             </div>
           </div>
@@ -143,10 +144,10 @@ export default function HealthScoreBreakdown({ data, lang }: { data: HealthScore
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
                     {dim.weighted_score !== null && dim.weighted_score !== undefined && (
-                      <span className="text-caption text-secondary">{T("healthscore.weight")}: {Math.round(dim.weight * 100)}%</span>
+                      <span className="text-caption text-secondary">{T("healthscore.weight")}: {formatPercent(dim.weight, 0, lang)}</span>
                     )}
                     <span className={`text-lg font-semibold tabular-nums ${dimAvailable ? "text-ink" : "text-secondary"}`}>
-                      {dimAvailable ? dim.score : "—"}
+                      {dimAvailable ? formatNumber(dim.score, lang) : "—"}
                     </span>
                   </div>
                 </div>

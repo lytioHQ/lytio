@@ -16,10 +16,10 @@ import RiskList from "@/components/business/RiskList";
 import RecommendationList from "@/components/business/RecommendationList";
 import BusinessActions from "@/components/business/BusinessActions";
 import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
-import { localeForLang, t } from "@/lib/i18n";
+import { localeForLang, t, UILanguage } from "@/lib/i18n";
 import { useUiLang } from "@/lib/useUiLang";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
-import { formatCurrencyCNFull } from "@/lib/formatNumber";
+import { formatCurrencyFull, formatNumberFull, formatPercent } from "@/lib/formatNumber";
 
 interface ExecutiveReportData {
   title: string;
@@ -52,19 +52,26 @@ const DISPLAY_METRICS = ["total_sales", "order_count", "average_order_value", "c
 function formatMetricValue(
   m: ComputedMetricData,
   T: (key: string, params?: Record<string, string | number>) => string,
+  lang: UILanguage,
 ): { display: string; full: string } {
   if (m.availability !== "available" || m.value == null) {
     return { display: "—", full: "—" };
   }
   if (m.metric_name === "customer_concentration") {
-    const value = `${T("metric.top1")} ${(Number(m.value) * 100).toFixed(1)}%`;
-    return { display: value, full: value };
+    const ratio = Number(m.value);
+    const display = Number.isNaN(ratio)
+      ? "—"
+      : `${T("metric.top1")} ${formatPercent(ratio, 1, lang)}`;
+    return { display, full: display };
   }
   if (m.metric_name === "total_sales" || m.metric_name === "average_order_value") {
-    // M2.14.3 Phase 1 (P3): compact 万/亿 display; M2.14.4 P0 keeps full value.
-    return formatCurrencyCNFull(Number(m.value));
+    const num = Number(m.value);
+    return Number.isNaN(num) ? { display: "—", full: "—" } : formatCurrencyFull(num, lang);
   }
-  return { display: String(m.value), full: String(m.value) };
+  const num = Number(m.value);
+  return Number.isNaN(num)
+    ? { display: String(m.value), full: String(m.value) }
+    : formatNumberFull(num, lang);
 }
 
 function ScreenHeading({ index, title }: { index: string; title: string }) {
@@ -229,7 +236,7 @@ export default function ExecutiveReportPage() {
                       if (!m) return null;
                       const available = m.availability === "available" && m.value != null;
                       const estimated = name === "order_count" && (m.assumptions ?? []).length > 0;
-                      const formatted = available ? formatMetricValue(m, T) : null;
+                      const formatted = available ? formatMetricValue(m, T, uiLang) : null;
                       const value = formatted?.display ?? "—";
                       const description = available
                         ? (estimated ? T("metric.estimated") : T("metric.subtitle"))

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { TOKEN_KEY, apiFetch } from "@/lib/apiFetch";
-import { localeForLang, t, UILanguage } from "@/lib/i18n";
-import { formatCurrencyCNFull } from "@/lib/formatNumber";
+import { t, UILanguage } from "@/lib/i18n";
+import { formatCurrencyFull, formatNumber, formatPercent, formatPercentSigned } from "@/lib/formatNumber";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
@@ -183,16 +183,25 @@ function dataLoopMetricName(metric: string | null | undefined, T: (key: string) 
 
 function formatValue(value: unknown, lang: UILanguage): string {
   if (typeof value === "number") {
-    return new Intl.NumberFormat(localeForLang(lang), { maximumFractionDigits: 2 }).format(value);
+    return formatNumber(value, lang);
   }
   if (typeof value === "string") return value;
   if (value === null || value === undefined) return "–";
   return JSON.stringify(value);
 }
 
-function currencyDisplayPair(value: unknown) {
+function currencyDisplayPair(value: unknown, lang: UILanguage) {
   if (typeof value !== "number") return null;
-  return formatCurrencyCNFull(value);
+  return formatCurrencyFull(value, lang);
+}
+
+function signedNumber(value: unknown, lang: UILanguage): string {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "–";
+  const body = formatNumber(Math.abs(n), lang);
+  if (n > 0) return `+${body}`;
+  if (n < 0) return `-${body}`;
+  return body;
 }
 
 /**
@@ -235,7 +244,7 @@ export default function BusinessMemoryCard({
   const lastHealth = healthPoints.length > 0 ? healthPoints[healthPoints.length - 1] : null;
   const salesPoints = memory?.metric_history?.["total_sales"] ?? [];
   const lastSales = salesPoints.length > 0 ? salesPoints[salesPoints.length - 1] : null;
-  const salesPair = currencyDisplayPair(lastSales?.value);
+  const salesPair = currencyDisplayPair(lastSales?.value, lang);
   const salesDisplay = salesPair?.display ?? formatValue(lastSales?.value, lang);
   const salesFull = salesPair?.full ?? salesDisplay;
   const summary = memory?.action_summary ?? { total: 0, pending: 0, completed: 0, cancelled: 0, verified: 0 };
@@ -251,6 +260,7 @@ export default function BusinessMemoryCard({
     verificationPoints.length > 0 ? verificationPoints[verificationPoints.length - 1] : null;
   const trends = memory?.trend_deltas ?? null;
   const salesTrend = trends?.metric_trends?.find((m) => m.metric_name === "total_sales") ?? null;
+  const salesTrendChangeRatio = salesTrend?.percent_delta == null ? null : isDemo ? Number(salesTrend.percent_delta) : Number(salesTrend.percent_delta) / 100;
   const healthTrend = trends?.health_trend ?? null;
   const actionTrend = trends?.action_trend ?? null;
   const verificationTrend = trends?.verification_trend ?? null;
@@ -284,7 +294,7 @@ export default function BusinessMemoryCard({
             <div className="rounded-control border border-border bg-canvas p-4">
               <p className="text-caption text-secondary">{T("memory.healthTrend")}</p>
               <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
-                {lastHealth?.score != null ? String(lastHealth.score) : "–"}
+                {lastHealth?.score != null ? formatNumber(lastHealth.score, lang) : "–"}
               </p>
               {lastHealth?.level && <p className="mt-0.5 text-xs text-secondary">{T(`health.level.${lastHealth.level}`) ?? lastHealth.level}</p>}
             </div>
@@ -322,13 +332,13 @@ export default function BusinessMemoryCard({
               <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <div className="rounded-control border border-border bg-canvas p-3">
                   <p className="text-caption text-secondary">{T("memory.salesTrend")}</p>
-                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums" title={salesTrend ? (currencyDisplayPair(salesTrend.latest)?.full ?? formatValue(salesTrend.latest, lang)) : "–"}>
-                    {salesTrend ? (currencyDisplayPair(salesTrend.latest)?.display ?? formatValue(salesTrend.latest, lang)) : "–"}
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums" title={salesTrend ? (currencyDisplayPair(salesTrend.latest, lang)?.full ?? formatValue(salesTrend.latest, lang)) : "–"}>
+                    {salesTrend ? (currencyDisplayPair(salesTrend.latest, lang)?.display ?? formatValue(salesTrend.latest, lang)) : "–"}
                     <span className="ml-1">{salesTrend ? trendIcon(salesTrend.direction) : ""}</span>
                   </p>
                   <p className="mt-0.5 text-xs text-secondary">
                     {salesTrend?.percent_delta != null
-                      ? `${salesTrend.percent_delta > 0 ? "+" : ""}${salesTrend.percent_delta}%`
+                      ? formatPercentSigned(salesTrendChangeRatio, 1, lang)
                       : "–"}
                     {salesTrend?.previous != null ? ` · ${T("memory.prevValue")} ${formatValue(salesTrend.previous, lang)}` : ""}
                   </p>
@@ -336,11 +346,11 @@ export default function BusinessMemoryCard({
                 <div className="rounded-control border border-border bg-canvas p-3">
                   <p className="text-caption text-secondary">{T("memory.healthTrend")}</p>
                   <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
-                    {healthTrend?.latest_score != null ? String(healthTrend.latest_score) : "–"}
+                    {healthTrend?.latest_score != null ? formatNumber(healthTrend.latest_score, lang) : "–"}
                     <span className="ml-1">{healthTrend ? trendIcon(healthTrend.direction) : ""}</span>
                   </p>
                   <p className="mt-0.5 text-xs text-secondary">
-                    {healthTrend?.delta != null ? `${healthTrend.delta > 0 ? "+" : ""}${healthTrend.delta}` : "–"}
+                    {healthTrend?.delta != null ? signedNumber(healthTrend.delta, lang) : "–"}
                     {healthTrend?.latest_level ? ` · ${T(`health.level.${healthTrend.latest_level}`) ?? healthTrend.latest_level}` : ""}
                   </p>
                 </div>
@@ -350,7 +360,7 @@ export default function BusinessMemoryCard({
                     {actionTrend ? T("memory.verifiedOf", { n: actionTrend.verified, total: actionTrend.total_actions }) : "–"}
                   </p>
                   <p className="mt-0.5 text-xs text-secondary">
-                    {actionTrend ? T("memory.verifiedRate", { pct: Math.round(actionTrend.verification_rate * 100) }) : ""}
+                    {actionTrend ? T("memory.verifiedRate", { pct: formatPercent(actionTrend.verification_rate, 0, lang) }) : ""}
                     {actionTrend && actionTrend.open_loops > 0 ? ` · ${T("memory.openLoops")} ${actionTrend.open_loops}` : ""}
                   </p>
                 </div>
@@ -437,7 +447,7 @@ export default function BusinessMemoryCard({
                   <p className="text-caption text-secondary">{T("memory.intel.executionRate")}</p>
                   <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
                     {intelRates.execution.execution_rate != null
-                      ? `${Math.round(intelRates.execution.execution_rate * 100)}%`
+                      ? formatPercent(intelRates.execution.execution_rate, 0, lang)
                       : "–"}
                   </p>
                   <p className="mt-0.5 text-xs text-secondary">
@@ -453,7 +463,7 @@ export default function BusinessMemoryCard({
                   <p className="text-caption text-secondary">{T("memory.intel.verificationRate")}</p>
                   <p className="mt-1 text-lg font-semibold text-ink tabular-nums">
                     {intelRates.verification.verification_rate != null
-                      ? `${Math.round(intelRates.verification.verification_rate * 100)}%`
+                      ? formatPercent(intelRates.verification.verification_rate, 0, lang)
                       : "–"}
                   </p>
                   <p className="mt-0.5 text-xs text-secondary">
@@ -538,7 +548,7 @@ export default function BusinessMemoryCard({
                 <p className="mt-1 text-sm leading-relaxed text-secondary">
                   {lastVerification.metric_changes
                     .slice(0, 3)
-                    .map((m) => String(m.metric ?? "–"))
+                    .map((m) => dataLoopMetricName(String(m.metric ?? ""), T))
                     .join(" · ")}
                 </p>
               )}

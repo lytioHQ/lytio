@@ -1,4 +1,5 @@
 import { t, UILanguage } from "@/lib/i18n";
+import { formatNumber } from "@/lib/formatNumber";
 
 interface HealthData { score: number; level: string; summary: string; }
 
@@ -15,7 +16,7 @@ export default function BusinessHealthCard({ data, lang }: { data: HealthData; l
     <div className={`rounded-card border bg-gradient-to-br from-surface via-surface to-accent-soft/25 p-6 shadow-[0_2px_14px_rgba(0,0,0,0.05)] md:p-8 ${colors[color]}`}>
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
         <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-[6px] border-current bg-white/60">
-          <span className="text-4xl font-semibold leading-none tabular-nums">{data.score}</span>
+          <span className="text-4xl font-semibold leading-none tabular-nums">{formatNumber(data.score, lang)}</span>
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-caption font-medium text-secondary">{T("landing.diff.businessHealth")}</p>

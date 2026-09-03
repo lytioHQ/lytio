@@ -14,7 +14,8 @@ import BusinessMemoryCard from "@/components/business/BusinessMemoryCard";
 import { Card, MetricCard } from "@/components/ui";
 import { buttonBaseClasses, buttonVariantClasses } from "@/components/ui/Button";
 import { useUiLang } from "@/lib/useUiLang";
-import { t, localeForLang } from "@/lib/i18n";
+import { localeForLang, t, UILanguage } from "@/lib/i18n";
+import { formatCurrencyFull, formatNumber, formatPercent } from "@/lib/formatNumber";
 import { schemaFieldMeta } from "@/lib/schemaMapping";
 import {
   DEMO_META,
@@ -47,6 +48,57 @@ function formatDate(d: string, locale: string): string {
   });
 }
 
+type DemoTFn = (key: string, params?: Record<string, string | number>) => string;
+
+function parseDemoNumeric(raw: unknown): number | null {
+  if (raw == null || raw === "") return null;
+  const direct = Number(raw);
+  if (Number.isFinite(direct)) return direct;
+  const cleaned = String(raw).replace(/[^0-9.eE+-]/g, "");
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+const DEMO_CURRENCY_METRICS = new Set(["total_sales", "average_order_value"]);
+const DEMO_PERCENT_METRICS = new Set(["growth", "concentration", "percent_delta"]);
+
+function formatSignedDemoPercent(raw: unknown, lang: UILanguage): string {
+  const n = parseDemoNumeric(raw);
+  if (n == null) return "–";
+  if (n === 0) return formatPercent(0, 1, lang);
+  const ratio = Math.abs(n) <= 1 ? n : n / 100;
+  const body = formatPercent(Math.abs(ratio), 1, lang);
+  return ratio > 0 ? `+${body}` : `-${body}`;
+}
+
+function formatDemoCellValue(raw: unknown, metricName: string, lang: UILanguage): string {
+  if (raw == null || raw === "") return "–";
+  const numeric = parseDemoNumeric(raw);
+  if (DEMO_CURRENCY_METRICS.has(metricName) && numeric != null) {
+    return formatCurrencyFull(numeric, lang).display;
+  }
+  if (DEMO_PERCENT_METRICS.has(metricName) || String(raw).includes("%")) {
+    return formatSignedDemoPercent(raw, lang);
+  }
+  if (numeric != null) return formatNumber(numeric, lang);
+  return String(raw);
+}
+
+function demoMetricLabel(name: string, T: DemoTFn): string {
+  const key = `metric.name.${name}`;
+  const label = T(key);
+  return label === key ? name : label;
+}
+
+function demoSchemaColumn(
+  m: { canonical_key: string; source_column: string | null },
+  T: DemoTFn,
+): string {
+  const key = `schema.field.${m.canonical_key}`;
+  const label = T(key);
+  return label === key ? T("schema.field.unknown") : label;
+}
+
 function schemaTier(m: { confidence_tier?: "high" | "medium" | "low"; confidence?: number }): "high" | "medium" | "low" {
   if (m.confidence_tier) return m.confidence_tier;
   const confidence = m.confidence ?? 1;
@@ -65,9 +117,11 @@ function ScreenHeading({ index, title }: { index: string; title: string }) {
 function VerificationSection({
   period,
   T,
+  uiLang,
 }: {
   period: ReturnType<typeof demoPeriodAt>;
-  T: (key: string, params?: Record<string, string | number>) => string;
+  T: DemoTFn;
+  uiLang: UILanguage;
 }) {
   const verification = buildDemoVerification(period);
   if (!verification) {
@@ -108,10 +162,16 @@ function VerificationSection({
           <tbody>
             {verification.metric_changes.map((mc) => (
               <tr key={mc.metric} className="border-b border-border last:border-none">
-                <td className="py-2.5 pr-4 font-medium text-ink">{mc.metric}</td>
-                <td className="py-2.5 pr-4 text-secondary">{mc.before ?? "–"}</td>
-                <td className="py-2.5 pr-4 text-secondary">{mc.after ?? "–"}</td>
-                <td className="py-2.5 pr-4 text-secondary">{mc.percent_delta ?? mc.absolute_delta ?? "–"}</td>
+                <td className="py-2.5 pr-4 font-medium text-ink">{demoMetricLabel(mc.metric, T)}</td>
+                <td className="py-2.5 pr-4 text-secondary">{formatDemoCellValue(mc.before, mc.metric, uiLang)}</td>
+                <td className="py-2.5 pr-4 text-secondary">{formatDemoCellValue(mc.after, mc.metric, uiLang)}</td>
+                <td className="py-2.5 pr-4 text-secondary">
+                  {mc.percent_delta != null
+                    ? formatSignedDemoPercent(mc.percent_delta, uiLang)
+                    : mc.absolute_delta != null
+                      ? formatDemoCellValue(mc.absolute_delta, mc.metric, uiLang)
+                      : "–"}
+                </td>
                 <td className="py-2.5 capitalize text-secondary">
                   {T(`verifyReport.direction.${mc.direction}`) ?? mc.direction}
                 </td>
@@ -198,8 +258,8 @@ export default function DemoPage() {
         <section aria-label={T("demo.screen1")}>
           <ScreenHeading index="1" title={T("demo.screen1")} />
           <div className="mt-6 space-y-8">
-            <BusinessHealthCard data={buildDemoHealthCard(period, T)} lang={uiLang} />
-            <ExecutiveSummaryCard content={buildDemoExecutiveSummary(period, T)} lang={uiLang} />
+            <BusinessHealthCard data={buildDemoHealthCard(period, T, uiLang)} lang={uiLang} />
+            <ExecutiveSummaryCard content={buildDemoExecutiveSummary(period, T, uiLang)} lang={uiLang} />
           </div>
         </section>
 
@@ -218,8 +278,15 @@ export default function DemoPage() {
                   if (!m) return null;
                   const available = m.availability === "available" && m.value != null;
                   const estimated = name === "order_count" && (m.assumptions ?? []).length > 0;
-                  const value = available ? formatMetricValue(m, T) : "—";
-                  const fullValue = available && m.value != null ? String(m.value) : undefined;
+                  const value = available ? formatMetricValue(m, T, uiLang) : "—";
+                  const rawNumeric = available ? parseDemoNumeric(m.value) : null;
+                  const fullValue = available
+                    ? DEMO_CURRENCY_METRICS.has(name) && rawNumeric != null
+                      ? formatCurrencyFull(rawNumeric, uiLang).full
+                      : m.value != null
+                        ? formatNumber(rawNumeric ?? NaN, uiLang)
+                        : "—"
+                    : undefined;
                   const description = available
                     ? estimated
                       ? T("metric.estimated")
@@ -238,7 +305,7 @@ export default function DemoPage() {
               </div>
             </div>
             <HealthScoreBreakdown data={period.health_score} lang={uiLang} />
-            <MetricGrid metrics={buildDemoMetricGrid(period, T)} lang={uiLang} />
+            <MetricGrid metrics={buildDemoMetricGrid(period, T, uiLang)} lang={uiLang} />
             <InsightList insights={buildDemoInsights(period, T)} lang={uiLang} />
             <RiskList risks={buildDemoRisks(period, T)} lang={uiLang} />
           </div>
@@ -257,7 +324,7 @@ export default function DemoPage() {
         <section aria-label={T("demo.screen4")}>
           <ScreenHeading index="4" title={T("demo.screen4")} />
           <div className="mt-6">
-            <VerificationSection period={period} T={T} />
+            <VerificationSection period={period} T={T} uiLang={uiLang} />
           </div>
         </section>
 
@@ -324,7 +391,7 @@ export default function DemoPage() {
                             </span>
                           )}
                         </td>
-                        <td className="py-2.5 pr-4 text-secondary">{m.source_column ?? "–"}</td>
+                        <td className="py-2.5 pr-4 text-secondary">{demoSchemaColumn(m, T)}</td>
                         <td className="py-2.5 pr-4 text-secondary">{T("schema.tier." + schemaTier(m))}</td>
                         <td className="py-2.5 pr-4 text-secondary">
                           {T(`schema.confirm.method.${m.match_method}`) ?? m.match_method}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { t, UILanguage } from "@/lib/i18n";
+import { formatNumber } from "@/lib/formatNumber";
 import { Button, Card } from "@/components/ui";
 import BusinessHealthCard from "@/components/business/BusinessHealthCard";
 import MetricGrid from "@/components/business/MetricGrid";
@@ -93,7 +94,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
               const sales = p.computed_metrics.find((m) => m.metric_name === "total_sales");
               const salesVal =
                 sales && sales.availability === "available" && sales.value != null
-                  ? formatMetricValue(sales, T)
+                  ? formatMetricValue(sales, T, lang)
                   : "—";
               return (
                 <div
@@ -103,7 +104,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
                   <p className="text-caption font-semibold uppercase tracking-wider text-secondary">
                     {T("demo.period.label", { n: idx + 1 })}
                   </p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums text-ink">{p.health_score.health_score}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-ink">{formatNumber(p.health_score.health_score, lang)}</p>
                   <p className="text-caption text-secondary">{T("landing.diff.businessHealth")}</p>
                   <p className="mt-2 truncate text-sm font-semibold text-ink">{salesVal}</p>
                   <p className="text-caption text-secondary">{T("metric.name.total_sales")}</p>
@@ -123,8 +124,8 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
                 </span>
               </div>
               <div className="space-y-6 p-5">
-                <BusinessHealthCard data={buildDemoHealthCard(latest, T)} lang={lang} />
-                <MetricGrid metrics={buildDemoMetricGrid(latest, T)} lang={lang} />
+                <BusinessHealthCard data={buildDemoHealthCard(latest, T, lang)} lang={lang} />
+                <MetricGrid metrics={buildDemoMetricGrid(latest, T, lang)} lang={lang} />
                 <InsightList insights={previewInsights} lang={lang} />
                 <RecommendationList recs={previewRecs} lang={lang} />
               </div>
@@ -267,8 +268,8 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
           </div>
 
           <div className="mt-12 space-y-8">
-            <BusinessHealthCard data={buildDemoHealthCard(latest, T)} lang={lang} />
-            <MetricGrid metrics={buildDemoMetricGrid(latest, T)} lang={lang} />
+            <BusinessHealthCard data={buildDemoHealthCard(latest, T, lang)} lang={lang} />
+            <MetricGrid metrics={buildDemoMetricGrid(latest, T, lang)} lang={lang} />
             <InsightList insights={buildDemoInsights(latest, T)} lang={lang} />
             <RecommendationList recs={buildDemoRecs(latest, T)} lang={lang} />
             <div className="flex justify-center pt-2">

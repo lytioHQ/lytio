@@ -21,7 +21,7 @@ import type { UILanguage } from "@/lib/i18n";
 import type { HealthScoreData } from "@/components/business/HealthScoreBreakdown";
 import type { DemoActionItem } from "@/components/business/BusinessActions";
 import type { BusinessMemoryData } from "@/components/business/BusinessMemoryCard";
-import { formatCurrencyCN } from "@/lib/formatNumber";
+import { formatCurrencyFull, formatNumber, formatPercent } from "@/lib/formatNumber";
 
 // ---------------------------------------------------------------------------
 // Snapshot types (mirror of generate_demo_fixture.py output)
@@ -193,16 +193,92 @@ const DISPLAY_METRICS = [
 
 type TFunc = (key: string, params?: Record<string, string | number>) => string;
 
-export function formatMetricValue(m: DemoComputedMetric, T: TFunc): string {
+const PRODUCT_I18N_KEY: Record<string, string> = {
+  "智能手表": "smartwatch",
+};
+
+function demoProductName(product: string, T: TFunc): string {
+  const key = `demo.product.${PRODUCT_I18N_KEY[product] ?? product}`;
+  const translated = T(key);
+  return translated === key ? product : translated;
+}
+
+function parseNumber(raw: number | string | null | undefined): number | null {
+  if (raw == null || raw === "" || raw === "—" || raw === "-") return null;
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
+  const cleaned = String(raw)
+    .replace(/[¥￥元RMBCNY\s,，%]/gi, "")
+    .replace(/万亿/g, "e12")
+    .replace(/亿/g, "e8")
+    .replace(/万/g, "e4");
+  const n = Number(cleaned);
+  return Number.isNaN(n) ? null : n;
+}
+
+function percentRatio(raw: number | string | null | undefined): number | null {
+  const n = parseNumber(raw);
+  if (n == null) return null;
+  return Math.abs(n) <= 1 ? n : n / 100;
+}
+
+function formatDemoPercent(
+  raw: number | string | null | undefined,
+  lang: UILanguage,
+  digits = 1,
+): string {
+  const ratio = percentRatio(raw);
+  return ratio == null ? "—" : formatPercent(ratio, digits, lang);
+}
+
+function formatSignedPercent(raw: number | string | null | undefined, lang: UILanguage): string {
+  const ratio = percentRatio(raw);
+  if (ratio == null) return "—";
+  const body = formatPercent(Math.abs(ratio), 1, lang);
+  if (ratio > 0) return `+${body}`;
+  if (ratio < 0) return `-${body}`;
+  return body;
+}
+
+function isCurrencyMetric(name: string): boolean {
+  return name === "total_sales" || name === "average_order_value";
+}
+
+function formatMetricDisplay(
+  name: string,
+  rawValue: number | string | null | undefined,
+  lang: UILanguage,
+): { display: string; full?: string } {
+  if (rawValue == null || rawValue === "") return { display: "—" };
+  if (isCurrencyMetric(name)) {
+    const num = parseNumber(rawValue);
+    if (num == null) return { display: String(rawValue) };
+    const pair = formatCurrencyFull(num, lang);
+    return { display: pair.display, full: pair.full };
+  }
+  if (name === "customer_concentration" || name === "sales_growth") {
+    return { display: formatDemoPercent(rawValue, lang) };
+  }
+  const num = parseNumber(rawValue);
+  if (num == null) return { display: String(rawValue) };
+  return { display: formatNumber(num, lang) };
+}
+
+export function formatMetricValue(
+  m: DemoComputedMetric,
+  T: TFunc,
+  lang: UILanguage = "zh",
+): string {
   if (m.availability !== "available" || m.value == null) return "—";
   if (m.metric_name === "customer_concentration") {
-    return `${T("metric.top1")} ${(Number(m.value) * 100).toFixed(1)}%`;
+    const ratio = percentRatio(Number(m.value));
+    return `${T("metric.top1")} ${ratio == null ? "—" : formatPercent(ratio, 1, lang)}`;
   }
-  // M2.14.3 Phase 1 (P3): currency metrics use the unified 万/亿 format.
   if (m.metric_name === "total_sales" || m.metric_name === "average_order_value") {
-    return formatCurrencyCN(Number(m.value));
+    const num = parseNumber(m.value as number | string | null | undefined);
+    return num == null ? "—" : formatCurrencyFull(num, lang).display;
   }
-  return String(m.value);
+  const num = parseNumber(m.value as number | string | null | undefined);
+  return num == null ? "—" : formatNumber(num, lang);
 }
 
 export function demoPeriodAt(index: number): DemoPeriod {
@@ -236,18 +312,23 @@ export interface DemoHealthCardData {
   summary: string;
 }
 
-export function buildDemoHealthCard(period: DemoPeriod, T: TFunc): DemoHealthCardData {
+export function buildDemoHealthCard(
+  period: DemoPeriod,
+  T: TFunc,
+  lang: UILanguage = "zh",
+): DemoHealthCardData {
   const hs = period.health_score;
   const params = periodNarrative(period).params;
+  const total = parseNumber(params.total_sales);
   return {
     score: Number(hs.health_score ?? 0),
     level: hs.health_level ?? "—",
     summary: T("demo.health.summary", {
-      health: params.health_score,
+      health: formatNumber(parseNumber(params.health_score) ?? 0, lang),
       level: T(`health.level.${params.health_level}`) || params.health_level,
-      growth: params.growth,
-      total: params.total_sales,
-      product: params.top_product,
+      growth: formatSignedPercent(params.growth, lang),
+      total: total == null ? "—" : formatCurrencyFull(total, lang).display,
+      product: demoProductName(params.top_product, T),
     }),
   };
 }
@@ -270,15 +351,20 @@ function compareValues(a: number | string | null | undefined, b: number | string
   return "stable";
 }
 
-export function buildDemoMetricGrid(period: DemoPeriod, T: TFunc): DemoMetricGridItem[] {
+export function buildDemoMetricGrid(
+  period: DemoPeriod,
+  T: TFunc,
+  lang: UILanguage = "zh",
+): DemoMetricGridItem[] {
   const index = DEMO_RESULT.periods.findIndex((p) => p.period_id === period.period_id);
   const previous = index > 0 ? DEMO_RESULT.periods[index - 1] : null;
   return period.key_metrics.map((km) => {
     const prev = previous?.key_metrics.find((p) => p.metric_name === km.metric_name);
+    const display = formatMetricDisplay(km.metric_name, km.value, lang);
     return {
       name: T(`metric.name.${km.metric_name}`),
-      value: km.display,
-      fullValue: km.value != null ? String(km.value) : km.display,
+      value: display.display,
+      fullValue: display.full ?? (km.value != null ? String(km.value) : km.display),
       trend: compareValues(km.value, prev?.value),
     };
   });
@@ -335,17 +421,25 @@ export function buildDemoRecs(period: DemoPeriod, T: TFunc): DemoRecData[] {
   }));
 }
 
-export function buildDemoExecutiveSummary(period: DemoPeriod, T: TFunc): string {
-  const narrative = periodNarrative(period);
-  return T(narrative.summary_key, {
-    total: narrative.params.total_sales,
-    growth: narrative.params.growth,
-    health: narrative.params.health_score,
-    level: T(`health.level.${narrative.params.health_level}`) || narrative.params.health_level,
-    concentration: narrative.params.concentration,
-    customers: narrative.params.customers,
-    product: narrative.params.top_product,
-    aov: narrative.params.aov,
+export function buildDemoExecutiveSummary(
+  period: DemoPeriod,
+  T: TFunc,
+  lang: UILanguage = "zh",
+): string {
+  const params = periodNarrative(period).params;
+  const total = parseNumber(params.total_sales);
+  const aov = parseNumber(params.aov);
+  const customers = parseNumber(params.customers);
+  const health = parseNumber(params.health_score);
+  return T(periodNarrative(period).summary_key, {
+    total: total == null ? "—" : formatCurrencyFull(total, lang).display,
+    growth: formatSignedPercent(params.growth, lang),
+    health: health == null ? "—" : formatNumber(health, lang),
+    level: T(`health.level.${params.health_level}`) || params.health_level,
+    concentration: formatDemoPercent(params.concentration, lang),
+    customers: customers == null ? "—" : formatNumber(customers, lang),
+    product: demoProductName(params.top_product, T),
+    aov: aov == null ? "—" : formatCurrencyFull(aov, lang).display,
   });
 }
 

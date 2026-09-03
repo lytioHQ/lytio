@@ -166,6 +166,51 @@ def ui_text_regression() -> None:
 
 
 # ---------------------------------------------------------------------------
+# 3b. Locale / Currency Regression
+# ---------------------------------------------------------------------------
+def locale_formatting_regression() -> None:
+    i18n_path = FRONTEND_SRC / "lib" / "i18n.ts"
+    i18n = i18n_path.read_text(encoding="utf-8")
+    blocks: dict[str, str] = {}
+    for lang, marker in (("en", "const en: TranslationDict = {"), ("ja", "const ja: TranslationDict = {"), ("de", "const de: TranslationDict = {")):
+        start = i18n.index(marker) + len(marker)
+        end_markers = ["const en:", "const ja:", "const de:", "const dictionaries:"]
+        ends = [i18n.index(m, start) for m in end_markers if m in i18n[start:] and i18n.index(m, start) > start]
+        blocks[lang] = i18n[start:min(ends)]
+
+    banned = "¥￥万亿円"
+    for lang in ("en", "ja", "de"):
+        values = re.findall(r':\s*"((?:\\.|[^"\\])*)"', blocks[lang])
+        leaked = sorted({v for v in values if any(ch in v for ch in banned)})
+        assert not leaked, f"{lang} i18n leaked Chinese compact/currency text: {leaked[:10]}"
+
+    demo_page = (FRONTEND_SRC / "app" / "demo" / "page.tsx").read_text(encoding="utf-8")
+    assert "demoSchemaColumn(m, T)" in demo_page, "demo schema must translate source columns"
+    assert re.search(r"\{\s*m\.source_column", demo_page) is None, "demo must not render raw source_column"
+
+    zh_only_callers = [
+        FRONTEND_SRC / "lib" / "demo" / "index.ts",
+        FRONTEND_SRC / "components" / "landing" / "LandingPage.tsx",
+        FRONTEND_SRC / "components" / "business" / "BusinessMemoryCard.tsx",
+        FRONTEND_SRC / "app" / "demo" / "page.tsx",
+        FRONTEND_SRC / "app" / "project" / "[id]" / "executive" / "page.tsx",
+        FRONTEND_SRC / "app" / "project" / "[id]" / "verification" / "[runId]" / "page.tsx",
+    ]
+    for path in zh_only_callers:
+        text = path.read_text(encoding="utf-8")
+        assert "formatCurrencyCNFull" not in text, f"{path.name} still calls zh-only currency formatter"
+
+    node_script = ROOT / "tests" / "regression" / "locale_formatting_regression.mjs"
+    result = subprocess.run(
+        ["node", "--experimental-strip-types", str(node_script)],
+        cwd=str(ROOT), capture_output=True, text=True, timeout=60,
+    )
+    if result.returncode != 0:
+        raise AssertionError(result.stdout + result.stderr)
+    assert "LOCALE FORMATTING REGRESSION PASS" in result.stdout
+
+
+# ---------------------------------------------------------------------------
 # 4. Overflow Regression
 # ---------------------------------------------------------------------------
 def overflow_regression() -> None:
@@ -267,6 +312,7 @@ def main() -> None:
     check("schema_regression", schema_regression)
     check("report_regression", report_regression)
     check("ui_text_regression", ui_text_regression)
+    check("locale_formatting_regression", locale_formatting_regression)
     check("overflow_regression", overflow_regression)
     check("focused_ui_text_regression", focused_ui_text_regression)
     check("focused_display_regression", focused_display_regression)
