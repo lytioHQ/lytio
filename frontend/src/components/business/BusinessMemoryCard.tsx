@@ -190,9 +190,9 @@ function formatValue(value: unknown, lang: UILanguage): string {
   return JSON.stringify(value);
 }
 
-function currencyDisplayPair(value: unknown, lang: UILanguage) {
+function currencyDisplayPair(value: unknown, lang: UILanguage, currency = "CNY") {
   if (typeof value !== "number") return null;
-  return formatCurrencyFull(value, lang);
+  return formatCurrencyFull(value, lang, currency);
 }
 
 function signedNumber(value: unknown, lang: UILanguage): string {
@@ -215,10 +215,12 @@ export default function BusinessMemoryCard({
   projectId,
   lang,
   demoData,
+  currency = "CNY",
 }: {
   projectId: string;
   lang: UILanguage;
   demoData?: { data: BusinessMemoryData };
+  currency?: string;
 }) {
   const T = (key: string, params?: Record<string, string | number>) => t(lang, key, params);
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
@@ -244,7 +246,7 @@ export default function BusinessMemoryCard({
   const lastHealth = healthPoints.length > 0 ? healthPoints[healthPoints.length - 1] : null;
   const salesPoints = memory?.metric_history?.["total_sales"] ?? [];
   const lastSales = salesPoints.length > 0 ? salesPoints[salesPoints.length - 1] : null;
-  const salesPair = currencyDisplayPair(lastSales?.value, lang);
+  const salesPair = currencyDisplayPair(lastSales?.value, lang, currency);
   const salesDisplay = salesPair?.display ?? formatValue(lastSales?.value, lang);
   const salesFull = salesPair?.full ?? salesDisplay;
   const summary = memory?.action_summary ?? { total: 0, pending: 0, completed: 0, cancelled: 0, verified: 0 };
@@ -332,8 +334,8 @@ export default function BusinessMemoryCard({
               <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <div className="rounded-control border border-border bg-canvas p-3">
                   <p className="text-caption text-secondary">{T("memory.salesTrend")}</p>
-                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums" title={salesTrend ? (currencyDisplayPair(salesTrend.latest, lang)?.full ?? formatValue(salesTrend.latest, lang)) : "–"}>
-                    {salesTrend ? (currencyDisplayPair(salesTrend.latest, lang)?.display ?? formatValue(salesTrend.latest, lang)) : "–"}
+                  <p className="mt-1 text-lg font-semibold text-ink tabular-nums" title={salesTrend ? (currencyDisplayPair(salesTrend.latest, lang, currency)?.full ?? formatValue(salesTrend.latest, lang)) : "–"}>
+                    {salesTrend ? (currencyDisplayPair(salesTrend.latest, lang, currency)?.display ?? formatValue(salesTrend.latest, lang)) : "–"}
                     <span className="ml-1">{salesTrend ? trendIcon(salesTrend.direction) : ""}</span>
                   </p>
                   <p className="mt-0.5 text-xs text-secondary">

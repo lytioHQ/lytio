@@ -193,6 +193,13 @@ const DISPLAY_METRICS = [
 
 type TFunc = (key: string, params?: Record<string, string | number>) => string;
 
+export function demoCurrencyForLang(lang: UILanguage): string {
+  if (lang === "en") return "USD";
+  if (lang === "ja") return "JPY";
+  if (lang === "de") return "EUR";
+  return "CNY";
+}
+
 const PRODUCT_I18N_KEY: Record<string, string> = {
   "智能手表": "smartwatch",
 };
@@ -247,12 +254,13 @@ function formatMetricDisplay(
   name: string,
   rawValue: number | string | null | undefined,
   lang: UILanguage,
+  currency = "CNY",
 ): { display: string; full?: string } {
   if (rawValue == null || rawValue === "") return { display: "—" };
   if (isCurrencyMetric(name)) {
     const num = parseNumber(rawValue);
     if (num == null) return { display: String(rawValue) };
-    const pair = formatCurrencyFull(num, lang);
+    const pair = formatCurrencyFull(num, lang, currency);
     return { display: pair.display, full: pair.full };
   }
   if (name === "customer_concentration" || name === "sales_growth") {
@@ -267,6 +275,7 @@ export function formatMetricValue(
   m: DemoComputedMetric,
   T: TFunc,
   lang: UILanguage = "zh",
+  currency = "CNY",
 ): string {
   if (m.availability !== "available" || m.value == null) return "—";
   if (m.metric_name === "customer_concentration") {
@@ -275,7 +284,7 @@ export function formatMetricValue(
   }
   if (m.metric_name === "total_sales" || m.metric_name === "average_order_value") {
     const num = parseNumber(m.value as number | string | null | undefined);
-    return num == null ? "—" : formatCurrencyFull(num, lang).display;
+    return num == null ? "—" : formatCurrencyFull(num, lang, currency).display;
   }
   const num = parseNumber(m.value as number | string | null | undefined);
   return num == null ? "—" : formatNumber(num, lang);
@@ -316,6 +325,7 @@ export function buildDemoHealthCard(
   period: DemoPeriod,
   T: TFunc,
   lang: UILanguage = "zh",
+  currency = "CNY",
 ): DemoHealthCardData {
   const hs = period.health_score;
   const params = periodNarrative(period).params;
@@ -327,7 +337,7 @@ export function buildDemoHealthCard(
       health: formatNumber(parseNumber(params.health_score) ?? 0, lang),
       level: T(`health.level.${params.health_level}`) || params.health_level,
       growth: formatSignedPercent(params.growth, lang),
-      total: total == null ? "—" : formatCurrencyFull(total, lang).display,
+      total: total == null ? "—" : formatCurrencyFull(total, lang, currency).display,
       product: demoProductName(params.top_product, T),
     }),
   };
@@ -355,12 +365,13 @@ export function buildDemoMetricGrid(
   period: DemoPeriod,
   T: TFunc,
   lang: UILanguage = "zh",
+  currency = "CNY",
 ): DemoMetricGridItem[] {
   const index = DEMO_RESULT.periods.findIndex((p) => p.period_id === period.period_id);
   const previous = index > 0 ? DEMO_RESULT.periods[index - 1] : null;
   return period.key_metrics.map((km) => {
     const prev = previous?.key_metrics.find((p) => p.metric_name === km.metric_name);
-    const display = formatMetricDisplay(km.metric_name, km.value, lang);
+    const display = formatMetricDisplay(km.metric_name, km.value, lang, currency);
     return {
       name: T(`metric.name.${km.metric_name}`),
       value: display.display,
@@ -425,6 +436,7 @@ export function buildDemoExecutiveSummary(
   period: DemoPeriod,
   T: TFunc,
   lang: UILanguage = "zh",
+  currency = "CNY",
 ): string {
   const params = periodNarrative(period).params;
   const total = parseNumber(params.total_sales);
@@ -432,14 +444,14 @@ export function buildDemoExecutiveSummary(
   const customers = parseNumber(params.customers);
   const health = parseNumber(params.health_score);
   return T(periodNarrative(period).summary_key, {
-    total: total == null ? "—" : formatCurrencyFull(total, lang).display,
+    total: total == null ? "—" : formatCurrencyFull(total, lang, currency).display,
     growth: formatSignedPercent(params.growth, lang),
     health: health == null ? "—" : formatNumber(health, lang),
     level: T(`health.level.${params.health_level}`) || params.health_level,
     concentration: formatDemoPercent(params.concentration, lang),
     customers: customers == null ? "—" : formatNumber(customers, lang),
     product: demoProductName(params.top_product, T),
-    aov: aov == null ? "—" : formatCurrencyFull(aov, lang).display,
+    aov: aov == null ? "—" : formatCurrencyFull(aov, lang, currency).display,
   });
 }
 

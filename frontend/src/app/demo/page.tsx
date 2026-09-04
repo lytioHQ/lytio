@@ -31,6 +31,7 @@ import {
   buildDemoRisks,
   buildDemoTimeline,
   buildDemoVerification,
+  demoCurrencyForLang,
   demoPeriodAt,
   formatMetricValue,
 } from "@/lib/demo";
@@ -71,11 +72,11 @@ function formatSignedDemoPercent(raw: unknown, lang: UILanguage): string {
   return ratio > 0 ? `+${body}` : `-${body}`;
 }
 
-function formatDemoCellValue(raw: unknown, metricName: string, lang: UILanguage): string {
+function formatDemoCellValue(raw: unknown, metricName: string, lang: UILanguage, currency: string): string {
   if (raw == null || raw === "") return "–";
   const numeric = parseDemoNumeric(raw);
   if (DEMO_CURRENCY_METRICS.has(metricName) && numeric != null) {
-    return formatCurrencyFull(numeric, lang).display;
+    return formatCurrencyFull(numeric, lang, currency).display;
   }
   if (DEMO_PERCENT_METRICS.has(metricName) || String(raw).includes("%")) {
     return formatSignedDemoPercent(raw, lang);
@@ -118,10 +119,12 @@ function VerificationSection({
   period,
   T,
   uiLang,
+  currency,
 }: {
   period: ReturnType<typeof demoPeriodAt>;
   T: DemoTFn;
   uiLang: UILanguage;
+  currency: string;
 }) {
   const verification = buildDemoVerification(period);
   if (!verification) {
@@ -163,13 +166,13 @@ function VerificationSection({
             {verification.metric_changes.map((mc) => (
               <tr key={mc.metric} className="border-b border-border last:border-none">
                 <td className="py-2.5 pr-4 font-medium text-ink">{demoMetricLabel(mc.metric, T)}</td>
-                <td className="py-2.5 pr-4 text-secondary">{formatDemoCellValue(mc.before, mc.metric, uiLang)}</td>
-                <td className="py-2.5 pr-4 text-secondary">{formatDemoCellValue(mc.after, mc.metric, uiLang)}</td>
+                <td className="py-2.5 pr-4 text-secondary">{formatDemoCellValue(mc.before, mc.metric, uiLang, currency)}</td>
+                <td className="py-2.5 pr-4 text-secondary">{formatDemoCellValue(mc.after, mc.metric, uiLang, currency)}</td>
                 <td className="py-2.5 pr-4 text-secondary">
                   {mc.percent_delta != null
                     ? formatSignedDemoPercent(mc.percent_delta, uiLang)
                     : mc.absolute_delta != null
-                      ? formatDemoCellValue(mc.absolute_delta, mc.metric, uiLang)
+                      ? formatDemoCellValue(mc.absolute_delta, mc.metric, uiLang, currency)
                       : "–"}
                 </td>
                 <td className="py-2.5 capitalize text-secondary">
@@ -188,6 +191,7 @@ function VerificationSection({
 export default function DemoPage() {
   const { uiLang } = useUiLang();
   const T = (key: string, params?: Record<string, string | number>) => t(uiLang, key, params);
+  const demoCurrency = demoCurrencyForLang(uiLang);
   const [periodIndex, setPeriodIndex] = useState(DEMO_PERIOD_COUNT - 1);
   const period = demoPeriodAt(periodIndex);
   const timeline = buildDemoTimeline(T);
@@ -258,8 +262,8 @@ export default function DemoPage() {
         <section aria-label={T("demo.screen1")}>
           <ScreenHeading index="1" title={T("demo.screen1")} />
           <div className="mt-6 space-y-8">
-            <BusinessHealthCard data={buildDemoHealthCard(period, T, uiLang)} lang={uiLang} />
-            <ExecutiveSummaryCard content={buildDemoExecutiveSummary(period, T, uiLang)} lang={uiLang} />
+            <BusinessHealthCard data={buildDemoHealthCard(period, T, uiLang, demoCurrency)} lang={uiLang} />
+            <ExecutiveSummaryCard content={buildDemoExecutiveSummary(period, T, uiLang, demoCurrency)} lang={uiLang} />
           </div>
         </section>
 
@@ -278,11 +282,11 @@ export default function DemoPage() {
                   if (!m) return null;
                   const available = m.availability === "available" && m.value != null;
                   const estimated = name === "order_count" && (m.assumptions ?? []).length > 0;
-                  const value = available ? formatMetricValue(m, T, uiLang) : "—";
+                  const value = available ? formatMetricValue(m, T, uiLang, demoCurrency) : "—";
                   const rawNumeric = available ? parseDemoNumeric(m.value) : null;
                   const fullValue = available
                     ? DEMO_CURRENCY_METRICS.has(name) && rawNumeric != null
-                      ? formatCurrencyFull(rawNumeric, uiLang).full
+                      ? formatCurrencyFull(rawNumeric, uiLang, demoCurrency).full
                       : m.value != null
                         ? formatNumber(rawNumeric ?? NaN, uiLang)
                         : "—"
@@ -305,7 +309,7 @@ export default function DemoPage() {
               </div>
             </div>
             <HealthScoreBreakdown data={period.health_score} lang={uiLang} />
-            <MetricGrid metrics={buildDemoMetricGrid(period, T, uiLang)} lang={uiLang} />
+            <MetricGrid metrics={buildDemoMetricGrid(period, T, uiLang, demoCurrency)} lang={uiLang} />
             <InsightList insights={buildDemoInsights(period, T)} lang={uiLang} />
             <RiskList risks={buildDemoRisks(period, T)} lang={uiLang} />
           </div>
@@ -324,7 +328,7 @@ export default function DemoPage() {
         <section aria-label={T("demo.screen4")}>
           <ScreenHeading index="4" title={T("demo.screen4")} />
           <div className="mt-6">
-            <VerificationSection period={period} T={T} uiLang={uiLang} />
+            <VerificationSection period={period} T={T} uiLang={uiLang} currency={demoCurrency} />
           </div>
         </section>
 
@@ -332,7 +336,7 @@ export default function DemoPage() {
         <section aria-label={T("demo.screen5")}>
           <ScreenHeading index="5" title={T("demo.screen5")} />
           <div className="mt-6 space-y-6">
-            <BusinessMemoryCard projectId="demo" lang={uiLang} demoData={{ data: buildDemoMemory() }} />
+            <BusinessMemoryCard projectId="demo" lang={uiLang} demoData={{ data: buildDemoMemory() }} currency={demoCurrency} />
             <div>
               <h3 className="text-base font-semibold text-ink">{T("demo.timelineTitle")}</h3>
               <div className="mt-3 space-y-3">

@@ -44,10 +44,10 @@ function isMissing(value: unknown): boolean {
   return value == null || Number.isNaN(Number(value));
 }
 
-function currencyFullPair(num: number, locale: string): string {
+function currencyFullPair(num: number, locale: string, currency = "CNY"): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "CNY",
+    currency,
     currencyDisplay: "code",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -111,6 +111,7 @@ export function formatCurrencyCN(
 export function formatCurrencyFull(
   value: number | null | undefined,
   lang: UILanguage | string = "zh",
+  currency = "CNY",
 ): FormattedNumber {
   if (isMissing(value)) return { display: MISSING_VALUE, full: MISSING_VALUE };
   const num = Number(value);
@@ -122,7 +123,7 @@ export function formatCurrencyFull(
       display: formatCurrencyCNFull(num).display,
       full: new Intl.NumberFormat(locale, {
         style: "currency",
-        currency: "CNY",
+        currency,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(num),
@@ -130,10 +131,10 @@ export function formatCurrencyFull(
   }
 
   // Non-zh locales: explicit CNY code, full locale number, no Chinese units.
-  const full = currencyFullPair(num, locale);
+  const full = currencyFullPair(num, locale, currency);
   const display = new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "CNY",
+    currency,
     currencyDisplay: "code",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,

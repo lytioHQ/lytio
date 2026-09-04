@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useUiLang } from "@/lib/useUiLang";
 import { t } from "@/lib/i18n";
 import { Button, Card } from "@/components/ui";
+import registerLogo from "../../../../public/logo/lytio-primary-dark.svg";
 
 const inputClasses =
   "h-12 w-full rounded-control border border-border bg-surface px-4 text-base text-ink placeholder:text-secondary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40";
@@ -41,7 +42,7 @@ export default function RegisterPage() {
     <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-16">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-h1 text-ink">Lytio</h1>
+          <img src={registerLogo.src} alt="Lytio" className="mx-auto h-[36px] w-auto" />
           <p className="mt-2 text-base text-secondary">{T("auth.register.title")}</p>
         </div>
 

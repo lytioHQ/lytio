@@ -61,7 +61,7 @@ export default function WorkspacePage() {
   const [showModal, setShowModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newIndustry, setNewIndustry] = useState("sales");
-  const [newLang, setNewLang] = useState("zh");
+  const [newLang, setNewLang] = useState<string>(uiLang);
   const [newFile, setNewFile] = useState<File | null>(null);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
@@ -91,7 +91,7 @@ export default function WorkspacePage() {
   function openNewAnalysisModal() {
     setNewTitle("");
     setNewIndustry("sales");
-    setNewLang("zh");
+    setNewLang(uiLang);
     setNewFile(null);
     setError("");
     setShowModal(true);
@@ -289,7 +289,11 @@ export default function WorkspacePage() {
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-ink">{T("home.excelFile")}</label>
-              <input type="file" accept=".xlsx,.xls" onChange={(e) => setNewFile(e.target.files?.[0] || null)} className="w-full text-sm text-secondary file:mr-3 file:rounded-control file:border file:border-border file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-ink hover:file:bg-canvas" />
+              <label className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-2 text-sm text-secondary hover:bg-canvas">
+                <span className="truncate">{newFile?.name || T("home.noFileChosen")}</span>
+                <span className="shrink-0 rounded-control border border-border bg-surface px-3 py-1.5 text-sm font-medium text-ink">{T("home.chooseFile")}</span>
+                <input type="file" accept=".xlsx,.xls" onChange={(e) => setNewFile(e.target.files?.[0] || null)} className="hidden" />
+              </label>
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="secondary" onClick={() => setShowModal(false)}>{T("home.cancel")}</Button>
