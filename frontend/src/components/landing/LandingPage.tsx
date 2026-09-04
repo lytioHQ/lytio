@@ -50,7 +50,7 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
             <img
               src={primaryLogo.src}
               alt="Lytio"
-              className="mx-auto mb-4 h-[36px] w-auto md:h-[48px]"
+              className="mx-auto mb-4 h-[72px] w-auto md:h-[96px]"
             />
             <p className="mb-5 inline-flex rounded-full border border-accent/20 bg-accent/5 px-3.5 py-1 text-caption font-semibold text-accent">
               {T("landing.badge")}

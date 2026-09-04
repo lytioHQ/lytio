@@ -144,7 +144,7 @@ export default function WorkspacePage() {
         <BetaBanner lang={uiLang} />
         <header className="border-b border-border bg-surface">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-            <img src={monoLogo.src} alt="Lytio" className="h-[20px] w-auto" />
+            <img src={monoLogo.src} alt="Lytio" className="h-[40px] w-auto" />
             <div className="flex items-center gap-5">
               <LanguageSelector lang={uiLang} onChange={handleUiLangChange} />
               <Link href="/login" className="text-sm text-secondary transition-colors hover:text-ink">{T("home.login")}</Link>
@@ -168,7 +168,7 @@ export default function WorkspacePage() {
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-6 py-5">
           <div>
-            <img src={monoLogo.src} alt="Lytio" className="h-[22px] w-auto md:h-[24px]" />
+            <img src={monoLogo.src} alt="Lytio" className="h-[44px] w-auto md:h-[48px]" />
             <p className="mt-0.5 text-sm text-secondary">{T("home.subtitle")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:gap-5">
