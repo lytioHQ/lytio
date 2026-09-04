@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { t, UILanguage } from "@/lib/i18n";
 import { formatNumber } from "@/lib/formatNumber";
 import { Button, Card } from "@/components/ui";
+import primaryLogo from "../../../../public/logo/lytio-primary-light.svg";
 import BusinessHealthCard from "@/components/business/BusinessHealthCard";
 import MetricGrid from "@/components/business/MetricGrid";
 import InsightList from "@/components/business/InsightList";
@@ -46,7 +47,11 @@ export default function LandingPage({ lang }: { lang: UILanguage }) {
         <div aria-hidden className="pointer-events-none absolute top-24 right-[-140px] h-[300px] w-[300px] rounded-full bg-success-soft/60 blur-[100px]" />
         <div className="relative mx-auto max-w-5xl px-4 pt-16 pb-20 text-center md:px-6 md:pt-24 md:pb-28">
           <div className="mx-auto max-w-2xl">
-            <p className="mb-4 text-[36px] font-bold leading-tight tracking-tight text-ink md:text-display">Lytio</p>
+            <img
+              src={primaryLogo.src}
+              alt="Lytio"
+              className="mx-auto mb-4 h-[36px] w-auto md:h-[48px]"
+            />
             <p className="mb-5 inline-flex rounded-full border border-accent/20 bg-accent/5 px-3.5 py-1 text-caption font-semibold text-accent">
               {T("landing.badge")}
             </p>
